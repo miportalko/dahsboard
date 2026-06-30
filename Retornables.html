@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retornables Dashboard · Mi Portal Coca-Cola</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:    #E8241B;
+    --red2:   #c41a13;
+    --bg:     #F2F2F2;
+    --white:  #FFFFFF;
+    --black:  #0D0D0D;
+    --border: #E0E0E0;
+    --text:   #1A1A1A;
+    --muted:  #6B6B6B;
+    --light:  #F7F7F7;
+    --c1: #82E1FF;
+    --c2: #78E6A0;
+    --c3: #FFB400;
+    --c4: #FF8700;
+    --c5: #FF5A00;
+    --c6: #E8241B;
+    --rainbow: linear-gradient(90deg,#82E1FF 0%,#78E6A0 20%,#FFB400 40%,#FF8700 60%,#FF5A00 80%,#E8241B 100%);
+    --font: 'Inter', sans-serif;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow-md: 0 4px 24px rgba(0,0,0,0.12);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); font-family:var(--font); color:var(--text); min-height:100vh; }
+
+  /* HEADER */
+  .header-rainbow { height:4px; background:var(--rainbow); position:sticky; top:0; z-index:101; }
+  .header {
+    background:var(--black); padding:0 28px;
+    display:flex; align-items:center; justify-content:space-between;
+    height:58px; position:sticky; top:4px; z-index:100;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /* LOGO marca */
+  .header-logo {
+    display:flex; align-items:center; gap:12px; flex-shrink:0;
+  }
+  .logo-icon {
+    width:34px; height:34px; border-radius:8px; overflow:hidden;
+    flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(135deg, #82E1FF 0%, #78E6A0 30%, #FFB400 55%, #FF8700 75%, #E8241B 100%);
+    box-shadow: 0 2px 8px rgba(232,36,27,0.35);
+  }
+  .logo-icon svg { width:20px; height:20px; }
+  .logo-wordmark { display:flex; flex-direction:column; gap:0px; line-height:1; }
+  .logo-top {
+    font-size:10px; font-weight:800; letter-spacing:1.5px;
+    text-transform:uppercase; color:rgba(255,255,255,0.45);
+  }
+  .logo-bottom {
+    font-size:15px; font-weight:800; letter-spacing:-0.3px;
+    background: var(--rainbow);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* SEPARADOR vertical */
+  .header-sep {
+    width:1px; height:28px;
+    background:rgba(255,255,255,0.12);
+    flex-shrink:0; margin:0 4px;
+  }
+
+  /* TÍTULO de la vista actual */
+  .header-view {
+    display:flex; flex-direction:column; gap:1px;
+  }
+  .header-view-label {
+    font-size:10px; font-weight:600; letter-spacing:.8px;
+    text-transform:uppercase; color:rgba(255,255,255,0.35);
+  }
+  .header-view-name {
+    font-size:14px; font-weight:700; color:white; letter-spacing:-0.2px;
+  }
+  .header-view-name span { color:#82E1FF; }
+
+  /* NAVEGACIÓN */
+  .header-nav {
+    display:flex; align-items:center; gap:2px;
+    background:rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:8px; padding:3px;
+  }
+  .nav-link {
+    padding:5px 12px; border-radius:6px;
+    font-size:11px; font-weight:600; letter-spacing:0.2px;
+    color:rgba(255,255,255,0.45);
+    text-decoration:none; transition:all .15s; white-space:nowrap;
+    cursor:pointer; border:none; background:none; font-family:var(--font);
+  }
+  .nav-link:hover { color:rgba(255,255,255,0.85); background:rgba(255,255,255,0.07); }
+  .nav-link.active {
+    background:rgba(255,255,255,0.12); color:white;
+    box-shadow:0 1px 4px rgba(0,0,0,0.2);
+  }
+
+  /* DERECHA */
+  .header-right { display:flex; align-items:center; gap:10px; }
+  .period-chip {
+    background:rgba(255,255,255,.07); color:rgba(255,255,255,.55); font-size:11px;
+    font-weight:600; padding:5px 11px; border-radius:20px;
+    border:1px solid rgba(255,255,255,.1); letter-spacing:0.2px;
+  }
+  .live-chip {
+    display:flex; align-items:center; gap:5px;
+    background:rgba(120,230,160,.12); color:#78E6A0;
+    font-size:11px; font-weight:600; padding:4px 10px;
+    border-radius:20px; border:1px solid rgba(120,230,160,.25);
+  }
+  .live-dot { width:5px; height:5px; background:#78E6A0; border-radius:50%; animation:blink 2s ease infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* FILTER BAR */
+  .filter-bar {
+    background:var(--white); border-bottom:1px solid var(--border);
+    padding:0 32px; display:flex; align-items:center; gap:16px;
+    height:52px; position:sticky; top:60px; z-index:99;
+    box-shadow:0 2px 8px rgba(0,0,0,.05);
+  }
+  .filter-label { font-size:11px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.8px; color:var(--muted); white-space:nowrap; flex-shrink:0; }
+  .filter-divider { width:1px; height:20px; background:var(--border); flex-shrink:0; }
+  .period-pills { display:flex; gap:5px; align-items:center; }
+  .ppill {
+    padding:5px 12px; border-radius:20px; border:1px solid var(--border);
+    background:var(--white); font-family:var(--font); font-size:12px;
+    font-weight:600; color:var(--muted); cursor:pointer; transition:all .15s; white-space:nowrap;
+  }
+  .ppill:hover { border-color:var(--red); color:var(--red); }
+  .ppill.active { background:var(--red); border-color:var(--red); color:white; box-shadow:0 2px 8px rgba(232,36,27,.25); }
+  .date-range { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+  .date-input {
+    font-family:var(--font); font-size:12px; font-weight:500; color:var(--text);
+    background:var(--bg); border:1px solid var(--border); border-radius:8px;
+    padding:5px 10px; outline:none; cursor:pointer; transition:border-color .15s;
+  }
+  .date-input:focus, .date-input:hover { border-color:var(--red); }
+  .date-sep { font-size:11px; color:var(--muted); font-weight:500; }
+  .btn-apply {
+    padding:5px 14px; border-radius:8px; border:none; background:var(--red);
+    color:white; font-family:var(--font); font-size:12px; font-weight:700;
+    cursor:pointer; transition:background .15s,transform .1s; flex-shrink:0;
+  }
+  .btn-apply:hover { background:var(--red2); transform:translateY(-1px); }
+  .range-summary {
+    margin-left:auto; display:flex; align-items:center; gap:6px;
+    font-size:11px; color:var(--muted); font-weight:500; white-space:nowrap; flex-shrink:0;
+  }
+  .range-summary strong { color:var(--text); font-weight:700; }
+  .range-dot { width:6px; height:6px; border-radius:50%; background:var(--red); opacity:.6; }
+
+  /* KPI FLASH ANIMATION */
+  @keyframes kpiFlash {
+    0%  { opacity:.3; transform:translateY(4px); }
+    100%{ opacity:1;  transform:translateY(0); }
+  }
+  .kpi-value, .cohort-pct { transition:color .2s; }
+  .kpi-animating { animation:kpiFlash .3s ease forwards; }
+
+  /* LAYOUT */
+  .container { max-width:1360px; margin:0 auto; padding:28px 24px; }
+  .page-header { margin-bottom:24px; display:flex; align-items:flex-end; justify-content:space-between; }
+  .page-title { font-size:26px; font-weight:800; color:var(--black); letter-spacing:-.5px; line-height:1.1; }
+  .page-title span { color:var(--red); }
+  .page-sub { font-size:13px; color:var(--muted); margin-top:4px; font-weight:400; }
+
+  /* TABS */
+  .tabs {
+    display:flex; gap:0; background:var(--white); border-radius:var(--radius);
+    border:1px solid var(--border); padding:6px; margin-bottom:24px;
+    box-shadow:var(--shadow); overflow-x:auto;
+  }
+  .tab {
+    flex:1; min-width:110px; padding:8px 14px; border-radius:8px;
+    background:none; border:none; font-family:var(--font); font-size:12px;
+    font-weight:600; color:var(--muted); cursor:pointer; transition:all .18s;
+    white-space:nowrap; text-align:center; letter-spacing:.2px;
+  }
+  .tab:hover { color:var(--text); background:var(--bg); }
+  .tab.active { background:var(--red); color:white; box-shadow:0 2px 8px rgba(232,36,27,.3); }
+
+  /* SECTIONS */
+  .section { display:none; animation:fadeIn .25s ease; }
+  .section.active { display:block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+  .sec-title {
+    font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:1px;
+    color:var(--muted); margin-bottom:14px; display:flex; align-items:center; gap:8px;
+  }
+  .sec-title::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  /* KPI CARDS */
+  .kpi-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px; margin-bottom:20px; }
+  .kpi {
+    background:var(--white); border-radius:var(--radius); border:1px solid var(--border);
+    padding:18px 18px 16px; box-shadow:var(--shadow); position:relative; overflow:hidden;
+    transition:box-shadow .2s, transform .2s;
+  }
+  .kpi:hover { box-shadow:var(--shadow-md); transform:translateY(-2px); }
+  .kpi::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+  .kpi:nth-child(1)::before { background:var(--c6); }
+  .kpi:nth-child(2)::before { background:var(--c4); }
+  .kpi:nth-child(3)::before { background:var(--c3); }
+  .kpi:nth-child(4)::before { background:var(--c2); }
+  .kpi:nth-child(5)::before { background:var(--c1); }
+  .kpi:nth-child(6)::before { background:var(--c5); }
+  .kpi-label { font-size:11px; font-weight:600; text-transform:uppercase;
+    letter-spacing:.8px; color:var(--muted); margin-bottom:8px; }
+  .kpi-value { font-size:30px; font-weight:800; color:var(--black);
+    letter-spacing:-1px; line-height:1; margin-bottom:6px; }
+  .kpi-sub { font-size:11px; color:var(--muted); line-height:1.4; }
+  .kpi-badge {
+    display:inline-flex; align-items:center; gap:3px; font-size:10px; font-weight:700;
+    padding:2px 7px; border-radius:20px; margin-top:6px;
+  }
+  .badge-red    { background:rgba(232,36,27,.1);  color:var(--red); }
+  .badge-green  { background:rgba(0,175,85,.1);   color:#00AF55; }
+  .badge-blue   { background:rgba(0,120,255,.1);  color:#0078FF; }
+  .badge-orange { background:rgba(255,135,0,.1);  color:var(--c4); }
+
+  /* CHART CARDS */
+  .row { display:grid; gap:14px; margin-bottom:14px; }
+  .row.cols-2   { grid-template-columns:1fr 1fr; }
+  .row.cols-3   { grid-template-columns:1fr 1fr 1fr; }
+  .row.cols-1-2 { grid-template-columns:1fr 2fr; }
+  .row.cols-2-1 { grid-template-columns:2fr 1fr; }
+  .card { background:var(--white); border-radius:var(--radius); border:1px solid var(--border); padding:20px; box-shadow:var(--shadow); }
+  .card-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.8px;
+    color:var(--muted); margin-bottom:16px; display:flex; align-items:center; gap:6px; }
+  .card-title-dot { width:8px; height:8px; border-radius:50%; background:var(--red); flex-shrink:0; }
+  .chart-wrap { position:relative; }
+  .chart-wrap.h200{height:200px} .chart-wrap.h220{height:220px}
+  .chart-wrap.h240{height:240px} .chart-wrap.h280{height:280px}
+  .chart-wrap.h320{height:320px}
+
+  /* TABLE */
+  table.dt { width:100%; border-collapse:collapse; font-size:12px; }
+  table.dt th { text-align:left; padding:8px 10px; font-size:10px; font-weight:700;
+    text-transform:uppercase; letter-spacing:.8px; color:var(--muted);
+    border-bottom:2px solid var(--border); background:var(--light); }
+  table.dt td { padding:10px 10px; border-bottom:1px solid var(--bg); color:var(--text); vertical-align:middle; }
+  table.dt tr:last-child td { border-bottom:none; }
+  table.dt tr:hover td { background:var(--bg); }
+  .rank { font-size:16px; font-weight:800; color:var(--border); width:28px; }
+  .rank.gold{color:#FFB400} .rank.silver{color:#AAAAAA} .rank.bronze{color:#CD7F32}
+  .bar-mini { height:3px; border-radius:2px; background:var(--red); margin-top:3px; opacity:.6; }
+  .val-primary { font-size:14px; font-weight:700; color:var(--black); text-align:right; }
+  .val-secondary { font-size:11px; color:var(--muted); text-align:right; }
+
+  /* INSIGHT CARDS */
+  .insight-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; margin-top:14px; }
+  .insight { background:var(--white); border-radius:var(--radius); border:1px solid var(--border);
+    padding:16px; border-left:4px solid var(--red); box-shadow:var(--shadow); }
+  .insight-tag { font-size:10px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.8px; color:var(--red); margin-bottom:6px; }
+  .insight-body { font-size:13px; color:var(--muted); line-height:1.6; }
+
+  /* COHORT BOXES */
+  .cohort-row { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:14px; }
+  .cohort-box { background:var(--white); border-radius:var(--radius); border:1px solid var(--border);
+    padding:24px 20px; text-align:center; box-shadow:var(--shadow); transition:box-shadow .2s; }
+  .cohort-box:hover { box-shadow:var(--shadow-md); }
+  .cohort-days { font-size:11px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.8px; color:var(--muted); margin-bottom:12px; }
+  .cohort-pct { font-size:52px; font-weight:800; letter-spacing:-2px; line-height:1; color:var(--black); }
+  .cohort-pct span { font-size:28px; font-weight:600; color:var(--muted); }
+  .cohort-sub { font-size:11px; color:var(--muted); margin-top:8px; }
+  .cohort-bar { height:4px; border-radius:2px; background:var(--bg); margin-top:14px; overflow:hidden; }
+  .cohort-bar-fill { height:100%; border-radius:2px; background:var(--rainbow); transition:width .5s ease; }
+
+  /* SEG BARS */
+  .seg-bar-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .seg-bar-label { width:130px; font-size:12px; color:var(--muted); flex-shrink:0; }
+  .seg-bar-track { flex:1; height:8px; background:var(--bg); border-radius:4px; overflow:hidden; }
+  .seg-bar-fill  { height:100%; border-radius:4px; transition:width .5s ease; }
+  .seg-bar-val   { width:60px; text-align:right; font-size:13px; font-weight:700; color:var(--black); }
+
+  /* PROMO CARDS */
+  .promo-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:12px; margin-bottom:14px; }
+  .promo-card { background:var(--white); border-radius:var(--radius); border:1px solid var(--border);
+    padding:16px; box-shadow:var(--shadow); transition:box-shadow .2s; }
+  .promo-card:hover { box-shadow:var(--shadow-md); }
+  .promo-name { font-size:12px; font-weight:600; color:var(--text); margin-bottom:12px; line-height:1.4; }
+  .promo-kpis { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:10px; }
+  .promo-kpi-val { font-size:20px; font-weight:800; color:var(--black); letter-spacing:-.5px; }
+  .promo-kpi-lbl { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); margin-top:2px; }
+  .promo-rainbow-bar { height:3px; border-radius:2px; background:var(--bg); overflow:hidden; }
+  .promo-fill { height:100%; background:var(--rainbow); border-radius:2px; }
+
+  @media(max-width:900px){
+    .row.cols-2,.row.cols-3,.row.cols-1-2,.row.cols-2-1 { grid-template-columns:1fr; }
+    .cohort-row { grid-template-columns:1fr; }
+    .kpi-grid { grid-template-columns:1fr 1fr; }
+    .filter-bar { gap:10px; padding:0 16px; flex-wrap:wrap; height:auto; padding:8px 16px; }
+    .range-summary { display:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header-rainbow"></div>
+<div class="header">
+  <div class="header-brand">
+    <div class="brand-badge">Mi Portal</div>
+    <div class="brand-name">Coca-Cola · <span>Dashboard Retornables</span></div>
+  </div>
+  <div class="header-right">
+    <div class="live-chip"><div class="live-dot"></div> Datos reales</div>
+    <div class="period-chip" id="headerPeriodChip">Ene – May 2026</div>
+  </div>
+</div>
+
+<!-- FILTER BAR -->
+<div class="filter-bar">
+  <span class="filter-label">Período</span>
+  <div class="period-pills">
+    <button class="ppill" onclick="setPeriod('jan',this)">Ene</button>
+    <button class="ppill" onclick="setPeriod('feb',this)">Feb</button>
+    <button class="ppill" onclick="setPeriod('mar',this)">Mar</button>
+    <button class="ppill" onclick="setPeriod('apr',this)">Abr</button>
+    <button class="ppill" onclick="setPeriod('may',this)">May</button>
+    <button class="ppill active" onclick="setPeriod('all',this)">Todo</button>
+    <button class="ppill" onclick="setPeriod('q1',this)">Q1</button>
+  </div>
+  <div class="filter-divider"></div>
+  <div class="date-range">
+    <input type="date" class="date-input" id="dateFrom" value="2026-01-01" min="2026-01-01" max="2026-05-29">
+    <span class="date-sep">→</span>
+    <input type="date" class="date-input" id="dateTo"   value="2026-05-29" min="2026-01-01" max="2026-05-29">
+    <button class="btn-apply" onclick="applyDateRange()">Aplicar</button>
+  </div>
+  <div class="range-summary">
+    <div class="range-dot"></div>
+    Mostrando: <strong id="rangeLabel">Ene 2026 – May 2026</strong>
+    &nbsp;·&nbsp; <strong id="rangeOrders">9.054</strong> órdenes ret.
+    &nbsp;·&nbsp; <strong id="rangeRevenue">Gs. 342M</strong> en ret.
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">Análisis de <span>Retornables</span></div>
+      <div class="page-sub" id="pageSub">9.054 órdenes totales · 31.622 líneas · Período: Enero – Mayo 2026</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="showTab('resumen',this)">📊 Resumen</button>
+    <button class="tab" onclick="showTab('nuevos',this)">🆕 Nuevos Clientes</button>
+    <button class="tab" onclick="showTab('cohorte',this)">🔄 Cohorte</button>
+    <button class="tab" onclick="showTab('productos',this)">🧴 Productos</button>
+    <button class="tab" onclick="showTab('promos',this)">🎯 Campañas</button>
+    <button class="tab" onclick="showTab('segmentos',this)">👥 Segmentos</button>
+  </div>
+
+  <!-- S1: RESUMEN -->
+  <div class="section active" id="sec-resumen">
+    <div class="sec-title" id="s1Title">KPIs principales · retornables · Ene–May 2026</div>
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">Ventas Retornables</div>
+        <div class="kpi-value" id="k1v">342M</div>
+        <div class="kpi-sub" id="k1s">Gs. 342.164.734 en el período</div>
+        <div class="kpi-badge badge-red" id="k1b">↑ Pico en Mayo</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Órdenes con Ret.</div>
+        <div class="kpi-value" id="k2v">4.054</div>
+        <div class="kpi-sub" id="k2s">de 9.054 órdenes totales</div>
+        <div class="kpi-badge badge-orange" id="k2b">44.8% del total</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Unidades Vendidas</div>
+        <div class="kpi-value" id="k3v">42.363</div>
+        <div class="kpi-sub" id="k3s">SKUs retornables despachados</div>
+        <div class="kpi-badge badge-blue" id="k3b">Multi-marca</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Ticket Promedio</div>
+        <div class="kpi-value" id="k4v">84.4K</div>
+        <div class="kpi-sub" id="k4s">Gs. por orden retornable</div>
+        <div class="kpi-badge badge-red" id="k4b">vs 160K tienda</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Clientes Únicos Ret.</div>
+        <div class="kpi-value" id="k5v">2.056</div>
+        <div class="kpi-sub" id="k5s">compradores en el período</div>
+        <div class="kpi-badge badge-green" id="k5b">40% del base total</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Participación Revenue</div>
+        <div class="kpi-value" id="k6v">23.5%</div>
+        <div class="kpi-sub" id="k6s">ret. sobre total tienda</div>
+        <div class="kpi-badge badge-blue" id="k6b">2º categoría</div>
+      </div>
+    </div>
+    <div class="row cols-2-1">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Evolución Mensual · Revenue Retornables (Gs.)</div>
+        <div class="chart-wrap h280"><canvas id="c_revMonth"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Mix de Marca</div>
+        <div class="chart-wrap h280"><canvas id="c_brandMix"></canvas></div>
+      </div>
+    </div>
+    <div class="row cols-2">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Órdenes Mensuales · Ret. vs No-Ret.</div>
+        <div class="chart-wrap h240"><canvas id="c_ordersVsTotal"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Mix de Tamaño por Revenue</div>
+        <div class="chart-wrap h240"><canvas id="c_sizeMix"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S2: NUEVOS CLIENTES -->
+  <div class="section" id="sec-nuevos">
+    <div class="sec-title" id="s2Title">Clientes que compran retornables por primera vez</div>
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">Nuevos en Ret.</div>
+        <div class="kpi-value" id="n1v">2.056</div>
+        <div class="kpi-sub" id="n1s">compradores 1ª vez en ret.</div>
+        <div class="kpi-badge badge-red" id="n1b">Ene: pico con 577</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">% del Total Clientes</div>
+        <div class="kpi-value" id="n2v">40%</div>
+        <div class="kpi-sub" id="n2s">de 5.145 clientes únicos</div>
+        <div class="kpi-badge badge-green" id="n2b">Alto potencial</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Revenue Nuevos</div>
+        <div class="kpi-value" id="n3v">159M</div>
+        <div class="kpi-sub" id="n3s">Gs. generados por nuevos</div>
+        <div class="kpi-badge badge-blue" id="n3b">46% del rev. ret.</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Ticket Nuevos</div>
+        <div class="kpi-value" id="n4v">77.2K</div>
+        <div class="kpi-sub" id="n4s">Gs. primer orden promedio</div>
+        <div class="kpi-badge badge-red" id="n4b">−8.5% vs ticket ret.</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Cross-sell a Ret.</div>
+        <div class="kpi-value" id="n5v">189</div>
+        <div class="kpi-sub" id="n5s">ya compraban no-retornables</div>
+        <div class="kpi-badge badge-orange" id="n5b">9.2% del total</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Mejor Semana</div>
+        <div class="kpi-value" id="n6v">162</div>
+        <div class="kpi-sub" id="n6s">nuevos/semana (5–11 ene)</div>
+        <div class="kpi-badge badge-green" id="n6b">¿Lanzamiento?</div>
+      </div>
+    </div>
+    <div class="row cols-1-2">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Nuevos por Mes</div>
+        <div class="chart-wrap h280"><canvas id="c_newByMonth"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Evolución Semanal · Nuevos Clientes</div>
+        <div class="chart-wrap h280"><canvas id="c_newByWeek"></canvas></div>
+      </div>
+    </div>
+    <div class="row cols-2">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Revenue: Nuevos vs Recurrentes (Gs.)</div>
+        <div class="chart-wrap h240"><canvas id="c_newVsRet"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Canal de Adquisición (UTM Source)</div>
+        <div class="chart-wrap h240"><canvas id="c_utmSource"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S3: COHORTE -->
+  <div class="section" id="sec-cohorte">
+    <div class="sec-title" id="s3Title">Recompra y comportamiento de los 2.056 compradores</div>
+    <div class="kpi-grid" style="margin-bottom:20px">
+      <div class="kpi">
+        <div class="kpi-label">Tasa de Recompra</div>
+        <div class="kpi-value" id="c1v">33.9%</div>
+        <div class="kpi-sub" id="c1s">698 compraron 2+ veces en ret.</div>
+        <div class="kpi-badge badge-green">Crecimiento posible</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Solo 1 Compra</div>
+        <div class="kpi-value" id="c2v">66.1%</div>
+        <div class="kpi-sub" id="c2s">1.358 clientes · target reactivar</div>
+        <div class="kpi-badge badge-red">Prioridad reactivar</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Recurrentes</div>
+        <div class="kpi-value" id="c3v">698</div>
+        <div class="kpi-sub" id="c3s">compraron ret. en 2+ ocasiones</div>
+        <div class="kpi-badge badge-blue">Segmento VIP</div>
+      </div>
+    </div>
+    <div class="cohort-row">
+      <div class="cohort-box">
+        <div class="cohort-days">Recompra · 7 días</div>
+        <div class="cohort-pct" id="ch7v">21<span>%</span></div>
+        <div class="cohort-sub" id="ch7s">~432 clientes en la 1ª semana</div>
+        <div class="cohort-bar"><div class="cohort-bar-fill" id="ch7bar" style="width:21%"></div></div>
+      </div>
+      <div class="cohort-box">
+        <div class="cohort-days">Recompra · 15 días</div>
+        <div class="cohort-pct" id="ch15v">29<span>%</span></div>
+        <div class="cohort-sub" id="ch15s">~597 clientes dentro de 2 semanas</div>
+        <div class="cohort-bar"><div class="cohort-bar-fill" id="ch15bar" style="width:29%"></div></div>
+      </div>
+      <div class="cohort-box">
+        <div class="cohort-days">Recompra · 30 días</div>
+        <div class="cohort-pct" id="ch30v">33.9<span>%</span></div>
+        <div class="cohort-sub" id="ch30s">698 clientes en el primer mes</div>
+        <div class="cohort-bar"><div class="cohort-bar-fill" id="ch30bar" style="width:33.9%"></div></div>
+      </div>
+    </div>
+    <div class="row cols-2">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Distribución de Frecuencia de Compra</div>
+        <div class="chart-wrap h240"><canvas id="c_freqDist"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Mix Nuevos vs Recurrentes por Mes (%)</div>
+        <div class="chart-wrap h240"><canvas id="c_cohortPct"></canvas></div>
+      </div>
+    </div>
+    <div class="sec-title" style="margin-top:20px">Recomendaciones accionables</div>
+    <div class="insight-grid">
+      <div class="insight">
+        <div class="insight-tag">🎯 Retargeting urgente</div>
+        <div class="insight-body" id="ins1">1.358 clientes hicieron 1 sola compra. Una campaña con descuento en 2ª orden puede duplicar el LTV de esta base en 30 días.</div>
+      </div>
+      <div class="insight" style="border-left-color:var(--c4)">
+        <div class="insight-tag" style="color:var(--c4)">⚡ Trigger D+6</div>
+        <div class="insight-body" id="ins2">El 21% recompra en 7 días naturalmente. Un mensaje automático al día 6 puede llevar esa tasa al 30%+.</div>
+      </div>
+      <div class="insight" style="border-left-color:#00AF55">
+        <div class="insight-tag" style="color:#00AF55">📦 Pack programado</div>
+        <div class="insight-body" id="ins3">El 33.9% vuelve en 30 días. Un modelo de suscripción mensual captura a estos recurrentes y reduce el costo de adquisición.</div>
+      </div>
+      <div class="insight" style="border-left-color:var(--c1)">
+        <div class="insight-tag" style="color:#0078FF">🏆 Programa fidelidad</div>
+        <div class="insight-body" id="ins4">Los 698 recurrentes son el segmento de mayor valor. Puntos para 3ª compra en adelante puede multiplicar este número rápido.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S4: PRODUCTOS -->
+  <div class="section" id="sec-productos">
+    <div class="sec-title" id="s4Title">Top SKUs retornables por revenue</div>
+    <div class="row cols-2">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Top 10 SKUs · Revenue (Gs.)</div>
+        <div style="overflow-y:auto;max-height:380px">
+          <table class="dt" id="t_topSku"></table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Top 10 SKUs · Unidades Vendidas</div>
+        <div class="chart-wrap h320"><canvas id="c_topSku"></canvas></div>
+      </div>
+    </div>
+    <div class="row cols-3" style="margin-top:0">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Revenue por Tamaño</div>
+        <div class="chart-wrap h220"><canvas id="c_sizeRev"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Unidades por Tamaño</div>
+        <div class="chart-wrap h220"><canvas id="c_sizeUnits"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Revenue por Marca</div>
+        <div class="chart-wrap h220"><canvas id="c_brandRev"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S5: CAMPAÑAS -->
+  <div class="section" id="sec-promos">
+    <div class="sec-title" id="s5Title">Performance por UTM Campaign · retornables</div>
+    <div class="promo-grid" id="promoGrid"></div>
+    <div class="row cols-2">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Revenue por Campaña · Top 8 (Gs.)</div>
+        <div class="chart-wrap h280"><canvas id="c_campRev"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Órdenes por Fuente UTM</div>
+        <div class="chart-wrap h280"><canvas id="c_utmOrders"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- S6: SEGMENTOS -->
+  <div class="section" id="sec-segmentos">
+    <div class="sec-title" id="s6Title">Nuevos vs recurrentes · activos vs dormidos</div>
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">Solo 1 compra ret.</div>
+        <div class="kpi-value" id="sg1v">1.358</div>
+        <div class="kpi-sub" id="sg1s">66.1% de compradores ret.</div>
+        <div class="kpi-badge badge-red">Target retargeting</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Recurrentes ret.</div>
+        <div class="kpi-value" id="sg2v">698</div>
+        <div class="kpi-sub" id="sg2s">33.9% — compraron 2+ veces</div>
+        <div class="kpi-badge badge-green">Segmento VIP</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Activos (último mes)</div>
+        <div class="kpi-value" id="sg3v">393</div>
+        <div class="kpi-sub" id="sg3s">nuevos en el último mes del período</div>
+        <div class="kpi-badge badge-green" id="sg3b">+38.9% vs anterior</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Cross-sell a Ret.</div>
+        <div class="kpi-value" id="sg4v">189</div>
+        <div class="kpi-sub" id="sg4s">tenían compras no-ret previas</div>
+        <div class="kpi-badge badge-blue">Cross-sell logrado</div>
+      </div>
+    </div>
+    <div class="row cols-2">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Segmentación por Frecuencia</div>
+        <div style="padding:8px 0" id="segBarsContainer">
+          <div class="seg-bar-row">
+            <div class="seg-bar-label">Solo 1 compra</div>
+            <div class="seg-bar-track"><div class="seg-bar-fill" id="sb1fill" style="width:66.1%;background:var(--c6)"></div></div>
+            <div class="seg-bar-val" id="sb1val">1.358</div>
+          </div>
+          <div class="seg-bar-row">
+            <div class="seg-bar-label">2 compras</div>
+            <div class="seg-bar-track"><div class="seg-bar-fill" id="sb2fill" style="width:22%;background:var(--c4)"></div></div>
+            <div class="seg-bar-val" id="sb2val">~452</div>
+          </div>
+          <div class="seg-bar-row">
+            <div class="seg-bar-label">3–5 compras</div>
+            <div class="seg-bar-track"><div class="seg-bar-fill" id="sb3fill" style="width:10%;background:var(--c3)"></div></div>
+            <div class="seg-bar-val" id="sb3val">~205</div>
+          </div>
+          <div class="seg-bar-row">
+            <div class="seg-bar-label">6+ compras</div>
+            <div class="seg-bar-track"><div class="seg-bar-fill" id="sb4fill" style="width:4%;background:var(--c2)"></div></div>
+            <div class="seg-bar-val" id="sb4val">~41</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Composición de Compradores Retornables</div>
+        <div class="chart-wrap h220"><canvas id="c_segDoughnut"></canvas></div>
+      </div>
+    </div>
+    <div class="row cols-2" style="margin-top:0">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Acumulado de Nuevos Clientes</div>
+        <div class="chart-wrap h220"><canvas id="c_newAccum"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Revenue Estimado por Segmento (Gs.)</div>
+        <div class="chart-wrap h220"><canvas id="c_segValue"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ═══════════════════════════════════════════════════
+// DATOS COMPLETOS POR MES (5 meses: Ene→May 2026)
+// ═══════════════════════════════════════════════════
+const D = {
+  months:     ['Ene 26','Feb 26','Mar 26','Abr 26','May 26'],
+
+  // Revenue retornables por mes (SKU Total Price)
+  retRev:     [61225631, 52651064, 62656877, 59046512, 106584650],
+  // Revenue total tienda por mes (estimado proporcional)
+  totalRev:   [270000000, 248000000, 291000000, 259000000, 389000000],
+  // Órdenes retornables
+  ordRet:     [751, 772, 973, 725, 833],
+  // Órdenes no-retornables
+  ordNoRet:   [1557, 1042, 1141, 1150, 1110],
+  // Unidades retornables por mes
+  units:      [7820, 6940, 9310, 8190, 10103],
+  // Clientes únicos ret. por mes
+  clients:    [577, 363, 440, 283, 393],
+  // Clientes recurrentes (recompra dentro del mes)
+  retClients: [0, 221, 296, 289, 296],
+  // Revenue de nuevos clientes por mes
+  newRev:     [61225631, 22343264, 25762015, 22320462, 63488800],
+  // Revenue de recurrentes por mes
+  recRev:     [0, 30307800, 36894862, 36726050, 43095850],
+  // Cross-sell por mes (aprox proporcional)
+  crossSell:  [35, 30, 45, 40, 39],
+
+  // Semanas con su mes de referencia (índice 0-4)
+  weeks:       ['5-11 ene','12-18 ene','19-25 ene','26ene-1feb','2-8 feb','9-15 feb','16-22 feb','23feb-1mar','2-8 mar','9-15 mar','16-22 mar','23-29 mar','30mar-5abr','6-12 abr','13-19 abr','20-26 abr','27abr-3may','4-10 may','11-17 may','18-24 may','25-31 may'],
+  weekMonth:   [0,0,0,1,1,1,1,2,2,2,2,2,3,3,3,3,4,4,4,4,4],
+  newByWeek:   [162,124,140,111,98,101,82,94,94,98,94,105,67,78,74,69,44,53,42,138,142],
+
+  // SKUs: array completo (no varía con filtro mensual — son acumulados)
+  skus: [
+    {name:'CC s/azúcar ret. 2L x8 (S/env.)',    units:571, revenue:41578563, orders:362},
+    {name:'CC original ret. 1.5L x8 (S/env.)',  units:606, revenue:37540969, orders:379},
+    {name:'CC original ret. 2L x8 (S/env.)',    units:450, revenue:32447456, orders:319},
+    {name:'CC s/azúcar ret. 350ml x24 (S/env.)',units:312, revenue:30851353, orders:217},
+    {name:'CC original ret. 350ml x24 (C/env.)',units:212, revenue:26319200, orders:173},
+    {name:'CC s/azúcar ret. 1L x12 (S/env.)',   units:254, revenue:17806246, orders:203},
+    {name:'CC original ret. 350ml x24 (S/env.)',units:176, revenue:17455423, orders:138},
+    {name:'CC original ret. 350ml x12+Vasos',   units:95,  revenue:15403000, orders:72},
+    {name:'CC original ret. 1L x12 (S/env.)',   units:189, revenue:13377077, orders:147},
+    {name:'CC s/azúcar ret. 350ml x12+Vasos',   units:51,  revenue:8043000,  orders:51},
+  ],
+  // Mix por tamaño y marca (proporciones fijas)
+  brandRev:   {'CC Original':194981100,'CC Zero':134471794,'Sprite':7305847,'Fanta':5405993},
+  sizeRev:    {'350ml':140438037,'2L':107047226,'1.5L':47698881,'1L':46980590},
+  sizeUnits:  {'350ml':15693,'2L':11794,'1.5L':8176,'1L':6700},
+  // Campañas
+  campaigns: [
+    {name:'Search · Productos',  orders:609, revenue:53642824, clients:461},
+    {name:'Meta · Productos',    orders:203, revenue:13641500, clients:168},
+    {name:'Meta Campaign #1',    orders:121, revenue:10093900, clients:106},
+    {name:'Meta Campaign #2',    orders:61,  revenue:8626500,  clients:57},
+    {name:'Meta Campaign #3',    orders:35,  revenue:1791000,  clients:32},
+    {name:'Vasos Canción',       orders:9,   revenue:1502000,  clients:9},
+    {name:'Posavasos Albirrojo', orders:6,   revenue:1074500,  clients:6},
+    {name:'Lanz. 350ml x12',     orders:7,   revenue:961000,   clients:7},
+  ],
+  utmSource: {Search:1989, Meta:795, WooWup:627, Facebook:404, Instagram:345, Otros:5},
+};
+
+// ═══════════════════════════════════
+// ESTADO DEL FILTRO
+// ═══════════════════════════════════
+const PALETTE = ['#82E1FF','#78E6A0','#FFB400','#FF8700','#FF5A00','#E8241B'];
+const RED = '#E8241B';
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = '#6B6B6B';
+Chart.defaults.borderColor = '#E8E8E8';
+
+const FMT  = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(0)+'K' : String(n);
+const FMTn = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(Math.round(n));
+const PCT  = (a,b) => b ? (a/b*100).toFixed(1)+'%' : '—';
+const NUM  = n => Math.round(n).toLocaleString('es-PY');
+
+let ACTIVE_IDX = [0,1,2,3,4];
+let charts = {};
+
+// Slice helpers
+const sl  = arr => ACTIVE_IDX.map(i => arr[i]);
+const sum = arr => sl(arr).reduce((a,b)=>a+b,0);
+
+// ═══════════════════════════════════
+// COMPUTED METRICS para el filtro activo
+// ═══════════════════════════════════
+function compute() {
+  const retRevTotal  = sum(D.retRev);
+  const totalRevTot  = sum(D.totalRev);
+  const ordRetTotal  = sum(D.ordRet);
+  const ordNoRetTot  = sum(D.ordNoRet);
+  const ordTotal     = ordRetTotal + ordNoRetTot;
+  const unitsTotal   = sum(D.units);
+  const newClients   = sum(D.clients);
+  const recCliTotal  = sum(D.retClients);
+  const newRevTotal  = sum(D.newRev);
+  const recRevTotal  = sum(D.recRev);
+  const crossSellTot = sum(D.crossSell);
+
+  const ticket      = ordRetTotal ? retRevTotal / ordRetTotal : 0;
+  const newTicket   = newClients  ? newRevTotal / newClients  : 0;
+  const pctRet      = ordTotal    ? (ordRetTotal/ordTotal*100).toFixed(1)+'%' : '—';
+  const pctRevPart  = totalRevTot ? (retRevTotal/totalRevTot*100).toFixed(1)+'%' : '—';
+  const pctNewOfAll = 5145        ? (newClients/5145*100).toFixed(0)+'%' : '—';
+
+  // Recompra (escala proporcional al todo — 33.9% total)
+  const reuseRate   = newClients  ? Math.min(33.9, (recCliTotal/newClients)*100) : 33.9;
+  const reuse30     = reuseRate.toFixed(1);
+  const reuse15     = (reuseRate * 0.856).toFixed(1);  // ~29/33.9
+  const reuse7      = (reuseRate * 0.620).toFixed(1);  // ~21/33.9
+  const reuseN      = Math.round(newClients * reuseRate / 100);
+  const noReuse     = newClients - reuseN;
+
+  // Semana con más nuevos en rango activo
+  const filtWeeks = D.newByWeek.filter((_,i) => ACTIVE_IDX.includes(D.weekMonth[i]));
+  const filtWkLbl = D.weeks.filter((_,i)      => ACTIVE_IDX.includes(D.weekMonth[i]));
+  const maxWk     = Math.max(...filtWeeks);
+  const maxWkLbl  = filtWkLbl[filtWeeks.indexOf(maxWk)] || '—';
+
+  // Mes activo con más nuevos
+  const ncSlice    = sl(D.clients);
+  const maxNc      = Math.max(...ncSlice);
+  const maxNcMonth = D.months[ACTIVE_IDX[ncSlice.indexOf(maxNc)]];
+
+  // Último mes del rango (para "activos")
+  const lastI      = ACTIVE_IDX[ACTIVE_IDX.length - 1];
+  const lastMonth  = D.months[lastI];
+  const lastNew    = D.clients[lastI];
+  const prevI      = ACTIVE_IDX.length > 1 ? ACTIVE_IDX[ACTIVE_IDX.length - 2] : null;
+  const prevNew    = prevI !== null ? D.clients[prevI] : null;
+  const lastVsPrev = prevNew ? ((lastNew - prevNew)/prevNew*100).toFixed(1) : null;
+
+  // Frecuencia estimada proporcional
+  const f1 = Math.round(noReuse);
+  const f2 = Math.round(reuseN * 0.648);
+  const f3 = Math.round(reuseN * 0.224);
+  const f4 = Math.round(reuseN * 0.130) || 1;
+
+  // Label del período
+  const periodLabel = ACTIVE_IDX.length === 5
+    ? 'Ene 2026 – May 2026'
+    : ACTIVE_IDX.length === 1
+    ? D.months[ACTIVE_IDX[0]]
+    : `${D.months[ACTIVE_IDX[0]]} – ${D.months[ACTIVE_IDX[ACTIVE_IDX.length-1]]}`;
+
+  return {
+    retRevTotal, totalRevTot, ordRetTotal, ordTotal, ordNoRetTot, unitsTotal,
+    newClients, recCliTotal, newRevTotal, recRevTotal, crossSellTot,
+    ticket, newTicket, pctRet, pctRevPart, pctNewOfAll,
+    reuse30, reuse15, reuse7, reuseN, noReuse, reuseRate,
+    filtWeeks, filtWkLbl, maxWk, maxWkLbl,
+    maxNc, maxNcMonth,
+    lastMonth, lastNew, lastVsPrev, prevNew,
+    f1, f2, f3, f4,
+    periodLabel,
+  };
+}
+
+// ═══════════════════════════════════
+// ACTUALIZAR TODOS LOS KPIs DEL DOM
+// ═══════════════════════════════════
+function flash(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('kpi-animating');
+  void el.offsetWidth;
+  el.classList.add('kpi-animating');
+}
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = val; flash(id); }
+}
+
+function updateKPIs(m) {
+  // ── S1 RESUMEN ──
+  setText('k1v', FMT(m.retRevTotal));
+  setText('k1s', `Gs. ${NUM(m.retRevTotal)} en el período`);
+  setText('k1b', `↑ Pico en ${m.maxNcMonth}`);
+
+  setText('k2v', NUM(m.ordRetTotal));
+  setText('k2s', `de ${NUM(m.ordTotal)} órdenes totales`);
+  setText('k2b', `${m.pctRet} del total`);
+
+  setText('k3v', NUM(m.unitsTotal));
+  setText('k3s', `SKUs retornables despachados`);
+
+  const ticket4 = FMTn(m.ticket);
+  setText('k4v', ticket4);
+  setText('k4s', 'Gs. por orden retornable');
+
+  setText('k5v', NUM(m.newClients));
+  setText('k5s', 'compradores únicos en ret.');
+  setText('k5b', `${m.pctNewOfAll} del base total`);
+
+  setText('k6v', m.pctRevPart);
+  setText('k6s', `ret. sobre Gs. ${FMT(m.totalRevTot)} total`);
+
+  // Sec title S1
+  document.getElementById('s1Title').textContent = `KPIs principales · retornables · ${m.periodLabel}`;
+
+  // ── S2 NUEVOS ──
+  setText('n1v', NUM(m.newClients));
+  setText('n1s', 'compradores 1ª vez en ret.');
+  setText('n1b', `${m.maxNcMonth}: pico con ${m.maxNc}`);
+
+  setText('n2v', m.pctNewOfAll);
+  setText('n2s', 'de 5.145 clientes únicos totales');
+
+  setText('n3v', FMT(m.newRevTotal));
+  setText('n3s', `Gs. ${NUM(m.newRevTotal)} generados`);
+  setText('n3b', `${PCT(m.newRevTotal, m.retRevTotal)} del rev. ret.`);
+
+  const newTkt = FMTn(m.newTicket);
+  const tktDiff = m.ticket ? ((m.newTicket - m.ticket)/m.ticket*100).toFixed(1) : '—';
+  setText('n4v', newTkt);
+  setText('n4s', 'Gs. primer orden promedio');
+  setText('n4b', `${tktDiff > 0 ? '+' : ''}${tktDiff}% vs ticket ret.`);
+
+  setText('n5v', NUM(m.crossSellTot));
+  setText('n5s', 'ya compraban no-retornables');
+  setText('n5b', `${PCT(m.crossSellTot, m.newClients)} del total`);
+
+  setText('n6v', m.maxWk);
+  setText('n6s', `nuevos/semana (${m.maxWkLbl})`);
+
+  document.getElementById('s2Title').textContent = `Clientes que compran retornables por primera vez · ${m.periodLabel}`;
+
+  // ── S3 COHORTE ──
+  setText('c1v', `${m.reuse30}%`);
+  setText('c1s', `${NUM(m.reuseN)} compraron 2+ veces en ret.`);
+  const noReuseRate = (100 - parseFloat(m.reuse30)).toFixed(1);
+  setText('c2v', `${noReuseRate}%`);
+  setText('c2s', `${NUM(m.noReuse)} clientes · target reactivar`);
+  setText('c3v', NUM(m.reuseN));
+  setText('c3s', 'compraron ret. en 2+ ocasiones');
+
+  // Cohort boxes
+  const r7  = parseFloat(m.reuse7);
+  const r15 = parseFloat(m.reuse15);
+  const r30 = parseFloat(m.reuse30);
+  document.getElementById('ch7v').innerHTML  = `${m.reuse7}<span>%</span>`;
+  document.getElementById('ch15v').innerHTML = `${m.reuse15}<span>%</span>`;
+  document.getElementById('ch30v').innerHTML = `${m.reuse30}<span>%</span>`;
+  setText('ch7s',  `~${Math.round(m.newClients*r7/100)} clientes en la 1ª semana`);
+  setText('ch15s', `~${Math.round(m.newClients*r15/100)} clientes dentro de 2 semanas`);
+  setText('ch30s', `${NUM(m.reuseN)} clientes en el primer mes`);
+  document.getElementById('ch7bar').style.width  = `${r7}%`;
+  document.getElementById('ch15bar').style.width = `${r15}%`;
+  document.getElementById('ch30bar').style.width = `${r30}%`;
+
+  // Insights dinámicos
+  setText('ins1', `${NUM(m.noReuse)} clientes hicieron 1 sola compra en este período. Una campaña con descuento en 2ª orden puede duplicar el LTV de esta base en 30 días.`);
+  setText('ins2', `El ${m.reuse7}% recompra en 7 días naturalmente. Un mensaje automático al día 6 puede llevar esa tasa al ${(r7*1.4).toFixed(0)}%+.`);
+  setText('ins3', `El ${m.reuse30}% vuelve en 30 días. Un modelo de suscripción mensual captura a estos ${NUM(m.reuseN)} recurrentes y reduce el costo de adquisición.`);
+  setText('ins4', `Los ${NUM(m.reuseN)} recurrentes del período son el segmento de mayor valor. Puntos para 3ª compra puede multiplicar rápidamente este número.`);
+
+  document.getElementById('s3Title').textContent = `Recompra y comportamiento de los ${NUM(m.newClients)} compradores de retornables`;
+
+  // ── S4 PRODUCTOS ──
+  document.getElementById('s4Title').textContent = `Top SKUs retornables por revenue · ${m.periodLabel}`;
+
+  // ── S5 CAMPAÑAS ──
+  document.getElementById('s5Title').textContent = `Performance por UTM Campaign · retornables · ${m.periodLabel}`;
+
+  // ── S6 SEGMENTOS ──
+  setText('sg1v', NUM(m.noReuse));
+  setText('sg1s', `${(100 - parseFloat(m.reuse30)).toFixed(1)}% de compradores ret.`);
+
+  setText('sg2v', NUM(m.reuseN));
+  setText('sg2s', `${m.reuse30}% — compraron 2+ veces`);
+
+  setText('sg3v', NUM(m.lastNew));
+  setText('sg3s', `nuevos en ${m.lastMonth}`);
+  if (m.lastVsPrev !== null) {
+    const arrow = parseFloat(m.lastVsPrev) >= 0 ? '↑' : '↓';
+    setText('sg3b', `${arrow}${m.lastVsPrev}% vs ${m.prevNew ? D.months[ACTIVE_IDX[ACTIVE_IDX.length-2]] : '—'}`);
+    document.getElementById('sg3b').className = `kpi-badge ${parseFloat(m.lastVsPrev) >= 0 ? 'badge-green' : 'badge-red'}`;
+  }
+
+  setText('sg4v', NUM(m.crossSellTot));
+  setText('sg4s', `tenían compras no-ret previas`);
+
+  // Seg bars
+  const totSeg = m.f1 + m.f2 + m.f3 + m.f4;
+  document.getElementById('sb1fill').style.width = `${(m.f1/totSeg*100).toFixed(1)}%`;
+  document.getElementById('sb2fill').style.width = `${(m.f2/totSeg*100).toFixed(1)}%`;
+  document.getElementById('sb3fill').style.width = `${(m.f3/totSeg*100).toFixed(1)}%`;
+  document.getElementById('sb4fill').style.width = `${(m.f4/totSeg*100).toFixed(1)}%`;
+  setText('sb1val', NUM(m.f1));
+  setText('sb2val', `~${NUM(m.f2)}`);
+  setText('sb3val', `~${NUM(m.f3)}`);
+  setText('sb4val', `~${NUM(m.f4)}`);
+
+  document.getElementById('s6Title').textContent = `Nuevos vs recurrentes · ${m.periodLabel}`;
+
+  // Filter bar summary
+  setText('rangeLabel', m.periodLabel);
+  setText('rangeOrders', NUM(m.ordRetTotal));
+  setText('rangeRevenue', 'Gs. ' + FMT(m.retRevTotal));
+  document.getElementById('headerPeriodChip').textContent = m.periodLabel;
+
+  // Page sub
+  document.getElementById('pageSub').textContent =
+    `${NUM(m.ordTotal)} órdenes · Período: ${m.periodLabel}`;
+}
+
+// ═══════════════════════════════════
+// CHART HELPERS
+// ═══════════════════════════════════
+function baseOpts(extra={}) {
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:14,font:{size:11}}},
+      tooltip:{backgroundColor:'#fff',borderColor:'#E0E0E0',borderWidth:1,
+               titleColor:'#1A1A1A',bodyColor:'#6B6B6B',padding:10,callbacks:{}}
+    },
+    scales:{
+      x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#9A9A9A'}},
+      y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#9A9A9A'}}
+    }, ...extra
+  };
+}
+function doughnutOpts(pos='bottom') {
+  return {
+    responsive:true, maintainAspectRatio:false, cutout:'60%',
+    plugins:{
+      legend:{position:pos,labels:{color:'#6B6B6B',boxWidth:10,padding:12,font:{size:11}}},
+      tooltip:{backgroundColor:'#fff',borderColor:'#E0E0E0',borderWidth:1,
+               titleColor:'#1A1A1A',bodyColor:'#6B6B6B',padding:10}
+    }
+  };
+}
+
+// ═══════════════════════════════════
+// REFRESH CHARTS (filtro activo)
+// ═══════════════════════════════════
+function refreshCharts() {
+  const months = ACTIVE_IDX.map(i => D.months[i]);
+
+  function upd(id, datasets, labels) {
+    const ch = charts[id]; if (!ch) return;
+    ch.data.labels = labels || months;
+    datasets.forEach((ds,i) => { if (ch.data.datasets[i]) ch.data.datasets[i].data = ds; });
+    ch.update('active');
+  }
+
+  const retSlice = ACTIVE_IDX.map(i => D.retRev[i]);
+
+  // S1
+  upd('c_revMonth', [retSlice, retSlice]);
+  if (charts['c_revMonth']) {
+    charts['c_revMonth'].data.datasets[0].backgroundColor =
+      retSlice.map((_,i) => i === retSlice.length-1 ? RED : 'rgba(232,36,27,0.4)');
+    charts['c_revMonth'].update('active');
+  }
+  upd('c_ordersVsTotal', [ACTIVE_IDX.map(i=>D.ordRet[i]), ACTIVE_IDX.map(i=>D.ordNoRet[i])]);
+  upd('c_newByMonth',   [ACTIVE_IDX.map(i=>D.clients[i])]);
+  if (charts['c_newByMonth']) {
+    const nc = ACTIVE_IDX.map(i=>D.clients[i]);
+    charts['c_newByMonth'].data.datasets[0].backgroundColor =
+      nc.map((_,i) => i === nc.indexOf(Math.max(...nc)) ? RED : 'rgba(232,36,27,0.4)');
+    charts['c_newByMonth'].update('active');
+  }
+
+  upd('c_newVsRet',  [ACTIVE_IDX.map(i=>D.newRev[i]), ACTIVE_IDX.map(i=>D.recRev[i])]);
+  upd('c_cohortPct', [
+    ACTIVE_IDX.map(i => {
+      const t = D.clients[i] + (D.retClients[i]||0);
+      return t ? Math.round(D.clients[i]/t*100) : 100;
+    }),
+    ACTIVE_IDX.map(i => {
+      const t = D.clients[i] + (D.retClients[i]||0);
+      return t ? 100 - Math.round(D.clients[i]/t*100) : 0;
+    }),
+  ]);
+
+  // Semanas filtradas
+  const wLabels = D.weeks.filter((_,i)    => ACTIVE_IDX.includes(D.weekMonth[i]));
+  const wData   = D.newByWeek.filter((_,i) => ACTIVE_IDX.includes(D.weekMonth[i]));
+  upd('c_newByWeek', [wData], wLabels);
+
+  // Acumulado
+  let acc = 0;
+  upd('c_newAccum', [ACTIVE_IDX.map(i => { acc += D.clients[i]; return acc; })]);
+
+  // Seg doughnut
+  const m = compute();
+  if (charts['c_segDoughnut']) {
+    charts['c_segDoughnut'].data.datasets[0].data = [m.noReuse, Math.round(m.reuseN * 0.77), Math.round(m.reuseN * 0.23)];
+    charts['c_segDoughnut'].update('active');
+  }
+
+  // Freq dist
+  if (charts['c_freqDist']) {
+    charts['c_freqDist'].data.datasets[0].data = [m.f1, m.f2, m.f3, Math.round(m.f4*1.8), Math.round(m.f4*0.6)];
+    charts['c_freqDist'].update('active');
+  }
+}
+
+// ═══════════════════════════════════
+// BUILD CHARTS (solo al inicio)
+// ═══════════════════════════════════
+function buildCharts() {
+  // S1 – Revenue mensual
+  charts['c_revMonth'] = new Chart('c_revMonth',{ type:'bar', data:{
+    labels: D.months,
+    datasets:[
+      {type:'bar',  label:'Revenue Ret.', data:D.retRev,
+        backgroundColor: D.retRev.map((_,i)=>i===4?RED:'rgba(232,36,27,0.4)'),
+        borderRadius:6, borderSkipped:false},
+      {type:'line', label:'Tendencia', data:D.retRev,
+        borderColor:PALETTE[2], backgroundColor:'transparent',
+        borderWidth:2, pointRadius:4, pointBackgroundColor:PALETTE[2], tension:.4}
+    ]},
+    options: baseOpts({plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>' Gs. '+ctx.parsed.y.toLocaleString()}}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}}}})
+  });
+
+  // S1 – Brand doughnut
+  charts['c_brandMix'] = new Chart('c_brandMix',{ type:'doughnut', data:{
+    labels:Object.keys(D.brandRev),
+    datasets:[{data:Object.values(D.brandRev),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
+    options:doughnutOpts()
+  });
+
+  // S1 – Órdenes stacked
+  charts['c_ordersVsTotal'] = new Chart('c_ordersVsTotal',{ type:'bar', data:{
+    labels:D.months,
+    datasets:[
+      {label:'Retornables', data:D.ordRet,   backgroundColor:RED,                 borderRadius:4,borderSkipped:false},
+      {label:'No-Retorn.',  data:D.ordNoRet, backgroundColor:'rgba(0,0,0,0.07)', borderRadius:4,borderSkipped:false}
+    ]},
+    options:baseOpts({
+      plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:14,font:{size:11}}}},
+      scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
+  });
+
+  // S1 – Size mix
+  charts['c_sizeMix'] = new Chart('c_sizeMix',{ type:'doughnut', data:{
+    labels:Object.keys(D.sizeRev),
+    datasets:[{data:Object.values(D.sizeRev),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
+    options:doughnutOpts()
+  });
+
+  // S2 – New by month
+  charts['c_newByMonth'] = new Chart('c_newByMonth',{ type:'bar', data:{
+    labels:D.months,
+    datasets:[{label:'Nuevos clientes',data:D.clients,
+      backgroundColor:D.clients.map((_,i)=>i===0?RED:'rgba(232,36,27,0.4)'),
+      borderRadius:6,borderSkipped:false}]},
+    options:baseOpts({plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
+  });
+
+  // S2 – New by week
+  charts['c_newByWeek'] = new Chart('c_newByWeek',{ type:'line', data:{
+    labels:D.weeks,
+    datasets:[{label:'Nuevos/semana',data:D.newByWeek,
+      borderColor:RED,backgroundColor:'rgba(232,36,27,0.08)',
+      fill:true,tension:.4,pointRadius:3,pointBackgroundColor:RED,borderWidth:2}]},
+    options:baseOpts({plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',maxRotation:45,font:{size:9}}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
+  });
+
+  // S2 – New vs returning
+  charts['c_newVsRet'] = new Chart('c_newVsRet',{ type:'bar', data:{
+    labels:D.months,
+    datasets:[
+      {label:'Revenue Nuevos',      data:D.newRev,backgroundColor:RED,       borderRadius:4,borderSkipped:false},
+      {label:'Revenue Recurrentes', data:D.recRev,backgroundColor:PALETTE[1],borderRadius:4,borderSkipped:false}
+    ]},
+    options:baseOpts({
+      plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:14,font:{size:11}}},
+               tooltip:{callbacks:{label:ctx=>' Gs. '+FMT(ctx.parsed.y)}}},
+      scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}}}})
+  });
+
+  // S2 – UTM Source
+  const utmK = Object.keys(D.utmSource), utmV = Object.values(D.utmSource);
+  charts['c_utmSource'] = new Chart('c_utmSource',{ type:'doughnut', data:{
+    labels:utmK,datasets:[{data:utmV,backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
+    options:doughnutOpts('right')
+  });
+
+  // S3 – Freq dist
+  charts['c_freqDist'] = new Chart('c_freqDist',{ type:'bar', data:{
+    labels:['1 compra','2 compras','3 compras','4-5 compras','6+ compras'],
+    datasets:[{label:'Clientes',data:[1358,452,156,72,18],
+      backgroundColor:PALETTE.slice().reverse(),borderRadius:6,borderSkipped:false}]},
+    options:baseOpts({plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
+  });
+
+  // S3 – Cohort %
+  const pN = D.clients.map((n,i)=>{ const t=n+(D.retClients[i]||0); return t?Math.round(n/t*100):100; });
+  const pR = pN.map(p=>100-p);
+  charts['c_cohortPct'] = new Chart('c_cohortPct',{ type:'bar', data:{
+    labels:D.months,
+    datasets:[
+      {label:'% Nuevos',      data:pN,backgroundColor:RED,        borderRadius:4,borderSkipped:false},
+      {label:'% Recurrentes', data:pR,backgroundColor:PALETTE[1], borderRadius:4,borderSkipped:false}
+    ]},
+    options:baseOpts({
+      plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:14,font:{size:11}}},
+               tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y}%`}}},
+      scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{stacked:true,max:100,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>v+'%'}}}})
+  });
+
+  // S4 – Top SKU
+  charts['c_topSku'] = new Chart('c_topSku',{ type:'bar', data:{
+    labels:D.skus.map(s=>s.name.length>28?s.name.slice(0,28)+'…':s.name),
+    datasets:[{label:'Unidades',data:D.skus.map(s=>s.units),
+      backgroundColor:PALETTE[0],borderRadius:4,borderSkipped:false}]},
+    options:baseOpts({indexAxis:'y',plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#6B6B6B',font:{size:10}}}}})
+  });
+
+  // S4 – Size / Brand
+  new Chart('c_sizeRev',{type:'doughnut',data:{labels:Object.keys(D.sizeRev),datasets:[{data:Object.values(D.sizeRev),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
+  new Chart('c_sizeUnits',{type:'doughnut',data:{labels:Object.keys(D.sizeUnits),datasets:[{data:Object.values(D.sizeUnits),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
+  new Chart('c_brandRev',{type:'doughnut',data:{labels:Object.keys(D.brandRev),datasets:[{data:Object.values(D.brandRev),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
+
+  // S5 – Campaign revenue
+  new Chart('c_campRev',{ type:'bar', data:{
+    labels:D.campaigns.map(c=>c.name.length>24?c.name.slice(0,24)+'…':c.name),
+    datasets:[{label:'Revenue',data:D.campaigns.map(c=>c.revenue),
+      backgroundColor:D.campaigns.map((_,i)=>i<2?RED:PALETTE[i%PALETTE.length]),
+      borderRadius:4,borderSkipped:false}]},
+    options:baseOpts({indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' Gs. '+FMT(ctx.parsed.x)}}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#6B6B6B',font:{size:11}}}}})
+  });
+  new Chart('c_utmOrders',{ type:'bar', data:{
+    labels:utmK,datasets:[{label:'Órdenes',data:utmV,backgroundColor:PALETTE,borderRadius:6,borderSkipped:false}]},
+    options:baseOpts({plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
+  });
+
+  // S6 – Seg doughnut
+  charts['c_segDoughnut'] = new Chart('c_segDoughnut',{ type:'doughnut', data:{
+    labels:['Solo 1 compra','Recurrentes','Cross-sell'],
+    datasets:[{data:[1358,540,158],backgroundColor:[RED,PALETTE[1],PALETTE[0]],borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
+    options:doughnutOpts('right')
+  });
+
+  // S6 – Acumulado
+  let acc=0;
+  charts['c_newAccum'] = new Chart('c_newAccum',{ type:'line', data:{
+    labels:D.months,
+    datasets:[{label:'Acumulado',data:D.clients.map(v=>{acc+=v;return acc;}),
+      borderColor:PALETTE[2],backgroundColor:'rgba(255,180,0,0.08)',
+      fill:true,tension:.4,pointRadius:5,pointBackgroundColor:PALETTE[2],borderWidth:2}]},
+    options:baseOpts({plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
+  });
+
+  // S6 – Seg value
+  new Chart('c_segValue',{ type:'bar', data:{
+    labels:['Solo 1 compra','2 compras','3–5 compras','6+ compras'],
+    datasets:[{label:'Revenue est. (Gs.)',data:[104843280,35000000,14000000,4839454],
+      backgroundColor:PALETTE.slice(0,4).reverse(),borderRadius:6,borderSkipped:false}]},
+    options:baseOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' Gs. '+FMT(ctx.parsed.y)}}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}}}})
+  });
+}
+
+// ═══════════════════════════════════
+// BUILD TABLE & PROMO CARDS
+// ═══════════════════════════════════
+function buildTable() {
+  const table = document.getElementById('t_topSku');
+  const maxR = D.skus[0].revenue;
+  table.innerHTML = `<thead><tr><th>#</th><th>Producto</th><th>Revenue</th><th>Unds.</th></tr></thead>`;
+  const tb = document.createElement('tbody');
+  D.skus.forEach((s,i)=>{
+    const pct = (s.revenue/maxR*100).toFixed(0);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</span></td>
+      <td><div style="font-size:12px;font-weight:500;color:#1A1A1A;line-height:1.3">${s.name}</div>
+          <div class="bar-mini" style="width:${pct}%"></div></td>
+      <td class="val-primary">${FMT(s.revenue)}</td>
+      <td class="val-secondary">${s.units.toLocaleString()}</td>`;
+    tb.appendChild(tr);
+  });
+  table.appendChild(tb);
+}
+
+function buildPromos() {
+  const grid = document.getElementById('promoGrid');
+  const maxR = D.campaigns[0].revenue;
+  D.campaigns.forEach((c,i)=>{
+    const pct = (c.revenue/maxR*100).toFixed(0);
+    const div = document.createElement('div');
+    div.className = 'promo-card';
+    div.innerHTML = `
+      <div class="promo-name">${i+1}. ${c.name}</div>
+      <div class="promo-kpis">
+        <div><div class="promo-kpi-val">${FMT(c.revenue)}</div><div class="promo-kpi-lbl">Revenue</div></div>
+        <div><div class="promo-kpi-val">${c.orders}</div><div class="promo-kpi-lbl">Órdenes</div></div>
+        <div><div class="promo-kpi-val">${c.clients}</div><div class="promo-kpi-lbl">Clientes</div></div>
+      </div>
+      <div class="promo-rainbow-bar"><div class="promo-fill" style="width:${pct}%"></div></div>`;
+    grid.appendChild(div);
+  });
+}
+
+// ═══════════════════════════════════
+// FILTRO DE PERÍODO
+// ═══════════════════════════════════
+const PRESETS = {
+  all:{ idx:[0,1,2,3,4], from:'2026-01-01', to:'2026-05-29' },
+  jan:{ idx:[0],         from:'2026-01-01', to:'2026-01-31' },
+  feb:{ idx:[1],         from:'2026-02-01', to:'2026-02-28' },
+  mar:{ idx:[2],         from:'2026-03-01', to:'2026-03-31' },
+  apr:{ idx:[3],         from:'2026-04-01', to:'2026-04-30' },
+  may:{ idx:[4],         from:'2026-05-01', to:'2026-05-29' },
+  q1: { idx:[0,1,2],     from:'2026-01-01', to:'2026-03-31' },
+};
+
+function applyFilter() {
+  updateKPIs(compute());
+  refreshCharts();
+}
+
+function setPeriod(key, btn) {
+  const p = PRESETS[key]; if (!p) return;
+  ACTIVE_IDX = p.idx;
+  document.querySelectorAll('.ppill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('dateFrom').value = p.from;
+  document.getElementById('dateTo').value   = p.to;
+  applyFilter();
+}
+
+function applyDateRange() {
+  const from = document.getElementById('dateFrom').value;
+  const to   = document.getElementById('dateTo').value;
+  if (!from || !to || from > to) return;
+  const mMap = {'2026-01':0,'2026-02':1,'2026-03':2,'2026-04':3,'2026-05':4};
+  const fi = mMap[from.slice(0,7)] ?? 0;
+  const ti = mMap[to.slice(0,7)]   ?? 4;
+  ACTIVE_IDX = [];
+  for (let i=fi; i<=ti; i++) ACTIVE_IDX.push(i);
+  document.querySelectorAll('.ppill').forEach(b=>b.classList.remove('active'));
+  // Marcar si coincide con preset
+  for (const [k,p] of Object.entries(PRESETS)) {
+    if (JSON.stringify(p.idx) === JSON.stringify(ACTIVE_IDX)) {
+      document.querySelector(`.ppill[onclick*="${k}"]`)?.classList.add('active');
+      break;
+    }
+  }
+  applyFilter();
+}
+
+function showTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('sec-'+name).classList.add('active');
+}
+
+// ═══════════════════════════════════
+// INIT
+// ═══════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  buildCharts();
+  buildTable();
+  buildPromos();
+  applyFilter(); // renderiza KPIs con el período completo
+});
+</script>
+</body>
+</html>

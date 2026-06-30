@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GA4 · Mi Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#F2F2F2; --ink:#0D0D0D; --amber:#FFB000; --card:#0D0D0D;
+    --line:#E5E5E5; --muted:#8A8A8A; --white:#FFFFFF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--ink);}
+  /* Header */
+  header{background:var(--ink);color:#fff;padding:26px 32px 22px;}
+  header .top{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;max-width:1400px;margin:0 auto;}
+  header h1{font-size:22px;font-weight:800;letter-spacing:-.5px;}
+  header h1 span{color:var(--amber);}
+  header .sub{color:#9a9a9a;font-size:13px;font-weight:500;margin-top:2px;}
+  .rainbow{height:4px;background:linear-gradient(90deg,#FF3B30,#FF9500,#FFCC00,#34C759,#00C7BE,#007AFF,#AF52DE);}
+  /* Controls */
+  .wrap{max-width:1400px;margin:0 auto;padding:24px 32px 48px;}
+  .controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px;}
+  .controls label{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+  .controls select,.controls input{font-family:inherit;font-size:13px;font-weight:500;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);}
+  .controls button{font-family:inherit;font-size:13px;font-weight:600;padding:8px 16px;border:none;border-radius:8px;background:var(--ink);color:#fff;cursor:pointer;}
+  .controls button:hover{background:#262626;}
+  /* KPI cards */
+  .kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:26px;}
+  .kpi{background:var(--card);border-radius:14px;padding:20px;}
+  .kpi .label{color:#9a9a9a;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;}
+  .kpi .val{color:var(--amber);font-size:30px;font-weight:800;letter-spacing:-1px;line-height:1;}
+  .kpi .sub{color:#6e6e6e;font-size:11px;font-weight:500;margin-top:6px;}
+  /* White cards */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .card{background:var(--white);border-radius:14px;padding:22px;border:1px solid var(--line);}
+  .card.full{grid-column:1 / -1;}
+  .card h3{font-size:14px;font-weight:700;margin-bottom:4px;}
+  .card .cap{font-size:12px;color:var(--muted);font-weight:500;margin-bottom:16px;}
+  .chart-box{position:relative;height:300px;}
+  /* Table */
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{text-align:right;padding:10px 12px;border-bottom:1px solid var(--line);}
+  th:first-child,td:first-child{text-align:left;}
+  th{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+  td{font-weight:500;}
+  tbody tr:hover{background:#FAFAFA;}
+  .badge{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px;vertical-align:middle;}
+  /* States */
+  .state{padding:60px 20px;text-align:center;color:var(--muted);font-size:14px;}
+  .state b{color:var(--ink);}
+  @media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <div>
+      <h1>GA4 · <span>Mi Portal</span></h1>
+      <div class="sub">Google Analytics 4 — tráfico, usuarios y conversiones</div>
+    </div>
+    <div class="sub" id="lastUpdate">—</div>
+  </div>
+</header>
+<div class="rainbow"></div>
+
+<div class="wrap">
+  <div class="controls">
+    <label>Rango</label>
+    <select id="rangeSel">
+      <option value="7">Últimos 7 días</option>
+      <option value="30" selected>Últimos 30 días</option>
+      <option value="90">Últimos 90 días</option>
+      <option value="0">Todo</option>
+    </select>
+    <label>Canal</label>
+    <select id="channelSel"><option value="__all">Todos</option></select>
+    <button id="reloadBtn">Actualizar</button>
+  </div>
+
+  <div id="content">
+    <div class="state">Cargando datos de GA4…</div>
+  </div>
+</div>
+
+<script>
+/* ===== CONFIG ===== */
+const SHEET_ID = '14pWC0sHTUPV8kQxXoBXCLHDj65gyAzfBEoloXMAMMCY';   // <-- ID de tu Google Sheet
+const SHEET_NAME = 'GA4';                    // nombre de la pestaña (debe coincidir EXACTO con el de la hoja)
+/* ================== */
+
+const GVIZ = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
+const PALETTE = ['#FFB000','#007AFF','#34C759','#FF3B30','#AF52DE','#00C7BE','#FF9500','#FFCC00'];
+let RAW = [];          // [{fecha:Date, canal, sesiones, usuarios, usuarios_nuevos, conversiones, duracion_prom}]
+let charts = {};
+
+const fmt = n => new Intl.NumberFormat('es-PY').format(Math.round(n));
+const fmtDur = s => { const m=Math.floor(s/60), x=Math.round(s%60); return `${m}m ${x}s`; };
+
+async function load(){
+  setState('Cargando datos de GA4…');
+  if(SHEET_ID==='PEGA_TU_SHEET_ID_ACA'){
+    setState('Configurá el <b>SHEET_ID</b> en el código (línea CONFIG) y compartí la hoja como pública de solo lectura.');
+    return;
+  }
+  try{
+    const res = await fetch(GVIZ);
+    const txt = await res.text();
+    const json = JSON.parse(txt.match(/setResponse\(([\s\S]*)\);?$/)[1]);
+    RAW = parse(json.table);
+    if(!RAW.length){ setState('La hoja <b>'+SHEET_NAME+'</b> no tiene filas.'); return; }
+    buildContent();
+    populateChannels();
+    document.getElementById('lastUpdate').textContent =
+      'Actualizado: ' + new Date().toLocaleString('es-PY');
+    render();
+  }catch(e){
+    console.error(e);
+    setState('No se pudo leer la hoja. Verificá el <b>SHEET_ID</b>, el nombre de la pestaña y que esté compartida públicamente.');
+  }
+}
+
+function parse(table){
+  const cols = table.cols.map(c => (c.label||'').trim().toLowerCase());
+  const idx = name => cols.indexOf(name);
+  const iF=idx('fecha'), iC=idx('canal'), iS=idx('sesiones'),
+        iU=idx('usuarios'), iN=idx('usuarios_nuevos'),
+        iCv=idx('conversiones'), iD=idx('duracion_prom');
+  return table.rows.map(r=>{
+    const c = r.c;
+    const v = i => (i>=0 && c[i]) ? c[i].v : null;
+    let f = v(iF);
+    // gviz puede devolver Date(2026,5,30) o string YYYY-MM-DD
+    if(typeof f==='string' && f.startsWith('Date(')){
+      const p=f.slice(5,-1).split(',').map(Number); f=new Date(p[0],p[1],p[2]);
+    }else{ f=new Date(f); }
+    return {
+      fecha:f, canal:v(iC)||'(sin canal)',
+      sesiones:+v(iS)||0, usuarios:+v(iU)||0,
+      usuarios_nuevos:+v(iN)||0, conversiones:+v(iCv)||0,
+      duracion_prom:+v(iD)||0
+    };
+  }).filter(r=>r.fecha && !isNaN(r.fecha));
+}
+
+function setState(msg){
+  document.getElementById('content').innerHTML = '<div class="state">'+msg+'</div>';
+}
+
+function buildContent(){
+  document.getElementById('content').innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><div class="label">Sesiones</div><div class="val" id="k_ses">—</div></div>
+      <div class="kpi"><div class="label">Usuarios</div><div class="val" id="k_usr">—</div></div>
+      <div class="kpi"><div class="label">Usuarios nuevos</div><div class="val" id="k_new">—</div><div class="sub" id="k_new_pct"></div></div>
+      <div class="kpi"><div class="label">Conversiones</div><div class="val" id="k_cv">—</div><div class="sub" id="k_cvr"></div></div>
+      <div class="kpi"><div class="label">Duración prom.</div><div class="val" id="k_dur" style="font-size:24px">—</div></div>
+    </div>
+    <div class="grid">
+      <div class="card full"><h3>Sesiones por día</h3><div class="cap">Evolución diaria del tráfico</div><div class="chart-box"><canvas id="c_ses"></canvas></div></div>
+      <div class="card"><h3>Sesiones por canal</h3><div class="cap">Distribución de adquisición</div><div class="chart-box"><canvas id="c_chan"></canvas></div></div>
+      <div class="card"><h3>Conversiones por día</h3><div class="cap">Tendencia de conversiones</div><div class="chart-box"><canvas id="c_cv"></canvas></div></div>
+      <div class="card full"><h3>Resumen por canal</h3><div class="cap">Métricas agregadas del período</div>
+        <table><thead><tr><th>Canal</th><th>Sesiones</th><th>Usuarios</th><th>Nuevos</th><th>Conversiones</th><th>Tasa conv.</th></tr></thead>
+        <tbody id="tbody"></tbody></table>
+      </div>
+    </div>`;
+}
+
+function populateChannels(){
+  const sel = document.getElementById('channelSel');
+  [...new Set(RAW.map(r=>r.canal))].sort().forEach(c=>{
+    const o=document.createElement('option'); o.value=c; o.textContent=c; sel.appendChild(o);
+  });
+}
+
+function filtered(){
+  const days = +document.getElementById('rangeSel').value;
+  const chan = document.getElementById('channelSel').value;
+  let rows = RAW.slice();
+  if(days>0){
+    const max = new Date(Math.max(...RAW.map(r=>r.fecha)));
+    const cut = new Date(max); cut.setDate(cut.getDate()-days+1);
+    rows = rows.filter(r=>r.fecha>=cut);
+  }
+  if(chan!=='__all') rows = rows.filter(r=>r.canal===chan);
+  return rows;
+}
+
+function render(){
+  const rows = filtered();
+  // KPIs
+  const sum = k => rows.reduce((a,r)=>a+r[k],0);
+  const ses=sum('sesiones'), usr=sum('usuarios'), nw=sum('usuarios_nuevos'), cv=sum('conversiones');
+  const durAvg = rows.length ? rows.reduce((a,r)=>a+r.duracion_prom*r.sesiones,0)/(ses||1) : 0;
+  document.getElementById('k_ses').textContent=fmt(ses);
+  document.getElementById('k_usr').textContent=fmt(usr);
+  document.getElementById('k_new').textContent=fmt(nw);
+  document.getElementById('k_new_pct').textContent = usr ? ((nw/usr*100).toFixed(1)+'% del total') : '';
+  document.getElementById('k_cv').textContent=fmt(cv);
+  document.getElementById('k_cvr').textContent = ses ? ('Tasa '+(cv/ses*100).toFixed(2)+'%') : '';
+  document.getElementById('k_dur').textContent=fmtDur(durAvg);
+
+  // Series por día
+  const byDay = {};
+  rows.forEach(r=>{
+    const k=r.fecha.toISOString().slice(0,10);
+    byDay[k]=byDay[k]||{ses:0,cv:0};
+    byDay[k].ses+=r.sesiones; byDay[k].cv+=r.conversiones;
+  });
+  const days = Object.keys(byDay).sort();
+  const lbl = days.map(d=>{const p=d.split('-');return p[2]+'/'+p[1];});
+
+  drawLine('c_ses', lbl, days.map(d=>byDay[d].ses), 'Sesiones', '#FFB000');
+  drawLine('c_cv',  lbl, days.map(d=>byDay[d].cv),  'Conversiones', '#34C759');
+
+  // Por canal
+  const byChan = {};
+  rows.forEach(r=>{
+    byChan[r.canal]=byChan[r.canal]||{ses:0,usr:0,nw:0,cv:0};
+    byChan[r.canal].ses+=r.sesiones; byChan[r.canal].usr+=r.usuarios;
+    byChan[r.canal].nw+=r.usuarios_nuevos; byChan[r.canal].cv+=r.conversiones;
+  });
+  const chans = Object.entries(byChan).sort((a,b)=>b[1].ses-a[1].ses);
+  drawDoughnut('c_chan', chans.map(c=>c[0]), chans.map(c=>c[1].ses));
+
+  // Tabla
+  document.getElementById('tbody').innerHTML = chans.map((c,i)=>{
+    const d=c[1], cvr=d.ses?(d.cv/d.ses*100).toFixed(2)+'%':'—';
+    return `<tr><td><span class="badge" style="background:${PALETTE[i%PALETTE.length]}"></span>${c[0]}</td>
+      <td>${fmt(d.ses)}</td><td>${fmt(d.usr)}</td><td>${fmt(d.nw)}</td><td>${fmt(d.cv)}</td><td>${cvr}</td></tr>`;
+  }).join('');
+}
+
+function drawLine(id,labels,data,label,color){
+  if(charts[id]) charts[id].destroy();
+  const ctx=document.getElementById(id);
+  const g=ctx.getContext('2d').createLinearGradient(0,0,0,300);
+  g.addColorStop(0,color+'55'); g.addColorStop(1,color+'00');
+  charts[id]=new Chart(ctx,{type:'line',data:{labels,datasets:[{label,data,
+    borderColor:color,backgroundColor:g,borderWidth:2.5,fill:true,tension:.35,
+    pointRadius:0,pointHoverRadius:5,pointHoverBackgroundColor:color}]},
+    options:baseOpts()});
+}
+function drawDoughnut(id,labels,data){
+  if(charts[id]) charts[id].destroy();
+  charts[id]=new Chart(document.getElementById(id),{type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:PALETTE,borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{position:'right',labels:{font:{family:'Inter',size:11},boxWidth:10,padding:10}}}}});
+}
+function baseOpts(){
+  return {responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#0D0D0D',padding:10,cornerRadius:8,
+      titleFont:{family:'Inter'},bodyFont:{family:'Inter'}}},
+    scales:{x:{grid:{display:false},ticks:{font:{family:'Inter',size:10},color:'#8A8A8A',maxRotation:0,autoSkip:true,maxTicksLimit:12}},
+      y:{grid:{color:'#EEE'},border:{display:false},ticks:{font:{family:'Inter',size:10},color:'#8A8A8A'},beginAtZero:true}}};
+}
+
+document.getElementById('reloadBtn').addEventListener('click',load);
+document.getElementById('rangeSel').addEventListener('change',render);
+document.getElementById('channelSel').addEventListener('change',render);
+load();
+</script>
+</body>
+</html>

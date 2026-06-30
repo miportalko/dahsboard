@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Portal CC — Dashboard Mailing 2025–2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --red: #E8241B; --red-light: #f5453c; --orange: #F5821F;
+    --yellow: #F5C518; --green: #A8D95A; --cyan: #5BDDE8;
+    --dark: #0D0D0D; --bg: #F2F2F2; --card: #FFFFFF;
+    --text: #1a1a1a; --text-muted: #666; --border: #e0e0e0;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08); --radius: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); font-size: 14px; }
+
+  /* HEADER */
+  .header {
+    background: var(--dark); padding: 0 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    height: 64px; position: sticky; top: 4px; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+  .header-left { display: flex; align-items: center; gap: 16px; }
+  .logo-badge { background: var(--red); color: #fff; font-weight: 800; font-size: 13px; padding: 6px 12px; border-radius: 6px; letter-spacing: 0.5px; }
+  .header-title { color: #fff; font-size: 16px; font-weight: 600; }
+  .header-subtitle { color: #aaa; font-size: 12px; margin-top: 1px; }
+  .header-period { background: rgba(255,255,255,0.08); color: #ccc; font-size: 12px; padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.12); }
+
+  /* FILTERS */
+  .filters-bar {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 12px 32px; display: flex; gap: 12px; align-items: center;
+    flex-wrap: wrap; position: sticky; top: 68px; z-index: 90;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  }
+  .filter-label { font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  .filter-group { display: flex; align-items: center; gap: 8px; }
+  select, input[type="text"] {
+    border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;
+    font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text);
+    background: #fafafa; cursor: pointer; outline: none;
+  }
+  select:focus, input:focus { border-color: var(--red); }
+  .btn-reset { background: var(--red); color: #fff; border: none; border-radius: 6px; padding: 7px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s; white-space: nowrap; }
+  .btn-reset:hover { background: var(--red-light); }
+  .btn-export { display: inline-flex; align-items: center; gap: 5px; background: #fff; color: var(--text); border: 1.5px solid var(--border); border-radius: 6px; padding: 6px 13px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; font-family: 'Inter', sans-serif; }
+  .btn-export:hover { border-color: var(--red); color: var(--red); background: #fff5f5; }
+  .btn-export svg { width: 13px; height: 13px; flex-shrink: 0; }
+  .export-group { display: flex; gap: 6px; align-items: center; }
+  .filter-divider { width: 1px; height: 24px; background: var(--border); }
+  #search-camp { width: 220px; }
+
+  /* MAIN */
+  .main { padding: 28px 32px; max-width: 1600px; margin: 0 auto; }
+  .section-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text-muted); margin-bottom: 14px; margin-top: 28px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* KPI CARDS */
+  .kpi-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; }
+  .kpi-card {
+    background: var(--card); border-radius: var(--radius); padding: 18px 16px;
+    box-shadow: var(--shadow); border-top: 3px solid var(--red);
+    display: flex; flex-direction: column; gap: 5px;
+  }
+  .kpi-card:nth-child(2) { border-top-color: var(--orange); }
+  .kpi-card:nth-child(3) { border-top-color: var(--yellow); }
+  .kpi-card:nth-child(4) { border-top-color: #2a9d5c; }
+  .kpi-card:nth-child(5) { border-top-color: var(--cyan); }
+  .kpi-card:nth-child(6) { border-top-color: #9b1c1c; }
+  .kpi-card:nth-child(7) { border-top-color: #6d28d9; }
+  .kpi-label { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+  .kpi-value { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1; }
+  .kpi-sub { font-size: 10px; color: var(--text-muted); }
+
+  /* GRIDS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 14px; }
+
+  .chart-card { background: var(--card); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); }
+  .chart-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .chart-subtitle { font-size: 11px; color: var(--text-muted); margin-bottom: 14px; }
+  .chart-wrap { position: relative; }
+  .chart-wrap canvas { width: 100% !important; }
+
+  /* TABLE */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .data-table th {
+    background: #f5f5f5; padding: 8px 10px; text-align: left;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--text-muted); border-bottom: 1px solid var(--border);
+    cursor: pointer; user-select: none; white-space: nowrap;
+  }
+  .data-table th:hover { background: #eee; color: var(--red); }
+  .data-table th.sort-asc::after { content: ' ▲'; font-size: 9px; }
+  .data-table th.sort-desc::after { content: ' ▼'; font-size: 9px; }
+  .data-table td { padding: 7px 10px; border-bottom: 1px solid #f0f0f0; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: #fafafa; }
+  .pct-bar { background: #f0f0f0; border-radius: 3px; height: 5px; overflow: hidden; min-width: 50px; }
+  .pct-fill { height: 100%; border-radius: 3px; background: var(--red); }
+  .badge { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+  .badge-high { background: #d1fae5; color: #065f46; }
+  .badge-mid  { background: #fef3c7; color: #92400e; }
+  .badge-low  { background: #fee2e2; color: #991b1b; }
+
+  /* PAGINATION */
+  .pagination { display: flex; gap: 6px; align-items: center; justify-content: flex-end; margin-top: 12px; font-size: 12px; }
+  .page-btn { background: #f5f5f5; border: 1px solid var(--border); border-radius: 5px; padding: 4px 10px; cursor: pointer; font-size: 12px; }
+  .page-btn:hover { background: var(--red); color: #fff; border-color: var(--red); }
+  .page-btn.active { background: var(--red); color: #fff; border-color: var(--red); font-weight: 700; }
+  #page-info { color: var(--text-muted); font-size: 11px; }
+
+  /* INSIGHT BOX */
+  .insight-box {
+    background: linear-gradient(135deg, #fff5f5, #fff);
+    border: 1px solid #fdd; border-left: 4px solid var(--red);
+    border-radius: 8px; padding: 12px 14px; margin-top: 12px;
+    font-size: 12px; color: #444; line-height: 1.5;
+  }
+  .insight-box strong { color: var(--red); }
+
+  /* MINI KPI ROW */
+  .mini-kpi-row { display: flex; gap: 10px; margin-bottom: 14px; }
+  .mini-pill { background: #f8f8f8; border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; flex: 1; text-align: center; }
+  .mini-pill-val { font-size: 18px; font-weight: 800; }
+  .mini-pill-lbl { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+
+  /* FOOTER */
+  .footer { background: var(--dark); color: #666; text-align: center; padding: 16px 32px; font-size: 11px; margin-top: 40px; }
+  .footer span { color: #999; }
+
+  @media (max-width: 1100px) {
+    .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+    .grid-2, .grid-1-2 { grid-template-columns: 1fr; }
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+    .main { padding: 16px; }
+    .filters-bar { padding: 10px 16px; }
+    .header { padding: 0 16px; }
+  }
+
+  /* TOP BAR */
+  .top-bar { height: 4px; background: linear-gradient(90deg, var(--cyan), var(--green), var(--orange), var(--red)); position: sticky; top: 0; z-index: 101; }
+
+  /* HEADER NAV */
+
+  /* MULTI-SELECT MES */
+  .ms-wrap { position: relative; }
+  .ms-btn {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px;
+    font-family: 'Inter', sans-serif; font-size: 13px; color: var(--text);
+    background: #fafafa; cursor: pointer; outline: none; white-space: nowrap; min-width: 175px;
+  }
+  .ms-btn.open, .ms-btn:focus { border-color: var(--red); background: #fff; }
+  .ms-btn .ms-arrow { font-size: 9px; color: var(--text-muted); transition: transform .15s; }
+  .ms-btn.open .ms-arrow { transform: rotate(180deg); }
+  .ms-badge { display: inline-block; background: var(--red); color: #fff; font-size: 10px; font-weight: 700; border-radius: 10px; padding: 1px 6px; margin-right: 2px; }
+  .ms-panel {
+    display: none; position: absolute; top: calc(100% + 4px); left: 0;
+    background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.13); z-index: 500; min-width: 195px;
+  }
+  .ms-panel.open { display: block; }
+  .ms-actions { display: flex; gap: 6px; padding: 8px 10px 6px; border-bottom: 1px solid #f0f0f0; }
+  .ms-actions button { flex: 1; font-size: 11px; font-weight: 700; border: 1px solid var(--border); border-radius: 4px; padding: 3px 0; cursor: pointer; background: #f5f5f5; color: var(--text-muted); font-family: 'Inter', sans-serif; }
+  .ms-actions button:hover { background: var(--red); color: #fff; border-color: var(--red); }
+  .ms-list { max-height: 240px; overflow-y: auto; padding: 4px 0; }
+  .ms-item { display: flex; align-items: center; gap: 8px; padding: 6px 12px; cursor: pointer; font-size: 12px; user-select: none; }
+  .ms-item:hover { background: #fafafa; }
+  .ms-item input[type=checkbox] { cursor: pointer; accent-color: var(--red); width: 14px; height: 14px; flex-shrink: 0; }
+
+
+  /* COMPARATIVO 2025 vs 2026 */
+  .comp-grid { display: grid; grid-template-columns: repeat(6,1fr); gap: 12px; }
+  .comp-card { background: var(--card); border-radius: var(--radius); padding: 16px 14px; box-shadow: var(--shadow); border-top: 3px solid var(--border); }
+  .comp-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 10px; }
+  .comp-years { display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; margin-bottom: 8px; }
+  .comp-y-block { display: flex; flex-direction: column; gap: 2px; }
+  .comp-y-lbl { font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
+  .comp-v25 { font-size: 13px; font-weight: 700; color: var(--text-muted); }
+  .comp-v26 { font-size: 21px; font-weight: 800; color: var(--text); line-height: 1.1; }
+  .comp-delta { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px; display: inline-block; }
+  .c-up { background: #d1fae5; color: #065f46; }
+  .c-dn { background: #fee2e2; color: #991b1b; }
+  .c-neu { background: #f0f0f0; color: var(--text-muted); }
+  .comp-insight { background: var(--card); border-radius: var(--radius); padding: 16px 20px; box-shadow: var(--shadow); border-left: 4px solid var(--orange); font-size: 12px; line-height: 1.7; color: #444; margin-top: 14px; }
+  .comp-insight strong { color: var(--dark); }
+  @media(max-width:1100px){ .comp-grid { grid-template-columns: repeat(3,1fr); } }
+
+
+  /* COMPARATIVO COMPACTO — una fila */
+  .cmp-wrap { background: var(--card); border-radius: var(--radius); padding: 18px 20px; box-shadow: var(--shadow); border-top: 3px solid var(--red); }
+  .cmp-hdr { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .cmp-title { font-size: 15px; font-weight: 800; color: var(--text); }
+  .cmp-sub  { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+  .cmp-metrics { display: grid; grid-template-columns: repeat(6,1fr); gap: 10px; }
+  .cmp-metric { background: #fafafa; border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .cmp-mlbl { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 6px; }
+  .cmp-prev { font-size: 11px; color: var(--text-muted); margin-bottom: 2px; }
+  .cmp-curr { font-size: 18px; font-weight: 800; color: var(--text); line-height: 1.1; margin-bottom: 5px; }
+  .cmp-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; }
+  .cb-up  { background: #d1fae5; color: #065f46; }
+  .cb-dn  { background: #fee2e2; color: #991b1b; }
+  .cb-neu { background: #f0f0f0; color: var(--text-muted); }
+  @media(max-width:1100px){ .cmp-metrics { grid-template-columns: repeat(3,1fr); } }
+
+</style>
+</head>
+<body>
+
+<div class="top-bar"></div>
+
+<header class="header">
+  <div style="display:flex;align-items:center">
+    <a href="index.html" style="display:block;line-height:0">
+      <img src="data:image/png;base64,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" alt="Mi Portal Coca-Cola" style="height:34px;display:block;">
+    </a>
+  </div>
+  <div class="header-period">📧 Ago 2023 — Jun 2026</div>
+</header>
+
+<div class="filters-bar">
+  <span class="filter-label">Filtros</span>
+  <div class="filter-group">
+    <span class="filter-label">Año</span>
+    <select id="f-year"><option value="">Todos</option></select>
+  </div>
+  <div class="filter-divider"></div>
+  <div class="filter-group">
+    <span class="filter-label">Mes</span>
+    <div class="ms-wrap">
+      <button class="ms-btn" id="ms-btn" onclick="toggleMonthDropdown(event)">
+        <span id="ms-label">Todos los meses</span>
+        <span class="ms-arrow">▾</span>
+      </button>
+      <div class="ms-panel" id="ms-panel">
+        <div class="ms-actions">
+          <button onclick="selectAllMonths()">Todos</button>
+          <button onclick="clearMonths()">Ninguno</button>
+        </div>
+        <div class="ms-list" id="ms-list"></div>
+      </div>
+    </div>
+  </div>
+  <div class="filter-divider"></div>
+  <div class="filter-group">
+    <span class="filter-label">Campaña</span>
+    <input type="text" id="search-camp" placeholder="Buscar campaña...">
+  </div>
+
+  <div class="filter-divider"></div>
+  <button class="btn-reset" onclick="resetFilters()">✕ Resetear</button>
+  <span id="filter-count" style="font-size:11px;color:var(--text-muted);margin-left:4px;"></span>
+</div>
+
+<div class="main">
+
+  <!-- KPIs -->
+  <div class="section-title" style="justify-content:space-between;">
+    <span>Métricas Clave</span>
+    <div class="export-group" style="margin-left:auto;">
+      <span style="font-size:10px;color:var(--text-muted);font-weight:400;text-transform:none;letter-spacing:0;">Descargar datos:</span>
+      <button class="btn-export" onclick="exportMonthlyCSV()" title="Resumen mensual CSV">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h10M8 2v8M5 7l3 3 3-3"/></svg>Mensual CSV
+      </button>
+      <button class="btn-export" onclick="exportFullXLSX()" title="Exportar todo a Excel (2 hojas)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h10M8 2v8M5 7l3 3 3-3"/></svg>Completo Excel
+      </button>
+    </div>
+  </div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Campañas</div>
+      <div class="kpi-value" id="k-camp">—</div>
+      <div class="kpi-sub">enviadas</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Enviados</div>
+      <div class="kpi-value" id="k-sent">—</div>
+      <div class="kpi-sub">emails totales</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Open Rate</div>
+      <div class="kpi-value" id="k-or">—</div>
+      <div class="kpi-sub" id="k-opens-abs">aperturas únicas</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">CTR</div>
+      <div class="kpi-value" id="k-ctr">—</div>
+      <div class="kpi-sub" id="k-clicks-abs">clics únicos</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">CTOR</div>
+      <div class="kpi-value" id="k-ctor">—</div>
+      <div class="kpi-sub">clic / apertura</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Tickets</div>
+      <div class="kpi-value" id="k-tickets">—</div>
+      <div class="kpi-sub">órdenes generadas</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Revenue</div>
+      <div class="kpi-value" id="k-revenue">—</div>
+      <div class="kpi-sub" id="k-rev-avg">promedio / campaña</div>
+    </div>
+  </div>
+
+  <!-- EVOLUCIÓN TEMPORAL -->
+  <!-- COMPARATIVO YoY -->
+  <div class="section-title" id="comp-title">Comparativo Año vs Año Anterior</div>
+  <p style="font-size:11px;color:var(--text-muted);margin-bottom:14px;margin-top:-8px;" id="comp-subtitle">2026 vs 2025 · 2025 vs 2024 · 2024 vs 2023 · Filtrá por mes para períodos específicos</p>
+  <div id="comp-container"></div>
+  <div class="comp-insight" id="comp-insight">⏳ Calculando...</div>
+  <div class="grid-2" style="margin-top:14px">
+    <div class="chart-card">
+      <div class="chart-title" id="comp-or-title">Open Rate — Comparativo YoY</div>
+      <div class="chart-subtitle" id="comp-or-sub">Por mes, todos los años disponibles (%)</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chart-comp-or"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title" id="comp-rev-title">Revenue — Comparativo YoY</div>
+      <div class="chart-subtitle" id="comp-rev-sub">Por mes, todos los años disponibles (₲)</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chart-comp-rev"></canvas></div>
+    </div>
+  </div>
+
+  <div class="section-title">Evolución Mensual</div>
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="chart-title">Enviados y Open Rate por Mes</div>
+      <div class="chart-subtitle">Volumen de envíos (barras) vs tasa de apertura (línea)</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chart-sent-or"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Revenue y Tickets por Mes</div>
+      <div class="chart-subtitle">Revenue acumulado (₲) y tickets generados por mes</div>
+      <div class="chart-wrap" style="height:220px"><canvas id="chart-rev-tickets"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ENGAGEMENT -->
+  <div class="section-title">Tendencias de Engagement</div>
+  <div class="grid-3">
+    <div class="chart-card">
+      <div class="chart-title">Open Rate Mensual</div>
+      <div class="chart-subtitle">Evolución de la tasa de apertura (%)</div>
+      <div class="chart-wrap" style="height:190px"><canvas id="chart-or-trend"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">CTR Mensual</div>
+      <div class="chart-subtitle">Evolución de la tasa de clic (%)</div>
+      <div class="chart-wrap" style="height:190px"><canvas id="chart-ctr-trend"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Campañas por Mes</div>
+      <div class="chart-subtitle">Volumen de campañas enviadas</div>
+      <div class="chart-wrap" style="height:190px"><canvas id="chart-camp-month"></canvas></div>
+    </div>
+  </div>
+
+  <!-- TOP CAMPAÑAS -->
+  <div class="section-title">Top Campañas</div>
+  <div class="grid-2">
+    <div class="chart-card">
+      <div class="chart-title">Top 10 por Revenue</div>
+      <div class="chart-subtitle">Revenue total atribuido por campaña (₲)</div>
+      <div class="chart-wrap" style="height:290px"><canvas id="chart-top-rev"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Top 10 por Open Rate</div>
+      <div class="chart-subtitle">Campañas con mayor apertura (mín. 5.000 enviados)</div>
+      <div class="chart-wrap" style="height:290px"><canvas id="chart-top-or"></canvas></div>
+    </div>
+  </div>
+
+  <!-- SCATTER ENGAGEMENT -->
+  <div class="section-title">Mapa de Engagement</div>
+  <div class="chart-card">
+    <div class="chart-title">Open Rate vs CTR — por Campaña</div>
+    <div class="chart-subtitle">Cada punto es una campaña. Tamaño proporcional al revenue. Hover para ver detalle.</div>
+    <div class="chart-wrap" style="height:320px"><canvas id="chart-scatter"></canvas></div>
+    <div class="insight-box" id="insight-scatter">
+      💡 Cargando análisis...
+    </div>
+  </div>
+
+  <!-- TABLA CAMPAÑAS -->
+  <div class="section-title">Detalle de Campañas</div>
+  <div class="chart-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div>
+        <div class="chart-title">Todas las Campañas</div>
+        <div class="chart-subtitle">Ordenar por columna · Filtros activos desde la barra superior</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span id="table-count" style="font-size:11px;color:var(--text-muted);"></span>
+        <div class="export-group">
+          <button class="btn-export" onclick="exportMailingCSV()" title="Descargar CSV">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h10M8 2v8M5 7l3 3 3-3"/></svg>CSV
+          </button>
+          <button class="btn-export" onclick="exportMailingXLSX()" title="Descargar Excel">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h10M8 2v8M5 7l3 3 3-3"/></svg>Excel
+          </button>
+        </div>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="data-table" id="main-table">
+        <thead>
+          <tr>
+            <th onclick="sortTable('sent_at_str')" data-col="sent_at_str">Fecha</th>
+            <th onclick="sortTable('name')" data-col="name">Campaña</th>
+            <th onclick="sortTable('sent')" data-col="sent">Enviados</th>
+            <th onclick="sortTable('unique_open')" data-col="unique_open">Aperturas</th>
+            <th onclick="sortTable('open_rate')" data-col="open_rate">OR %</th>
+            <th onclick="sortTable('unique_click')" data-col="unique_click">Clics</th>
+            <th onclick="sortTable('ctr')" data-col="ctr">CTR %</th>
+            <th onclick="sortTable('ctor')" data-col="ctor">CTOR %</th>
+            <th onclick="sortTable('tickets')" data-col="tickets">Tickets</th>
+            <th onclick="sortTable('revenue')" data-col="revenue">Revenue ₲</th>
+            <th>Perf.</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-main"></tbody>
+      </table>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+
+</div>
+
+<div class="footer">
+  <span>Mi Portal CC — Coca-Cola Paraguay</span> &nbsp;|&nbsp; Fuente: WooWup Export &nbsp;|&nbsp; Actualizado: Junio 2026
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════
+const RAW = {"kpis":{"total_campañas":325,"total_sent":3407461,"total_opens":785541,"total_clicks":24135,"total_tickets":7244,"total_revenue":1426233677,"avg_open_rate":23.05,"avg_ctr":0.71,"avg_ctor":3.07,"avg_revenue_per_campaign":4388411},"monthly":[{"month":"2023-08","campañas":3,"sent":2083,"opens":835,"clicks":116,"tickets":46,"revenue":7111128,"open_rate":40.09,"ctr":5.57},{"month":"2023-09","campañas":5,"sent":2695,"opens":1294,"clicks":237,"tickets":43,"revenue":7493096,"open_rate":48.01,"ctr":8.79},{"month":"2023-10","campañas":4,"sent":9327,"opens":3107,"clicks":199,"tickets":69,"revenue":10999036,"open_rate":33.31,"ctr":2.13},{"month":"2023-11","campañas":2,"sent":9095,"opens":2454,"clicks":257,"tickets":75,"revenue":13532520,"open_rate":26.98,"ctr":2.83},{"month":"2023-12","campañas":7,"sent":36553,"opens":9917,"clicks":855,"tickets":234,"revenue":43085722,"open_rate":27.13,"ctr":2.34},{"month":"2024-01","campañas":6,"sent":37286,"opens":10245,"clicks":547,"tickets":173,"revenue":33092191,"open_rate":27.48,"ctr":1.47},{"month":"2024-02","campañas":10,"sent":65536,"opens":15686,"clicks":743,"tickets":320,"revenue":58753444,"open_rate":23.93,"ctr":1.13},{"month":"2024-03","campañas":11,"sent":66546,"opens":15084,"clicks":704,"tickets":251,"revenue":46755507,"open_rate":22.67,"ctr":1.06},{"month":"2024-04","campañas":11,"sent":90247,"opens":19741,"clicks":933,"tickets":400,"revenue":81009889,"open_rate":21.87,"ctr":1.03},{"month":"2024-05","campañas":13,"sent":116325,"opens":24649,"clicks":693,"tickets":318,"revenue":84477494,"open_rate":21.19,"ctr":0.6},{"month":"2024-06","campañas":10,"sent":101203,"opens":20274,"clicks":738,"tickets":265,"revenue":45501789,"open_rate":20.03,"ctr":0.73},{"month":"2024-07","campañas":17,"sent":156677,"opens":30916,"clicks":1710,"tickets":318,"revenue":61205962,"open_rate":19.73,"ctr":1.09},{"month":"2024-08","campañas":11,"sent":94789,"opens":20651,"clicks":925,"tickets":196,"revenue":40137755,"open_rate":21.79,"ctr":0.98},{"month":"2024-09","campañas":12,"sent":138079,"opens":27792,"clicks":1019,"tickets":265,"revenue":57115889,"open_rate":20.13,"ctr":0.74},{"month":"2024-10","campañas":8,"sent":112371,"opens":20219,"clicks":395,"tickets":165,"revenue":32370044,"open_rate":17.99,"ctr":0.35},{"month":"2024-11","campañas":10,"sent":123341,"opens":22077,"clicks":454,"tickets":229,"revenue":50415520,"open_rate":17.9,"ctr":0.37},{"month":"2024-12","campañas":7,"sent":111116,"opens":20649,"clicks":532,"tickets":292,"revenue":59959445,"open_rate":18.58,"ctr":0.48},{"month":"2025-01","campañas":6,"sent":75426,"opens":15080,"clicks":617,"tickets":196,"revenue":33212420,"open_rate":19.99,"ctr":0.82},{"month":"2025-02","campañas":10,"sent":136157,"opens":26100,"clicks":683,"tickets":202,"revenue":42215800,"open_rate":19.17,"ctr":0.5},{"month":"2025-03","campañas":12,"sent":203054,"opens":35809,"clicks":713,"tickets":255,"revenue":57084765,"open_rate":17.64,"ctr":0.35},{"month":"2025-04","campañas":7,"sent":86791,"opens":18832,"clicks":437,"tickets":122,"revenue":31021290,"open_rate":21.7,"ctr":0.5},{"month":"2025-05","campañas":8,"sent":100909,"opens":26461,"clicks":881,"tickets":197,"revenue":39390590,"open_rate":26.22,"ctr":0.87},{"month":"2025-06","campañas":7,"sent":101468,"opens":20666,"clicks":490,"tickets":135,"revenue":22965974,"open_rate":20.37,"ctr":0.48},{"month":"2025-07","campañas":7,"sent":97530,"opens":20538,"clicks":666,"tickets":228,"revenue":44894019,"open_rate":21.06,"ctr":0.68},{"month":"2025-08","campañas":6,"sent":83007,"opens":17732,"clicks":889,"tickets":173,"revenue":31042910,"open_rate":21.36,"ctr":1.07},{"month":"2025-09","campañas":10,"sent":137347,"opens":42192,"clicks":1277,"tickets":283,"revenue":50049541,"open_rate":30.72,"ctr":0.93},{"month":"2025-10","campañas":12,"sent":124184,"opens":27104,"clicks":812,"tickets":204,"revenue":39732890,"open_rate":21.83,"ctr":0.65},{"month":"2025-11","campañas":14,"sent":118772,"opens":35722,"clicks":701,"tickets":248,"revenue":57468751,"open_rate":30.08,"ctr":0.59},{"month":"2025-12","campañas":14,"sent":102992,"opens":42676,"clicks":741,"tickets":271,"revenue":51146870,"open_rate":41.44,"ctr":0.72},{"month":"2026-01","campañas":12,"sent":84452,"opens":32750,"clicks":618,"tickets":178,"revenue":34644999,"open_rate":38.78,"ctr":0.73},{"month":"2026-02","campañas":7,"sent":64061,"opens":21298,"clicks":513,"tickets":164,"revenue":21257443,"open_rate":33.25,"ctr":0.8},{"month":"2026-03","campañas":12,"sent":171034,"opens":34829,"clicks":713,"tickets":159,"revenue":26996095,"open_rate":20.36,"ctr":0.42},{"month":"2026-04","campañas":15,"sent":249953,"opens":48068,"clicks":924,"tickets":235,"revenue":46472926,"open_rate":19.23,"ctr":0.37},{"month":"2026-05","campañas":15,"sent":162582,"opens":41353,"clicks":1121,"tickets":302,"revenue":58088363,"open_rate":25.44,"ctr":0.69},{"month":"2026-06","campañas":4,"sent":34473,"opens":12741,"clicks":282,"tickets":33,"revenue":5531600,"open_rate":36.96,"ctr":0.82}],"campaigns":[{"id":385876,"name":"Shwpss Pomelo 250ml","sent_at_str":"2026-06-10","sent":11051,"unique_open":3599,"unique_click":30,"tickets":0,"revenue":0,"open_rate":32.57,"ctr":0.27,"ctor":0.83,"bounce_rate":0.0,"unsub_rate":0.11,"month":"2026-06","year":2026},{"id":385479,"name":"Promo Mega 25mil","sent_at_str":"2026-06-09","sent":11317,"unique_open":4242,"unique_click":117,"tickets":0,"revenue":0,"open_rate":37.48,"ctr":1.03,"ctor":2.76,"bounce_rate":0.0,"unsub_rate":0.14,"month":"2026-06","year":2026},{"id":385081,"name":"Merchs Coca Varios","sent_at_str":"2026-06-07","sent":11420,"unique_open":4515,"unique_click":123,"tickets":25,"revenue":4032900,"open_rate":39.54,"ctr":1.08,"ctor":2.72,"bounce_rate":0.01,"unsub_rate":0.11,"month":"2026-06","year":2026},{"id":383750,"name":"Retornables 350ml","sent_at_str":"2026-06-01","sent":685,"unique_open":385,"unique_click":12,"tickets":8,"revenue":1498700,"open_rate":56.2,"ctr":1.75,"ctor":3.12,"bounce_rate":0.0,"unsub_rate":0.15,"month":"2026-06","year":2026},{"id":383637,"name":"Itau General","sent_at_str":"2026-05-31","sent":311,"unique_open":197,"unique_click":11,"tickets":6,"revenue":1343450,"open_rate":63.34,"ctr":3.54,"ctor":5.58,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2026-05","year":2026},{"id":383207,"name":"Posavasos Boost","sent_at_str":"2026-05-29","sent":32469,"unique_open":5373,"unique_click":242,"tickets":62,"revenue":8895610,"open_rate":16.55,"ctr":0.75,"ctor":4.5,"bounce_rate":0.05,"unsub_rate":0.16,"month":"2026-05","year":2026},{"id":382350,"name":"350 Retornables + Pelota Puma","sent_at_str":"2026-05-26","sent":2600,"unique_open":1206,"unique_click":34,"tickets":20,"revenue":5522680,"open_rate":46.38,"ctr":1.31,"ctor":2.82,"bounce_rate":0.08,"unsub_rate":0.15,"month":"2026-05","year":2026},{"id":382170,"name":"Olimpia vs Audax","sent_at_str":"2026-05-25","sent":100,"unique_open":60,"unique_click":3,"tickets":4,"revenue":1155140,"open_rate":60.0,"ctr":3.0,"ctor":5.0,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2026-05","year":2026},{"id":381455,"name":"Vasos Canción","sent_at_str":"2026-05-21","sent":9223,"unique_open":4321,"unique_click":129,"tickets":26,"revenue":5690200,"open_rate":46.85,"ctr":1.4,"ctor":2.99,"bounce_rate":0.02,"unsub_rate":0.27,"month":"2026-05","year":2026},{"id":381094,"name":"Packs 500ml + 5 figuritas","sent_at_str":"2026-05-19","sent":9399,"unique_open":4549,"unique_click":179,"tickets":53,"revenue":9653510,"open_rate":48.4,"ctr":1.9,"ctor":3.93,"bounce_rate":0.02,"unsub_rate":0.38,"month":"2026-05","year":2026},{"id":381063,"name":"Olimpia vs Vasco","sent_at_str":"2026-05-19","sent":107,"unique_open":54,"unique_click":3,"tickets":0,"revenue":0,"open_rate":50.47,"ctr":2.8,"ctor":5.56,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2026-05","year":2026},{"id":380805,"name":"Stockeate en mi portal","sent_at_str":"2026-05-18","sent":5071,"unique_open":2301,"unique_click":65,"tickets":3,"revenue":441000,"open_rate":45.38,"ctr":1.28,"ctor":2.82,"bounce_rate":0.0,"unsub_rate":0.39,"month":"2026-05","year":2026},{"id":379490,"name":"Vasos balón mamá","sent_at_str":"2026-05-15","sent":9672,"unique_open":4345,"unique_click":126,"tickets":21,"revenue":4722700,"open_rate":44.92,"ctr":1.3,"ctor":2.9,"bounce_rate":0.03,"unsub_rate":0.29,"month":"2026-05","year":2026},{"id":378982,"name":"Entradas Cine Masivo","sent_at_str":"2026-05-12","sent":2518,"unique_open":1817,"unique_click":18,"tickets":0,"revenue":0,"open_rate":72.16,"ctr":0.71,"ctor":0.99,"bounce_rate":0.0,"unsub_rate":0.44,"month":"2026-05","year":2026},{"id":378380,"name":"Merchs Albirro Leads","sent_at_str":"2026-05-11","sent":5100,"unique_open":2281,"unique_click":53,"tickets":3,"revenue":998198,"open_rate":44.73,"ctr":1.04,"ctor":2.32,"bounce_rate":0.02,"unsub_rate":0.31,"month":"2026-05","year":2026},{"id":378408,"name":"Merchs Albirro Comunicación Habilitada","sent_at_str":"2026-05-11","sent":5106,"unique_open":2349,"unique_click":29,"tickets":20,"revenue":3518200,"open_rate":46.0,"ctr":0.57,"ctor":1.23,"bounce_rate":0.02,"unsub_rate":0.35,"month":"2026-05","year":2026},{"id":377553,"name":"Posavasos Albirrojo","sent_at_str":"2026-05-09","sent":31173,"unique_open":4627,"unique_click":57,"tickets":30,"revenue":5700875,"open_rate":14.84,"ctr":0.18,"ctor":1.23,"bounce_rate":0.01,"unsub_rate":0.3,"month":"2026-05","year":2026},{"id":377350,"name":"Vasos Asuncionico 2","sent_at_str":"2026-05-07","sent":18718,"unique_open":2727,"unique_click":66,"tickets":2,"revenue":507000,"open_rate":14.57,"ctr":0.35,"ctor":2.42,"bounce_rate":0.01,"unsub_rate":0.23,"month":"2026-05","year":2026},{"id":376609,"name":"Figuritas Panini","sent_at_str":"2026-05-05","sent":31015,"unique_open":5146,"unique_click":106,"tickets":52,"revenue":9939800,"open_rate":16.59,"ctr":0.34,"ctor":2.06,"bounce_rate":0.01,"unsub_rate":0.29,"month":"2026-05","year":2026},{"id":375982,"name":"Latas selecciones","sent_at_str":"2026-04-30","sent":30830,"unique_open":4802,"unique_click":131,"tickets":14,"revenue":2787300,"open_rate":15.58,"ctr":0.42,"ctor":2.73,"bounce_rate":0.0,"unsub_rate":0.27,"month":"2026-04","year":2026},{"id":375503,"name":"Retornables 2lts Abril","sent_at_str":"2026-04-29","sent":4260,"unique_open":1911,"unique_click":28,"tickets":17,"revenue":2832630,"open_rate":44.86,"ctr":0.66,"ctor":1.47,"bounce_rate":0.0,"unsub_rate":0.28,"month":"2026-04","year":2026},{"id":374823,"name":"Fanta Promo XBOX","sent_at_str":"2026-04-27","sent":9586,"unique_open":4213,"unique_click":62,"tickets":22,"revenue":3764140,"open_rate":43.95,"ctr":0.65,"ctor":1.47,"bounce_rate":0.0,"unsub_rate":0.43,"month":"2026-04","year":2026},{"id":374325,"name":"Vasos Pasión Albirro","sent_at_str":"2026-04-24","sent":10058,"unique_open":4380,"unique_click":88,"tickets":48,"revenue":10073570,"open_rate":43.55,"ctr":0.87,"ctor":2.01,"bounce_rate":0.0,"unsub_rate":0.4,"month":"2026-04","year":2026},{"id":373144,"name":"Clientes 1 compra (30- 90 días última compra)","sent_at_str":"2026-04-20","sent":793,"unique_open":170,"unique_click":2,"tickets":0,"revenue":0,"open_rate":21.44,"ctr":0.25,"ctor":1.18,"bounce_rate":0.0,"unsub_rate":0.76,"month":"2026-04","year":2026},{"id":372284,"name":"Vasos Asuncionico","sent_at_str":"2026-04-16","sent":10060,"unique_open":4248,"unique_click":49,"tickets":26,"revenue":4907940,"open_rate":42.23,"ctr":0.49,"ctor":1.15,"bounce_rate":0.0,"unsub_rate":0.58,"month":"2026-04","year":2026},{"id":372073,"name":"Olimpia vs Cerro","sent_at_str":"2026-04-15","sent":30617,"unique_open":4793,"unique_click":110,"tickets":13,"revenue":2749500,"open_rate":15.65,"ctr":0.36,"ctor":2.3,"bounce_rate":0.0,"unsub_rate":0.32,"month":"2026-04","year":2026},{"id":371843,"name":"Retornables 1lts","sent_at_str":"2026-04-14","sent":302,"unique_open":162,"unique_click":1,"tickets":0,"revenue":0,"open_rate":53.64,"ctr":0.33,"ctor":0.62,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2026-04","year":2026},{"id":371393,"name":"Libertad vs Rosario Central","sent_at_str":"2026-04-13","sent":30574,"unique_open":4536,"unique_click":74,"tickets":15,"revenue":5459660,"open_rate":14.84,"ctr":0.24,"ctor":1.63,"bounce_rate":0.0,"unsub_rate":0.15,"month":"2026-04","year":2026},{"id":370952,"name":"Itau Merch Albirro","sent_at_str":"2026-04-12","sent":30568,"unique_open":4684,"unique_click":157,"tickets":19,"revenue":3924676,"open_rate":15.32,"ctr":0.51,"ctor":3.35,"bounce_rate":0.0,"unsub_rate":0.34,"month":"2026-04","year":2026},{"id":370838,"name":"Entradas Ricky Fieles","sent_at_str":"2026-04-09","sent":662,"unique_open":187,"unique_click":6,"tickets":8,"revenue":1771920,"open_rate":28.25,"ctr":0.91,"ctor":3.21,"bounce_rate":0.0,"unsub_rate":0.3,"month":"2026-04","year":2026},{"id":370286,"name":"Entradas Ricky","sent_at_str":"2026-04-08","sent":30498,"unique_open":4581,"unique_click":68,"tickets":14,"revenue":2328100,"open_rate":15.02,"ctr":0.22,"ctor":1.48,"bounce_rate":0.0,"unsub_rate":0.35,"month":"2026-04","year":2026},{"id":369952,"name":"Recoleta vs San Lorenzo Sudamericana","sent_at_str":"2026-04-06","sent":30461,"unique_open":4705,"unique_click":77,"tickets":16,"revenue":2474950,"open_rate":15.45,"ctr":0.25,"ctor":1.64,"bounce_rate":0.0,"unsub_rate":0.32,"month":"2026-04","year":2026},{"id":369795,"name":"Retornables 2lts Abril ","sent_at_str":"2026-04-06","sent":30455,"unique_open":4638,"unique_click":71,"tickets":23,"revenue":3398540,"open_rate":15.23,"ctr":0.23,"ctor":1.53,"bounce_rate":0.0,"unsub_rate":0.34,"month":"2026-04","year":2026},{"id":369128,"name":"Olimpia vs Nacional","sent_at_str":"2026-04-01","sent":229,"unique_open":58,"unique_click":0,"tickets":0,"revenue":0,"open_rate":25.33,"ctr":0.0,"ctor":0.0,"bounce_rate":0.0,"unsub_rate":0.44,"month":"2026-04","year":2026},{"id":368973,"name":"Sampling Shwpss Pomelo Zero","sent_at_str":"2026-03-31","sent":30348,"unique_open":5014,"unique_click":123,"tickets":11,"revenue":1640300,"open_rate":16.52,"ctr":0.41,"ctor":2.45,"bounce_rate":0.0,"unsub_rate":0.35,"month":"2026-03","year":2026},{"id":368135,"name":"Red Label + Vaso JW","sent_at_str":"2026-03-27","sent":2162,"unique_open":1827,"unique_click":20,"tickets":0,"revenue":0,"open_rate":84.51,"ctr":0.93,"ctor":1.09,"bounce_rate":0.0,"unsub_rate":0.56,"month":"2026-03","year":2026},{"id":367512,"name":"Llevá 6 , pagá 5 Mini Packs","sent_at_str":"2026-03-26","sent":30032,"unique_open":4593,"unique_click":82,"tickets":28,"revenue":4142140,"open_rate":15.29,"ctr":0.27,"ctor":1.79,"bounce_rate":0.0,"unsub_rate":0.38,"month":"2026-03","year":2026},{"id":366882,"name":"GNB Lunes","sent_at_str":"2026-03-23","sent":18036,"unique_open":2590,"unique_click":28,"tickets":4,"revenue":179000,"open_rate":14.36,"ctr":0.16,"ctor":1.08,"bounce_rate":0.0,"unsub_rate":0.37,"month":"2026-03","year":2026},{"id":366363,"name":"Felicidad 350ml ","sent_at_str":"2026-03-20","sent":1824,"unique_open":430,"unique_click":9,"tickets":5,"revenue":918570,"open_rate":23.57,"ctr":0.49,"ctor":2.09,"bounce_rate":0.0,"unsub_rate":0.44,"month":"2026-03","year":2026},{"id":366142,"name":"Sudameris Merch","sent_at_str":"2026-03-19","sent":29759,"unique_open":4854,"unique_click":113,"tickets":14,"revenue":2001925,"open_rate":16.31,"ctr":0.38,"ctor":2.33,"bounce_rate":0.0,"unsub_rate":0.35,"month":"2026-03","year":2026},{"id":365112,"name":"Merch mi portal","sent_at_str":"2026-03-16","sent":8701,"unique_open":1855,"unique_click":55,"tickets":22,"revenue":4408200,"open_rate":21.32,"ctr":0.63,"ctor":2.96,"bounce_rate":0.0,"unsub_rate":0.32,"month":"2026-03","year":2026},{"id":364546,"name":"Itaú Domingos 25%OFF","sent_at_str":"2026-03-15","sent":516,"unique_open":147,"unique_click":4,"tickets":2,"revenue":419000,"open_rate":28.49,"ctr":0.78,"ctor":2.72,"bounce_rate":0.0,"unsub_rate":0.19,"month":"2026-03","year":2026},{"id":364516,"name":"Entradas Asuncionico","sent_at_str":"2026-03-12","sent":9950,"unique_open":4257,"unique_click":52,"tickets":15,"revenue":3508600,"open_rate":42.78,"ctr":0.52,"ctor":1.22,"bounce_rate":0.0,"unsub_rate":0.41,"month":"2026-03","year":2026},{"id":363763,"name":"Combo merendero","sent_at_str":"2026-03-10","sent":10302,"unique_open":4333,"unique_click":98,"tickets":18,"revenue":3332940,"open_rate":42.06,"ctr":0.95,"ctor":2.26,"bounce_rate":0.0,"unsub_rate":0.53,"month":"2026-03","year":2026},{"id":363014,"name":"Entradas Olimpia vs San Lorenzo","sent_at_str":"2026-03-06","sent":158,"unique_open":46,"unique_click":2,"tickets":1,"revenue":144000,"open_rate":29.11,"ctr":1.27,"ctor":4.35,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2026-03","year":2026},{"id":363020,"name":"Retornables 2lts Promo Marzo","sent_at_str":"2026-03-05","sent":29246,"unique_open":4883,"unique_click":127,"tickets":39,"revenue":6301420,"open_rate":16.7,"ctr":0.43,"ctor":2.6,"bounce_rate":0.0,"unsub_rate":0.31,"month":"2026-03","year":2026},{"id":361824,"name":"Mini packs fanta de regalo","sent_at_str":"2026-02-27","sent":29077,"unique_open":5190,"unique_click":274,"tickets":45,"revenue":4899510,"open_rate":17.85,"ctr":0.94,"ctor":5.28,"bounce_rate":0.0,"unsub_rate":0.3,"month":"2026-02","year":2026},{"id":360517,"name":"Domingos Itaú General","sent_at_str":"2026-02-22","sent":246,"unique_open":136,"unique_click":7,"tickets":5,"revenue":1276775,"open_rate":55.28,"ctr":2.85,"ctor":5.15,"bounce_rate":0.0,"unsub_rate":0.41,"month":"2026-02","year":2026},{"id":359697,"name":"Super Clásico Entradas Cerro","sent_at_str":"2026-02-18","sent":18,"unique_open":11,"unique_click":0,"tickets":1,"revenue":201500,"open_rate":61.11,"ctr":0.0,"ctor":0.0,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2026-02","year":2026},{"id":358965,"name":"Lanzamiento Retornables 350ml x12","sent_at_str":"2026-02-13","sent":8797,"unique_open":3934,"unique_click":57,"tickets":31,"revenue":5477340,"open_rate":44.72,"ctr":0.65,"ctor":1.45,"bounce_rate":0.0,"unsub_rate":0.48,"month":"2026-02","year":2026},{"id":357821,"name":"Fernet + Merch de regalo","sent_at_str":"2026-02-09","sent":8767,"unique_open":4089,"unique_click":67,"tickets":25,"revenue":2333000,"open_rate":46.64,"ctr":0.76,"ctor":1.64,"bounce_rate":0.0,"unsub_rate":0.6,"month":"2026-02","year":2026},{"id":357437,"name":"Coca Tapas Doradas","sent_at_str":"2026-02-07","sent":8709,"unique_open":3943,"unique_click":51,"tickets":25,"revenue":2915710,"open_rate":45.28,"ctr":0.59,"ctor":1.29,"bounce_rate":0.0,"unsub_rate":0.55,"month":"2026-02","year":2026},{"id":356468,"name":"GNB Lanzamiento","sent_at_str":"2026-02-02","sent":8447,"unique_open":3995,"unique_click":57,"tickets":32,"revenue":4153608,"open_rate":47.29,"ctr":0.67,"ctor":1.43,"bounce_rate":0.0,"unsub_rate":0.67,"month":"2026-02","year":2026},{"id":356262,"name":"Fernet + CCSA de regalo 2","sent_at_str":"2026-01-30","sent":8374,"unique_open":3866,"unique_click":43,"tickets":11,"revenue":1122889,"open_rate":46.17,"ctr":0.51,"ctor":1.11,"bounce_rate":0.0,"unsub_rate":0.68,"month":"2026-01","year":2026},{"id":355277,"name":"Fernet + CCSA de regalo ","sent_at_str":"2026-01-27","sent":3174,"unique_open":1657,"unique_click":16,"tickets":7,"revenue":969500,"open_rate":52.21,"ctr":0.5,"ctor":0.97,"bounce_rate":0.0,"unsub_rate":0.82,"month":"2026-01","year":2026},{"id":355151,"name":"Retornables Clientes +1 compra","sent_at_str":"2026-01-26","sent":1506,"unique_open":752,"unique_click":16,"tickets":20,"revenue":4346150,"open_rate":49.93,"ctr":1.06,"ctor":2.13,"bounce_rate":0.0,"unsub_rate":0.6,"month":"2026-01","year":2026},{"id":354081,"name":"Sprite Verano Vasos MUG","sent_at_str":"2026-01-21","sent":7905,"unique_open":3828,"unique_click":189,"tickets":32,"revenue":6225280,"open_rate":48.43,"ctr":2.39,"ctor":4.94,"bounce_rate":0.0,"unsub_rate":0.73,"month":"2026-01","year":2026},{"id":353606,"name":"Combo Hidratación","sent_at_str":"2026-01-19","sent":255,"unique_open":133,"unique_click":4,"tickets":7,"revenue":1947720,"open_rate":52.16,"ctr":1.57,"ctor":3.01,"bounce_rate":0.0,"unsub_rate":0.39,"month":"2026-01","year":2026},{"id":353398,"name":"La previa del verano - Licores","sent_at_str":"2026-01-16","sent":121,"unique_open":73,"unique_click":3,"tickets":2,"revenue":422000,"open_rate":60.33,"ctr":2.48,"ctor":4.11,"bounce_rate":0.0,"unsub_rate":0.83,"month":"2026-01","year":2026},{"id":352807,"name":"Merch Albirro","sent_at_str":"2026-01-14","sent":7658,"unique_open":3982,"unique_click":64,"tickets":14,"revenue":3211240,"open_rate":52.0,"ctr":0.84,"ctor":1.61,"bounce_rate":0.0,"unsub_rate":0.84,"month":"2026-01","year":2026},{"id":352322,"name":"Vasos Sprite Termocromatico","sent_at_str":"2026-01-12","sent":7709,"unique_open":4011,"unique_click":69,"tickets":29,"revenue":6588500,"open_rate":52.03,"ctr":0.9,"ctor":1.72,"bounce_rate":0.0,"unsub_rate":0.79,"month":"2026-01","year":2026},{"id":351741,"name":"Sudameris General Enero","sent_at_str":"2026-01-08","sent":7636,"unique_open":4263,"unique_click":53,"tickets":8,"revenue":1210050,"open_rate":55.83,"ctr":0.69,"ctor":1.24,"bounce_rate":0.0,"unsub_rate":0.69,"month":"2026-01","year":2026},{"id":351259,"name":"Reyes mini packs Fanta de regalo","sent_at_str":"2026-01-06","sent":26919,"unique_open":5233,"unique_click":104,"tickets":38,"revenue":6933640,"open_rate":19.44,"ctr":0.39,"ctor":1.99,"bounce_rate":0.0,"unsub_rate":0.38,"month":"2026-01","year":2026},{"id":351022,"name":"Manta Playera + Mega","sent_at_str":"2026-01-03","sent":7568,"unique_open":3934,"unique_click":36,"tickets":7,"revenue":1228890,"open_rate":51.98,"ctr":0.48,"ctor":0.92,"bounce_rate":0.0,"unsub_rate":0.63,"month":"2026-01","year":2026},{"id":350832,"name":"Recargá tus retornables","sent_at_str":"2026-01-02","sent":5627,"unique_open":1018,"unique_click":21,"tickets":3,"revenue":439140,"open_rate":18.09,"ctr":0.37,"ctor":2.06,"bounce_rate":0.0,"unsub_rate":0.28,"month":"2026-01","year":2026},{"id":350113,"name":"Recibí el 2026 con tus bebidas favoritas","sent_at_str":"2025-12-29","sent":7723,"unique_open":4028,"unique_click":54,"tickets":9,"revenue":1371000,"open_rate":52.16,"ctr":0.7,"ctor":1.34,"bounce_rate":0.0,"unsub_rate":0.7,"month":"2025-12","year":2025},{"id":349681,"name":"Sudameris Reintegro 20% Licores","sent_at_str":"2025-12-25","sent":7844,"unique_open":3833,"unique_click":32,"tickets":17,"revenue":3325240,"open_rate":48.87,"ctr":0.41,"ctor":0.83,"bounce_rate":0.0,"unsub_rate":0.69,"month":"2025-12","year":2025},{"id":348978,"name":"Combos Navideños","sent_at_str":"2025-12-22","sent":8544,"unique_open":4007,"unique_click":49,"tickets":7,"revenue":954150,"open_rate":46.9,"ctr":0.57,"ctor":1.22,"bounce_rate":0.0,"unsub_rate":0.76,"month":"2025-12","year":2025},{"id":348838,"name":"MC Diciembre 2","sent_at_str":"2025-12-22","sent":8536,"unique_open":3917,"unique_click":65,"tickets":15,"revenue":2810650,"open_rate":45.89,"ctr":0.76,"ctor":1.66,"bounce_rate":0.0,"unsub_rate":0.68,"month":"2025-12","year":2025},{"id":348742,"name":"Itaú Licores","sent_at_str":"2025-12-21","sent":4051,"unique_open":2104,"unique_click":33,"tickets":28,"revenue":4448620,"open_rate":51.94,"ctr":0.81,"ctor":1.57,"bounce_rate":0.0,"unsub_rate":0.42,"month":"2025-12","year":2025},{"id":348575,"name":"Combos para brindar","sent_at_str":"2025-12-19","sent":3286,"unique_open":1804,"unique_click":15,"tickets":3,"revenue":350000,"open_rate":54.9,"ctr":0.46,"ctor":0.83,"bounce_rate":0.0,"unsub_rate":0.55,"month":"2025-12","year":2025},{"id":347662,"name":"Retornable 1 lts Abridores","sent_at_str":"2025-12-17","sent":1551,"unique_open":832,"unique_click":19,"tickets":6,"revenue":973000,"open_rate":53.64,"ctr":1.23,"ctor":2.28,"bounce_rate":0.0,"unsub_rate":0.39,"month":"2025-12","year":2025},{"id":346826,"name":"Retornables Clientes +1 compra","sent_at_str":"2025-12-15","sent":1416,"unique_open":754,"unique_click":21,"tickets":19,"revenue":3949480,"open_rate":53.25,"ctr":1.48,"ctor":2.79,"bounce_rate":0.0,"unsub_rate":0.49,"month":"2025-12","year":2025},{"id":346700,"name":"Itau Merch Domingo","sent_at_str":"2025-12-14","sent":3986,"unique_open":2173,"unique_click":68,"tickets":39,"revenue":7503200,"open_rate":54.52,"ctr":1.71,"ctor":3.13,"bounce_rate":0.0,"unsub_rate":0.45,"month":"2025-12","year":2025},{"id":346570,"name":"Combos Copas Shwpss","sent_at_str":"2025-12-12","sent":8532,"unique_open":3993,"unique_click":34,"tickets":16,"revenue":2913640,"open_rate":46.8,"ctr":0.4,"ctor":0.85,"bounce_rate":0.0,"unsub_rate":0.64,"month":"2025-12","year":2025},{"id":345413,"name":"Abridores Navidad 350ml","sent_at_str":"2025-12-09","sent":8576,"unique_open":4118,"unique_click":117,"tickets":22,"revenue":4633300,"open_rate":48.02,"ctr":1.36,"ctor":2.84,"bounce_rate":0.0,"unsub_rate":0.76,"month":"2025-12","year":2025},{"id":345198,"name":"Itau Navidad Imanes","sent_at_str":"2025-12-07","sent":4013,"unique_open":2177,"unique_click":66,"tickets":29,"revenue":5564130,"open_rate":54.25,"ctr":1.64,"ctor":3.03,"bounce_rate":0.0,"unsub_rate":0.55,"month":"2025-12","year":2025},{"id":344931,"name":"MC Diciembre","sent_at_str":"2025-12-05","sent":8747,"unique_open":4163,"unique_click":68,"tickets":23,"revenue":5487590,"open_rate":47.59,"ctr":0.78,"ctor":1.63,"bounce_rate":0.0,"unsub_rate":0.69,"month":"2025-12","year":2025},{"id":344306,"name":"MEGA PACKS + Imanes Navidad.","sent_at_str":"2025-12-03","sent":26187,"unique_open":4773,"unique_click":100,"tickets":38,"revenue":6862870,"open_rate":18.23,"ctr":0.38,"ctor":2.1,"bounce_rate":0.0,"unsub_rate":0.53,"month":"2025-12","year":2025},{"id":343093,"name":"Itaú General","sent_at_str":"2025-11-30","sent":168,"unique_open":102,"unique_click":1,"tickets":3,"revenue":965180,"open_rate":60.71,"ctr":0.6,"ctor":0.98,"bounce_rate":0.0,"unsub_rate":0.6,"month":"2025-11","year":2025},{"id":342409,"name":"Descuentos W&S","sent_at_str":"2025-11-27","sent":210,"unique_open":71,"unique_click":2,"tickets":1,"revenue":408900,"open_rate":33.81,"ctr":0.95,"ctor":2.82,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2025-11","year":2025},{"id":341509,"name":"Día del Fernet","sent_at_str":"2025-11-25","sent":8661,"unique_open":3954,"unique_click":124,"tickets":21,"revenue":6047440,"open_rate":45.65,"ctr":1.43,"ctor":3.14,"bounce_rate":0.0,"unsub_rate":0.42,"month":"2025-11","year":2025},{"id":341191,"name":"Itau Licores","sent_at_str":"2025-11-23","sent":3991,"unique_open":2091,"unique_click":21,"tickets":20,"revenue":5897940,"open_rate":52.39,"ctr":0.53,"ctor":1.0,"bounce_rate":0.0,"unsub_rate":0.45,"month":"2025-11","year":2025},{"id":340860,"name":"MC Viernes","sent_at_str":"2025-11-21","sent":25800,"unique_open":4677,"unique_click":94,"tickets":24,"revenue":5375520,"open_rate":18.13,"ctr":0.36,"ctor":2.01,"bounce_rate":0.0,"unsub_rate":0.31,"month":"2025-11","year":2025},{"id":340397,"name":"Final Sudamericana","sent_at_str":"2025-11-19","sent":9958,"unique_open":3954,"unique_click":43,"tickets":20,"revenue":2934250,"open_rate":39.71,"ctr":0.43,"ctor":1.09,"bounce_rate":0.0,"unsub_rate":0.49,"month":"2025-11","year":2025},{"id":340111,"name":"Promo Mega Packs 1lts Navidad","sent_at_str":"2025-11-18","sent":10258,"unique_open":4121,"unique_click":56,"tickets":19,"revenue":3190400,"open_rate":40.17,"ctr":0.55,"ctor":1.36,"bounce_rate":0.0,"unsub_rate":0.46,"month":"2025-11","year":2025},{"id":339744,"name":"Itaú Merch","sent_at_str":"2025-11-16","sent":4388,"unique_open":2187,"unique_click":80,"tickets":25,"revenue":7142160,"open_rate":49.84,"ctr":1.82,"ctor":3.66,"bounce_rate":0.0,"unsub_rate":0.36,"month":"2025-11","year":2025},{"id":339720,"name":"Descuentos W&S","sent_at_str":"2025-11-15","sent":10701,"unique_open":4013,"unique_click":66,"tickets":17,"revenue":3574540,"open_rate":37.5,"ctr":0.62,"ctor":1.64,"bounce_rate":0.0,"unsub_rate":0.42,"month":"2025-11","year":2025},{"id":338476,"name":"Del valle Pedí 6 , Pagá 5.","sent_at_str":"2025-11-10","sent":2426,"unique_open":1219,"unique_click":20,"tickets":20,"revenue":4787290,"open_rate":50.25,"ctr":0.82,"ctor":1.64,"bounce_rate":0.0,"unsub_rate":0.33,"month":"2025-11","year":2025},{"id":338133,"name":"Sin nombre","sent_at_str":"2025-11-09","sent":11424,"unique_open":2536,"unique_click":66,"tickets":40,"revenue":7706960,"open_rate":22.2,"ctr":0.58,"ctor":2.6,"bounce_rate":0.0,"unsub_rate":0.16,"month":"2025-11","year":2025},{"id":338042,"name":"La fiesta empieza aca - Licores Varios","sent_at_str":"2025-11-07","sent":199,"unique_open":67,"unique_click":2,"tickets":3,"revenue":1401000,"open_rate":33.67,"ctr":1.01,"ctor":2.99,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2025-11","year":2025},{"id":335970,"name":"Itau Mistery Box 25%OFF","sent_at_str":"2025-11-02","sent":5136,"unique_open":2276,"unique_click":46,"tickets":18,"revenue":4176670,"open_rate":44.31,"ctr":0.9,"ctor":2.02,"bounce_rate":0.0,"unsub_rate":0.21,"month":"2025-11","year":2025},{"id":335949,"name":"Descuentos Fantasmales Merch","sent_at_str":"2025-11-01","sent":25452,"unique_open":4454,"unique_click":80,"tickets":17,"revenue":3860501,"open_rate":17.5,"ctr":0.31,"ctor":1.8,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2025-11","year":2025},{"id":334953,"name":"Descuentos Fantasmales Gaseosas","sent_at_str":"2025-10-29","sent":25412,"unique_open":4455,"unique_click":75,"tickets":19,"revenue":4060070,"open_rate":17.53,"ctr":0.3,"ctor":1.68,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2025-10","year":2025},{"id":334279,"name":"Sin nombre","sent_at_str":"2025-10-26","sent":5195,"unique_open":2117,"unique_click":24,"tickets":21,"revenue":5366740,"open_rate":40.75,"ctr":0.46,"ctor":1.13,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2025-10","year":2025},{"id":334158,"name":"Lanzamiento Smirnoff","sent_at_str":"2025-10-24","sent":25348,"unique_open":4445,"unique_click":41,"tickets":18,"revenue":3071990,"open_rate":17.54,"ctr":0.16,"ctor":0.92,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2025-10","year":2025},{"id":333476,"name":"Ofertas agua, saborizadas, powerade","sent_at_str":"2025-10-22","sent":842,"unique_open":203,"unique_click":1,"tickets":3,"revenue":559000,"open_rate":24.11,"ctr":0.12,"ctor":0.49,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2025-10","year":2025},{"id":333177,"name":"Lanzamiento Johnnie W","sent_at_str":"2025-10-21","sent":10840,"unique_open":4352,"unique_click":144,"tickets":25,"revenue":4853210,"open_rate":40.15,"ctr":1.33,"ctor":3.31,"bounce_rate":0.0,"unsub_rate":0.13,"month":"2025-10","year":2025},{"id":332829,"name":"Itau Merch Octubre","sent_at_str":"2025-10-19","sent":320,"unique_open":106,"unique_click":7,"tickets":6,"revenue":1057500,"open_rate":33.12,"ctr":2.19,"ctor":6.6,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2025-10","year":2025},{"id":332658,"name":"Retornables al mejor precio","sent_at_str":"2025-10-17","sent":1824,"unique_open":853,"unique_click":22,"tickets":23,"revenue":4315590,"open_rate":46.77,"ctr":1.21,"ctor":2.58,"bounce_rate":0.0,"unsub_rate":0.11,"month":"2025-10","year":2025},{"id":331318,"name":"Fanta Misterio","sent_at_str":"2025-10-13","sent":585,"unique_open":98,"unique_click":1,"tickets":0,"revenue":0,"open_rate":16.75,"ctr":0.17,"ctor":1.02,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2025-10","year":2025},{"id":330623,"name":"Planificá en Mi Portal.","sent_at_str":"2025-10-10","sent":3746,"unique_open":1045,"unique_click":18,"tickets":24,"revenue":5306770,"open_rate":27.9,"ctr":0.48,"ctor":1.72,"bounce_rate":0.0,"unsub_rate":0.11,"month":"2025-10","year":2025},{"id":330428,"name":"Powerade Aguas / La energía que te impulsa","sent_at_str":"2025-10-08","sent":265,"unique_open":88,"unique_click":9,"tickets":1,"revenue":70000,"open_rate":33.21,"ctr":3.4,"ctor":10.23,"bounce_rate":0.0,"unsub_rate":0.38,"month":"2025-10","year":2025},{"id":329179,"name":"Mistery Box","sent_at_str":"2025-10-03","sent":24929,"unique_open":4764,"unique_click":376,"tickets":29,"revenue":4682140,"open_rate":19.11,"ctr":1.51,"ctor":7.89,"bounce_rate":0.0,"unsub_rate":0.14,"month":"2025-10","year":2025},{"id":328875,"name":"Vaso Lata Negro","sent_at_str":"2025-10-01","sent":24878,"unique_open":4578,"unique_click":94,"tickets":35,"revenue":6389880,"open_rate":18.4,"ctr":0.38,"ctor":2.05,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2025-10","year":2025},{"id":328112,"name":"Itau Licores","sent_at_str":"2025-09-28","sent":24771,"unique_open":4246,"unique_click":101,"tickets":25,"revenue":4026561,"open_rate":17.14,"ctr":0.41,"ctor":2.38,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2025-09","year":2025},{"id":328032,"name":"Finde largo jugos y licores","sent_at_str":"2025-09-26","sent":24758,"unique_open":6752,"unique_click":98,"tickets":22,"revenue":3472500,"open_rate":27.27,"ctr":0.4,"ctor":1.45,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2025-09","year":2025},{"id":327492,"name":"Vaso lata blanco","sent_at_str":"2025-09-25","sent":24749,"unique_open":4121,"unique_click":102,"tickets":29,"revenue":4742820,"open_rate":16.65,"ctr":0.41,"ctor":2.48,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2025-09","year":2025},{"id":326681,"name":"Itau Merch","sent_at_str":"2025-09-21","sent":8196,"unique_open":3795,"unique_click":207,"tickets":35,"revenue":5330790,"open_rate":46.3,"ctr":2.53,"ctor":5.45,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2025-09","year":2025},{"id":326608,"name":"Fernet Primavera","sent_at_str":"2025-09-20","sent":8526,"unique_open":3734,"unique_click":62,"tickets":14,"revenue":3710730,"open_rate":43.8,"ctr":0.73,"ctor":1.66,"bounce_rate":0.0,"unsub_rate":0.15,"month":"2025-09","year":2025},{"id":325102,"name":"Promo Itau Domingo","sent_at_str":"2025-09-14","sent":8598,"unique_open":3762,"unique_click":92,"tickets":34,"revenue":7513700,"open_rate":43.75,"ctr":1.07,"ctor":2.45,"bounce_rate":0.0,"unsub_rate":0.16,"month":"2025-09","year":2025},{"id":325087,"name":"Voucher 2x1 Cine","sent_at_str":"2025-09-12","sent":8945,"unique_open":3790,"unique_click":77,"tickets":27,"revenue":4449100,"open_rate":42.37,"ctr":0.86,"ctor":2.03,"bounce_rate":0.0,"unsub_rate":0.13,"month":"2025-09","year":2025},{"id":324423,"name":"Vaso Lata Rojo","sent_at_str":"2025-09-10","sent":9254,"unique_open":4268,"unique_click":298,"tickets":30,"revenue":4843440,"open_rate":46.12,"ctr":3.22,"ctor":6.98,"bounce_rate":0.0,"unsub_rate":0.16,"month":"2025-09","year":2025},{"id":323877,"name":"Cúpon ALBIRRO20","sent_at_str":"2025-09-08","sent":9643,"unique_open":3696,"unique_click":101,"tickets":32,"revenue":5437480,"open_rate":38.33,"ctr":1.05,"ctor":2.73,"bounce_rate":0.0,"unsub_rate":0.17,"month":"2025-09","year":2025},{"id":323268,"name":"Vaso balón mundial","sent_at_str":"2025-09-05","sent":9907,"unique_open":4028,"unique_click":139,"tickets":35,"revenue":6522420,"open_rate":40.66,"ctr":1.4,"ctor":3.45,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2025-09","year":2025},{"id":321638,"name":"Descuentos MERCH","sent_at_str":"2025-08-26","sent":9844,"unique_open":4209,"unique_click":242,"tickets":47,"revenue":7433130,"open_rate":42.76,"ctr":2.46,"ctor":5.75,"bounce_rate":0.0,"unsub_rate":0.16,"month":"2025-08","year":2025},{"id":321122,"name":"Promoción Itaú","sent_at_str":"2025-08-24","sent":295,"unique_open":99,"unique_click":9,"tickets":3,"revenue":1087350,"open_rate":33.56,"ctr":3.05,"ctor":9.09,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2025-08","year":2025},{"id":321119,"name":"Vasos Latas","sent_at_str":"2025-08-23","sent":23945,"unique_open":4489,"unique_click":269,"tickets":49,"revenue":9597700,"open_rate":18.75,"ctr":1.12,"ctor":5.99,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2025-08","year":2025},{"id":319301,"name":"Vasos Balón","sent_at_str":"2025-08-13","sent":23840,"unique_open":4440,"unique_click":233,"tickets":25,"revenue":4790620,"open_rate":18.62,"ctr":0.98,"ctor":5.25,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2025-08","year":2025},{"id":318474,"name":"Promoción Itaú","sent_at_str":"2025-08-10","sent":23817,"unique_open":4163,"unique_click":118,"tickets":41,"revenue":6731710,"open_rate":17.48,"ctr":0.5,"ctor":2.83,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2025-08","year":2025},{"id":317623,"name":"Promoción 350 ml agosto 2025","sent_at_str":"2025-08-05","sent":1266,"unique_open":332,"unique_click":18,"tickets":8,"revenue":1402400,"open_rate":26.22,"ctr":1.42,"ctor":5.42,"bounce_rate":0.0,"unsub_rate":0.16,"month":"2025-08","year":2025},{"id":316656,"name":"Día de la amistad 2025","sent_at_str":"2025-07-30","sent":9505,"unique_open":3621,"unique_click":126,"tickets":33,"revenue":7350000,"open_rate":38.1,"ctr":1.33,"ctor":3.48,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2025-07","year":2025},{"id":315613,"name":"Reintegro de GNB","sent_at_str":"2025-07-24","sent":23547,"unique_open":3983,"unique_click":124,"tickets":36,"revenue":6473100,"open_rate":16.92,"ctr":0.53,"ctor":3.11,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2025-07","year":2025},{"id":315124,"name":"Clientes 1 compra julio 2025","sent_at_str":"2025-07-22","sent":3319,"unique_open":621,"unique_click":22,"tickets":8,"revenue":980639,"open_rate":18.71,"ctr":0.66,"ctor":3.54,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2025-07","year":2025},{"id":314134,"name":"Platos melamina salida x6","sent_at_str":"2025-07-17","sent":23351,"unique_open":4087,"unique_click":149,"tickets":36,"revenue":5551170,"open_rate":17.5,"ctr":0.64,"ctor":3.65,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2025-07","year":2025},{"id":313702,"name":"Afinidad de marca Coca Cola","sent_at_str":"2025-07-15","sent":5856,"unique_open":1342,"unique_click":45,"tickets":31,"revenue":6475590,"open_rate":22.92,"ctr":0.77,"ctor":3.35,"bounce_rate":0.0,"unsub_rate":0.02,"month":"2025-07","year":2025},{"id":312100,"name":"Share a Coke boost julio","sent_at_str":"2025-07-07","sent":9190,"unique_open":3139,"unique_click":80,"tickets":20,"revenue":3788830,"open_rate":34.16,"ctr":0.87,"ctor":2.55,"bounce_rate":0.0,"unsub_rate":0.17,"month":"2025-07","year":2025},{"id":311304,"name":"Promoción Itaú","sent_at_str":"2025-07-03","sent":22762,"unique_open":3745,"unique_click":120,"tickets":64,"revenue":14274690,"open_rate":16.45,"ctr":0.53,"ctor":3.2,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2025-07","year":2025},{"id":310807,"name":"Platos melamina salida","sent_at_str":"2025-06-30","sent":22717,"unique_open":4045,"unique_click":116,"tickets":33,"revenue":5526180,"open_rate":17.81,"ctr":0.51,"ctor":2.87,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2025-06","year":2025},{"id":309377,"name":"Personalizá tu Coca-Cola hasta 3 botellas","sent_at_str":"2025-06-23","sent":22609,"unique_open":3905,"unique_click":120,"tickets":31,"revenue":5952710,"open_rate":17.27,"ctr":0.53,"ctor":3.07,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2025-06","year":2025},{"id":308512,"name":"Pink Tonic compra programada","sent_at_str":"2025-06-18","sent":22489,"unique_open":3775,"unique_click":45,"tickets":13,"revenue":2888850,"open_rate":16.79,"ctr":0.2,"ctor":1.19,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2025-06","year":2025},{"id":307525,"name":"Clientes fieles cross seling junio 2025","sent_at_str":"2025-06-17","sent":365,"unique_open":89,"unique_click":3,"tickets":3,"revenue":521100,"open_rate":24.38,"ctr":0.82,"ctor":3.37,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2025-06","year":2025},{"id":307657,"name":"Codigo DIAPAPA","sent_at_str":"2025-06-13","sent":8705,"unique_open":3291,"unique_click":72,"tickets":19,"revenue":3182434,"open_rate":37.81,"ctr":0.83,"ctor":2.19,"bounce_rate":0.0,"unsub_rate":0.2,"month":"2025-06","year":2025},{"id":307187,"name":"Se retornable, exclusión de clientes que ya compraron retornables","sent_at_str":"2025-06-11","sent":16242,"unique_open":2395,"unique_click":38,"tickets":11,"revenue":1368700,"open_rate":14.75,"ctr":0.23,"ctor":1.59,"bounce_rate":0.0,"unsub_rate":0.01,"month":"2025-06","year":2025},{"id":306104,"name":"Boost de Personalizá tu Coca-Cola","sent_at_str":"2025-06-06","sent":8341,"unique_open":3166,"unique_click":96,"tickets":25,"revenue":3526000,"open_rate":37.96,"ctr":1.15,"ctor":3.03,"bounce_rate":0.0,"unsub_rate":0.02,"month":"2025-06","year":2025},{"id":304824,"name":"Gin tonic","sent_at_str":"2025-05-30","sent":7762,"unique_open":3103,"unique_click":29,"tickets":12,"revenue":2805450,"open_rate":39.98,"ctr":0.37,"ctor":0.93,"bounce_rate":0.0,"unsub_rate":0.13,"month":"2025-05","year":2025},{"id":303953,"name":"Vasos stickers","sent_at_str":"2025-05-27","sent":21193,"unique_open":3894,"unique_click":149,"tickets":34,"revenue":7444540,"open_rate":18.37,"ctr":0.7,"ctor":3.83,"bounce_rate":0.0,"unsub_rate":0.04,"month":"2025-05","year":2025},{"id":303464,"name":"Llegada de vasos Fernet Branca","sent_at_str":"2025-05-23","sent":7482,"unique_open":3237,"unique_click":83,"tickets":20,"revenue":3394390,"open_rate":43.26,"ctr":1.11,"ctor":2.56,"bounce_rate":0.0,"unsub_rate":0.15,"month":"2025-05","year":2025},{"id":303057,"name":"Llegada de vasos stick","sent_at_str":"2025-05-21","sent":21049,"unique_open":3692,"unique_click":222,"tickets":34,"revenue":5292460,"open_rate":17.54,"ctr":1.05,"ctor":6.01,"bounce_rate":0.0,"unsub_rate":0.05,"month":"2025-05","year":2025},{"id":302630,"name":"Empezá tu semana pidiendo jugos","sent_at_str":"2025-05-19","sent":7485,"unique_open":2871,"unique_click":31,"tickets":41,"revenue":8102920,"open_rate":38.36,"ctr":0.41,"ctor":1.08,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2025-05","year":2025},{"id":302049,"name":"Compartí una Coca-Cola","sent_at_str":"2025-05-16","sent":20765,"unique_open":3363,"unique_click":179,"tickets":29,"revenue":5535440,"open_rate":16.2,"ctr":0.86,"ctor":5.32,"bounce_rate":0.0,"unsub_rate":0.03,"month":"2025-05","year":2025},{"id":299882,"name":"Aperol y Campari lanzamiento","sent_at_str":"2025-05-09","sent":7578,"unique_open":3149,"unique_click":73,"tickets":15,"revenue":4352490,"open_rate":41.55,"ctr":0.96,"ctor":2.32,"bounce_rate":0.0,"unsub_rate":0.16,"month":"2025-05","year":2025},{"id":298500,"name":"Coca-Cola +Fernet","sent_at_str":"2025-05-02","sent":7595,"unique_open":3152,"unique_click":115,"tickets":12,"revenue":2462900,"open_rate":41.5,"ctr":1.51,"ctor":3.65,"bounce_rate":0.0,"unsub_rate":0.14,"month":"2025-05","year":2025},{"id":296401,"name":"Clientes con 1 compra vasos lata","sent_at_str":"2025-04-22","sent":159,"unique_open":38,"unique_click":1,"tickets":0,"revenue":0,"open_rate":23.9,"ctr":0.63,"ctor":2.63,"bounce_rate":0.0,"unsub_rate":0.63,"month":"2025-04","year":2025},{"id":296230,"name":"Cual es tu Coca favorita","sent_at_str":"2025-04-21","sent":8363,"unique_open":3075,"unique_click":65,"tickets":22,"revenue":11983750,"open_rate":36.77,"ctr":0.78,"ctor":2.11,"bounce_rate":0.0,"unsub_rate":0.17,"month":"2025-04","year":2025},{"id":295691,"name":"Finde off 19/04/25","sent_at_str":"2025-04-19","sent":20444,"unique_open":3752,"unique_click":181,"tickets":28,"revenue":5457470,"open_rate":18.35,"ctr":0.89,"ctor":4.82,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2025-04","year":2025},{"id":295245,"name":"2x1 en entradas al cine","sent_at_str":"2025-04-14","sent":8602,"unique_open":3038,"unique_click":60,"tickets":18,"revenue":3306060,"open_rate":35.32,"ctr":0.7,"ctor":1.97,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2025-04","year":2025},{"id":295004,"name":"Encuentro entre amigos","sent_at_str":"2025-04-11","sent":8766,"unique_open":2998,"unique_click":32,"tickets":17,"revenue":2992550,"open_rate":34.2,"ctr":0.37,"ctor":1.07,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2025-04","year":2025},{"id":293929,"name":"Pagá 5, llevá 6","sent_at_str":"2025-04-07","sent":20237,"unique_open":2520,"unique_click":23,"tickets":12,"revenue":2557460,"open_rate":12.45,"ctr":0.11,"ctor":0.91,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2025-04","year":2025},{"id":293641,"name":"Finde off cupón de descuento 4/4/25","sent_at_str":"2025-04-05","sent":20220,"unique_open":3411,"unique_click":75,"tickets":25,"revenue":4724000,"open_rate":16.87,"ctr":0.37,"ctor":2.2,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2025-04","year":2025},{"id":292608,"name":"Promo Mega boost marzo 2025","sent_at_str":"2025-03-31","sent":20127,"unique_open":3461,"unique_click":42,"tickets":30,"revenue":6571570,"open_rate":17.2,"ctr":0.21,"ctor":1.21,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2025-03","year":2025},{"id":291544,"name":"Paraguay vs Colombia","sent_at_str":"2025-03-25","sent":20007,"unique_open":3347,"unique_click":67,"tickets":26,"revenue":6569200,"open_rate":16.73,"ctr":0.33,"ctor":2.0,"bounce_rate":0.0,"unsub_rate":0.05,"month":"2025-03","year":2025},{"id":291447,"name":"Ofertas agua, saborizadas, powerade","sent_at_str":"2025-03-24","sent":19996,"unique_open":3212,"unique_click":36,"tickets":23,"revenue":3791390,"open_rate":16.06,"ctr":0.18,"ctor":1.12,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2025-03","year":2025},{"id":291003,"name":"Cumple de tu peque","sent_at_str":"2025-03-21","sent":19958,"unique_open":3379,"unique_click":59,"tickets":17,"revenue":3813500,"open_rate":16.93,"ctr":0.3,"ctor":1.75,"bounce_rate":0.0,"unsub_rate":0.03,"month":"2025-03","year":2025},{"id":289984,"name":"Sprite baja de precio","sent_at_str":"2025-03-17","sent":19839,"unique_open":4323,"unique_click":69,"tickets":25,"revenue":7559730,"open_rate":21.79,"ctr":0.35,"ctor":1.6,"bounce_rate":0.0,"unsub_rate":0.05,"month":"2025-03","year":2025},{"id":289669,"name":"Mega a Gs. 24.000","sent_at_str":"2025-03-15","sent":19827,"unique_open":3153,"unique_click":54,"tickets":21,"revenue":4195800,"open_rate":15.9,"ctr":0.27,"ctor":1.71,"bounce_rate":0.0,"unsub_rate":0.05,"month":"2025-03","year":2025},{"id":289101,"name":"Merch que sigue disponible","sent_at_str":"2025-03-12","sent":19573,"unique_open":3463,"unique_click":95,"tickets":19,"revenue":3730519,"open_rate":17.69,"ctr":0.49,"ctor":2.74,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2025-03","year":2025},{"id":288544,"name":"Combiná y disfrutá","sent_at_str":"2025-03-10","sent":19537,"unique_open":3321,"unique_click":55,"tickets":27,"revenue":5418690,"open_rate":17.0,"ctr":0.28,"ctor":1.66,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2025-03","year":2025},{"id":288246,"name":"Bajo tapas primera caja boost","sent_at_str":"2025-03-07","sent":19505,"unique_open":3485,"unique_click":68,"tickets":16,"revenue":3049730,"open_rate":17.87,"ctr":0.35,"ctor":1.95,"bounce_rate":0.0,"unsub_rate":0.13,"month":"2025-03","year":2025},{"id":287576,"name":"Clientes dormidos","sent_at_str":"2025-03-05","sent":539,"unique_open":147,"unique_click":9,"tickets":5,"revenue":2042500,"open_rate":27.27,"ctr":1.67,"ctor":6.12,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2025-03","year":2025},{"id":287649,"name":"Delivery gratis","sent_at_str":"2025-03-05","sent":18998,"unique_open":3422,"unique_click":110,"tickets":37,"revenue":8870720,"open_rate":18.01,"ctr":0.58,"ctor":3.21,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2025-03","year":2025},{"id":286959,"name":"Usuarios con 1 compra","sent_at_str":"2025-03-04","sent":5148,"unique_open":1096,"unique_click":49,"tickets":9,"revenue":1471416,"open_rate":21.29,"ctr":0.95,"ctor":4.47,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2025-03","year":2025},{"id":287091,"name":"Finde largo marzo","sent_at_str":"2025-02-28","sent":19309,"unique_open":3299,"unique_click":50,"tickets":13,"revenue":3013450,"open_rate":17.09,"ctr":0.26,"ctor":1.52,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2025-02","year":2025},{"id":286448,"name":"Usuarios que no hicieron ninguna compra","sent_at_str":"2025-02-26","sent":3711,"unique_open":1414,"unique_click":44,"tickets":1,"revenue":149700,"open_rate":38.1,"ctr":1.19,"ctor":3.11,"bounce_rate":0.0,"unsub_rate":0.13,"month":"2025-02","year":2025},{"id":286722,"name":"Usuarios que no hicieron ninguna compra sin interacción","sent_at_str":"2025-02-26","sent":10594,"unique_open":1667,"unique_click":61,"tickets":3,"revenue":2735700,"open_rate":15.74,"ctr":0.58,"ctor":3.66,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2025-02","year":2025},{"id":286219,"name":"Momento desayuno","sent_at_str":"2025-02-24","sent":19218,"unique_open":3405,"unique_click":66,"tickets":35,"revenue":6409830,"open_rate":17.72,"ctr":0.34,"ctor":1.94,"bounce_rate":0.0,"unsub_rate":0.15,"month":"2025-02","year":2025},{"id":285693,"name":"Jueves OFF","sent_at_str":"2025-02-20","sent":19119,"unique_open":3466,"unique_click":125,"tickets":24,"revenue":3784620,"open_rate":18.13,"ctr":0.65,"ctor":3.61,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2025-02","year":2025},{"id":284991,"name":"Olimpia vs Cerro Porteño","sent_at_str":"2025-02-18","sent":19058,"unique_open":3263,"unique_click":84,"tickets":30,"revenue":7100320,"open_rate":17.12,"ctr":0.44,"ctor":2.57,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2025-02","year":2025},{"id":284374,"name":"Descuentos que enamoran","sent_at_str":"2025-02-13","sent":18875,"unique_open":4328,"unique_click":71,"tickets":33,"revenue":6139230,"open_rate":22.93,"ctr":0.38,"ctor":1.64,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2025-02","year":2025},{"id":283811,"name":"Regalo sorpresa no compradores","sent_at_str":"2025-02-11","sent":6841,"unique_open":1404,"unique_click":83,"tickets":22,"revenue":3837810,"open_rate":20.52,"ctr":1.21,"ctor":5.91,"bounce_rate":0.0,"unsub_rate":0.01,"month":"2025-02","year":2025},{"id":283571,"name":"Vuelta a clases con loncheras","sent_at_str":"2025-02-10","sent":18701,"unique_open":3632,"unique_click":84,"tickets":38,"revenue":8616840,"open_rate":19.42,"ctr":0.45,"ctor":2.31,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2025-02","year":2025},{"id":282993,"name":"Compradores de enero 2025","sent_at_str":"2025-02-06","sent":731,"unique_open":222,"unique_click":15,"tickets":3,"revenue":428300,"open_rate":30.37,"ctr":2.05,"ctor":6.76,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2025-02","year":2025},{"id":280099,"name":"Ofertas refrescantes","sent_at_str":"2025-01-20","sent":17400,"unique_open":3368,"unique_click":109,"tickets":44,"revenue":7425140,"open_rate":19.36,"ctr":0.63,"ctor":3.24,"bounce_rate":0.0,"unsub_rate":0.15,"month":"2025-01","year":2025},{"id":279361,"name":"Mantas playeras","sent_at_str":"2025-01-15","sent":17275,"unique_open":3369,"unique_click":140,"tickets":44,"revenue":6995820,"open_rate":19.5,"ctr":0.81,"ctor":4.16,"bounce_rate":0.0,"unsub_rate":0.11,"month":"2025-01","year":2025},{"id":278894,"name":"Compradores de diciembre","sent_at_str":"2025-01-14","sent":597,"unique_open":154,"unique_click":16,"tickets":2,"revenue":257500,"open_rate":25.8,"ctr":2.68,"ctor":10.39,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2025-01","year":2025},{"id":278496,"name":"Promo irresistible","sent_at_str":"2025-01-10","sent":17102,"unique_open":3286,"unique_click":149,"tickets":31,"revenue":5899440,"open_rate":19.21,"ctr":0.87,"ctor":4.53,"bounce_rate":0.0,"unsub_rate":0.13,"month":"2025-01","year":2025},{"id":277681,"name":"Reyes Magos Mini Sprite regalo","sent_at_str":"2025-01-06","sent":16952,"unique_open":3407,"unique_click":123,"tickets":56,"revenue":9291640,"open_rate":20.1,"ctr":0.73,"ctor":3.61,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2025-01","year":2025},{"id":277239,"name":"Usuarios sin compra en 30 días","sent_at_str":"2025-01-02","sent":6100,"unique_open":1496,"unique_click":80,"tickets":19,"revenue":3342880,"open_rate":24.52,"ctr":1.31,"ctor":5.35,"bounce_rate":0.0,"unsub_rate":0.05,"month":"2025-01","year":2025},{"id":276205,"name":"Salutación Navidad","sent_at_str":"2024-12-25","sent":16380,"unique_open":3038,"unique_click":92,"tickets":33,"revenue":6318570,"open_rate":18.55,"ctr":0.56,"ctor":3.03,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2024-12","year":2024},{"id":275182,"name":"Jueves OFF","sent_at_str":"2024-12-19","sent":16102,"unique_open":2968,"unique_click":93,"tickets":32,"revenue":7619540,"open_rate":18.43,"ctr":0.58,"ctor":3.13,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2024-12","year":2024},{"id":274849,"name":"Bebidas a la puerta de tu casa","sent_at_str":"2024-12-18","sent":16054,"unique_open":2723,"unique_click":76,"tickets":34,"revenue":5063005,"open_rate":16.96,"ctr":0.47,"ctor":2.79,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2024-12","year":2024},{"id":274280,"name":"Eventos en casa","sent_at_str":"2024-12-16","sent":15973,"unique_open":2963,"unique_click":54,"tickets":63,"revenue":12835420,"open_rate":18.55,"ctr":0.34,"ctor":1.82,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2024-12","year":2024},{"id":272725,"name":"Copa de regalo Schweppes","sent_at_str":"2024-12-09","sent":15664,"unique_open":3179,"unique_click":80,"tickets":50,"revenue":9884960,"open_rate":20.29,"ctr":0.51,"ctor":2.52,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2024-12","year":2024},{"id":272701,"name":"Brindemos con Mi Portal","sent_at_str":"2024-12-06","sent":15544,"unique_open":2774,"unique_click":68,"tickets":24,"revenue":6053580,"open_rate":17.85,"ctr":0.44,"ctor":2.45,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2024-12","year":2024},{"id":271817,"name":"Promo mega pack diciembre 24","sent_at_str":"2024-12-03","sent":15399,"unique_open":3004,"unique_click":69,"tickets":56,"revenue":12184370,"open_rate":19.51,"ctr":0.45,"ctor":2.3,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2024-12","year":2024},{"id":270269,"name":"Descuento en jugos","sent_at_str":"2024-11-26","sent":15125,"unique_open":2666,"unique_click":60,"tickets":32,"revenue":7591780,"open_rate":17.63,"ctr":0.4,"ctor":2.25,"bounce_rate":0.0,"unsub_rate":0.05,"month":"2024-11","year":2024},{"id":269582,"name":"Ocasión eventos","sent_at_str":"2024-11-22","sent":14958,"unique_open":2655,"unique_click":49,"tickets":20,"revenue":3624050,"open_rate":17.75,"ctr":0.33,"ctor":1.85,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2024-11","year":2024},{"id":269393,"name":"No compradores RET (Nunca)","sent_at_str":"2024-11-21","sent":2079,"unique_open":455,"unique_click":9,"tickets":2,"revenue":306600,"open_rate":21.89,"ctr":0.43,"ctor":1.98,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2024-11","year":2024},{"id":269147,"name":"Recargá tu semana con beneficios","sent_at_str":"2024-11-20","sent":14847,"unique_open":2554,"unique_click":48,"tickets":21,"revenue":5362620,"open_rate":17.2,"ctr":0.32,"ctor":1.88,"bounce_rate":0.0,"unsub_rate":0.04,"month":"2024-11","year":2024},{"id":268927,"name":"No compradores RET +30 días","sent_at_str":"2024-11-19","sent":3387,"unique_open":743,"unique_click":25,"tickets":7,"revenue":1151620,"open_rate":21.94,"ctr":0.74,"ctor":3.36,"bounce_rate":0.0,"unsub_rate":0.03,"month":"2024-11","year":2024},{"id":268711,"name":"Previa partido","sent_at_str":"2024-11-18","sent":14781,"unique_open":2529,"unique_click":38,"tickets":22,"revenue":4912410,"open_rate":17.11,"ctr":0.26,"ctor":1.5,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2024-11","year":2024},{"id":268488,"name":"Boost vasos contour","sent_at_str":"2024-11-15","sent":14718,"unique_open":2663,"unique_click":52,"tickets":19,"revenue":3874320,"open_rate":18.09,"ctr":0.35,"ctor":1.95,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2024-11","year":2024},{"id":267860,"name":"Promo 350ml","sent_at_str":"2024-11-13","sent":14664,"unique_open":2653,"unique_click":68,"tickets":38,"revenue":7450280,"open_rate":18.09,"ctr":0.46,"ctor":2.56,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2024-11","year":2024},{"id":267282,"name":"Eventos","sent_at_str":"2024-11-08","sent":14453,"unique_open":2603,"unique_click":48,"tickets":26,"revenue":6169000,"open_rate":18.01,"ctr":0.33,"ctor":1.84,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2024-11","year":2024},{"id":265642,"name":"Almuerzo retornable","sent_at_str":"2024-11-04","sent":14329,"unique_open":2556,"unique_click":57,"tickets":42,"revenue":9972840,"open_rate":17.84,"ctr":0.4,"ctor":2.23,"bounce_rate":0.0,"unsub_rate":0.13,"month":"2024-11","year":2024},{"id":264607,"name":"Descuentos que dan miedo 4","sent_at_str":"2024-10-30","sent":14200,"unique_open":2597,"unique_click":68,"tickets":26,"revenue":4222385,"open_rate":18.29,"ctr":0.48,"ctor":2.62,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-10","year":2024},{"id":264026,"name":"Descuentos que dan miedo 3","sent_at_str":"2024-10-28","sent":14142,"unique_open":2497,"unique_click":47,"tickets":28,"revenue":5590875,"open_rate":17.66,"ctr":0.33,"ctor":1.88,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2024-10","year":2024},{"id":263846,"name":"Descuentos que dan miedo 2","sent_at_str":"2024-10-26","sent":14083,"unique_open":2507,"unique_click":35,"tickets":12,"revenue":2404665,"open_rate":17.8,"ctr":0.25,"ctor":1.4,"bounce_rate":0.0,"unsub_rate":0.05,"month":"2024-10","year":2024},{"id":263639,"name":"Descuentos que dan miedo 1","sent_at_str":"2024-10-25","sent":14076,"unique_open":2349,"unique_click":33,"tickets":9,"revenue":1479820,"open_rate":16.69,"ctr":0.23,"ctor":1.4,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-10","year":2024},{"id":263149,"name":"Encuentro con amigos","sent_at_str":"2024-10-23","sent":14015,"unique_open":2578,"unique_click":38,"tickets":21,"revenue":3859419,"open_rate":18.39,"ctr":0.27,"ctor":1.47,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-10","year":2024},{"id":262755,"name":"Retornables refill","sent_at_str":"2024-10-21","sent":13977,"unique_open":2624,"unique_click":55,"tickets":27,"revenue":5773610,"open_rate":18.77,"ctr":0.39,"ctor":2.1,"bounce_rate":0.0,"unsub_rate":0.03,"month":"2024-10","year":2024},{"id":262421,"name":"20% OFF","sent_at_str":"2024-10-18","sent":13961,"unique_open":2338,"unique_click":37,"tickets":16,"revenue":3645560,"open_rate":16.75,"ctr":0.27,"ctor":1.58,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2024-10","year":2024},{"id":261563,"name":"Jarritas Ades","sent_at_str":"2024-10-15","sent":13917,"unique_open":2729,"unique_click":82,"tickets":26,"revenue":5393710,"open_rate":19.61,"ctr":0.59,"ctor":3.0,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2024-10","year":2024},{"id":258652,"name":"Mystery bag","sent_at_str":"2024-09-28","sent":13515,"unique_open":2600,"unique_click":81,"tickets":22,"revenue":5145480,"open_rate":19.24,"ctr":0.6,"ctor":3.12,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-09","year":2024},{"id":258242,"name":"Finde largo","sent_at_str":"2024-09-26","sent":13476,"unique_open":2527,"unique_click":51,"tickets":20,"revenue":3921140,"open_rate":18.75,"ctr":0.38,"ctor":2.02,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2024-09","year":2024},{"id":257560,"name":"Tarros vintage","sent_at_str":"2024-09-23","sent":13375,"unique_open":2791,"unique_click":165,"tickets":46,"revenue":9148260,"open_rate":20.87,"ctr":1.23,"ctor":5.91,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-09","year":2024},{"id":256969,"name":"Jueves OFF 2 - Leads","sent_at_str":"2024-09-19","sent":2110,"unique_open":1103,"unique_click":44,"tickets":3,"revenue":295100,"open_rate":52.27,"ctr":2.09,"ctor":3.99,"bounce_rate":0.0,"unsub_rate":0.28,"month":"2024-09","year":2024},{"id":256954,"name":"Jueves OFF","sent_at_str":"2024-09-19","sent":4303,"unique_open":1080,"unique_click":71,"tickets":10,"revenue":1862400,"open_rate":25.1,"ctr":1.65,"ctor":6.57,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-09","year":2024},{"id":256686,"name":"Sorteo heladerita Coca-Cola","sent_at_str":"2024-09-18","sent":13256,"unique_open":2825,"unique_click":144,"tickets":26,"revenue":7247780,"open_rate":21.31,"ctr":1.09,"ctor":5.1,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2024-09","year":2024},{"id":256268,"name":"1 L retornable ♻","sent_at_str":"2024-09-16","sent":13198,"unique_open":2480,"unique_click":62,"tickets":22,"revenue":4522440,"open_rate":18.79,"ctr":0.47,"ctor":2.5,"bounce_rate":0.0,"unsub_rate":0.05,"month":"2024-09","year":2024},{"id":256143,"name":"350mL retornable","sent_at_str":"2024-09-14","sent":13154,"unique_open":2398,"unique_click":57,"tickets":11,"revenue":2227140,"open_rate":18.23,"ctr":0.43,"ctor":2.38,"bounce_rate":0.0,"unsub_rate":0.04,"month":"2024-09","year":2024},{"id":255430,"name":"Ocasión entrega en casa","sent_at_str":"2024-09-11","sent":13080,"unique_open":2447,"unique_click":54,"tickets":30,"revenue":6469060,"open_rate":18.71,"ctr":0.41,"ctor":2.21,"bounce_rate":0.0,"unsub_rate":0.05,"month":"2024-09","year":2024},{"id":254738,"name":"Eventos + conveniencia","sent_at_str":"2024-09-06","sent":12930,"unique_open":2445,"unique_click":100,"tickets":15,"revenue":3012649,"open_rate":18.91,"ctr":0.77,"ctor":4.09,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-09","year":2024},{"id":254236,"name":"Foco del Valle naranja","sent_at_str":"2024-09-04","sent":12883,"unique_open":2445,"unique_click":86,"tickets":22,"revenue":4863840,"open_rate":18.98,"ctr":0.67,"ctor":3.52,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2024-09","year":2024},{"id":253753,"name":"Cómo pedir retornables","sent_at_str":"2024-09-02","sent":12799,"unique_open":2651,"unique_click":104,"tickets":38,"revenue":8400600,"open_rate":20.71,"ctr":0.81,"ctor":3.92,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-09","year":2024},{"id":253069,"name":"Vasos aluminio Coca-Cola y Sprite","sent_at_str":"2024-08-28","sent":12591,"unique_open":2569,"unique_click":198,"tickets":25,"revenue":4772850,"open_rate":20.4,"ctr":1.57,"ctor":7.71,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2024-08","year":2024},{"id":252554,"name":"Fresh naranja","sent_at_str":"2024-08-26","sent":12547,"unique_open":2437,"unique_click":82,"tickets":36,"revenue":7009080,"open_rate":19.42,"ctr":0.65,"ctor":3.36,"bounce_rate":0.0,"unsub_rate":0.11,"month":"2024-08","year":2024},{"id":252351,"name":"Retornables starter/refill","sent_at_str":"2024-08-23","sent":12515,"unique_open":2469,"unique_click":111,"tickets":13,"revenue":2960650,"open_rate":19.73,"ctr":0.89,"ctor":4.5,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-08","year":2024},{"id":251793,"name":"Merch hasta 25% OFF","sent_at_str":"2024-08-21","sent":12569,"unique_open":2557,"unique_click":118,"tickets":19,"revenue":3424380,"open_rate":20.34,"ctr":0.94,"ctor":4.61,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-08","year":2024},{"id":251374,"name":"Beneficios de comprar retornables","sent_at_str":"2024-08-19","sent":4068,"unique_open":956,"unique_click":79,"tickets":13,"revenue":3817980,"open_rate":23.5,"ctr":1.94,"ctor":8.26,"bounce_rate":0.0,"unsub_rate":0.17,"month":"2024-08","year":2024},{"id":251173,"name":"Favs del día del niño","sent_at_str":"2024-08-16","sent":2187,"unique_open":1729,"unique_click":59,"tickets":16,"revenue":3888080,"open_rate":79.06,"ctr":2.7,"ctor":3.41,"bounce_rate":0.0,"unsub_rate":0.18,"month":"2024-08","year":2024},{"id":250610,"name":"20% OFF","sent_at_str":"2024-08-14","sent":1014,"unique_open":306,"unique_click":15,"tickets":2,"revenue":374400,"open_rate":30.18,"ctr":1.48,"ctor":4.9,"bounce_rate":0.0,"unsub_rate":0.2,"month":"2024-08","year":2024},{"id":249677,"name":"Schweppes - Encuentro con amigos","sent_at_str":"2024-08-09","sent":12404,"unique_open":2413,"unique_click":46,"tickets":13,"revenue":4438015,"open_rate":19.45,"ctr":0.37,"ctor":1.91,"bounce_rate":0.0,"unsub_rate":0.14,"month":"2024-08","year":2024},{"id":249311,"name":"Jueves OFF","sent_at_str":"2024-08-08","sent":12387,"unique_open":2697,"unique_click":127,"tickets":35,"revenue":5232040,"open_rate":21.77,"ctr":1.03,"ctor":4.71,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-08","year":2024},{"id":249039,"name":"Olimpia vs. Libertad","sent_at_str":"2024-08-06","sent":288,"unique_open":93,"unique_click":3,"tickets":6,"revenue":1065820,"open_rate":32.29,"ctr":1.04,"ctor":3.23,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2024-08","year":2024},{"id":248410,"name":"Ofertas especiales - Gaseosas","sent_at_str":"2024-08-02","sent":12219,"unique_open":2425,"unique_click":87,"tickets":18,"revenue":3154460,"open_rate":19.85,"ctr":0.71,"ctor":3.59,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2024-08","year":2024},{"id":248066,"name":"Amigos mi portal 2","sent_at_str":"2024-07-31","sent":876,"unique_open":347,"unique_click":33,"tickets":14,"revenue":2673730,"open_rate":39.61,"ctr":3.77,"ctor":9.51,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2024-07","year":2024},{"id":248057,"name":"Amigos mi portal","sent_at_str":"2024-07-31","sent":1327,"unique_open":392,"unique_click":31,"tickets":4,"revenue":1173930,"open_rate":29.54,"ctr":2.34,"ctor":7.91,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2024-07","year":2024},{"id":248033,"name":"Boost hoodies MARVEL","sent_at_str":"2024-07-31","sent":12157,"unique_open":2371,"unique_click":117,"tickets":17,"revenue":4027780,"open_rate":19.5,"ctr":0.96,"ctor":4.93,"bounce_rate":0.0,"unsub_rate":0.04,"month":"2024-07","year":2024},{"id":247627,"name":"Ofertas especiales - Jugos","sent_at_str":"2024-07-29","sent":12091,"unique_open":2421,"unique_click":71,"tickets":30,"revenue":6910070,"open_rate":20.02,"ctr":0.59,"ctor":2.93,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-07","year":2024},{"id":247179,"name":"Ofertas de la semana","sent_at_str":"2024-07-26","sent":11924,"unique_open":1962,"unique_click":67,"tickets":18,"revenue":2719480,"open_rate":16.45,"ctr":0.56,"ctor":3.41,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2024-07","year":2024},{"id":246725,"name":"Encuentro con amigos 350mL retornable","sent_at_str":"2024-07-24","sent":11835,"unique_open":2249,"unique_click":97,"tickets":21,"revenue":4366120,"open_rate":19.0,"ctr":0.82,"ctor":4.31,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2024-07","year":2024},{"id":246363,"name":"Nuevo merch vaso aluminio","sent_at_str":"2024-07-22","sent":11738,"unique_open":2151,"unique_click":173,"tickets":65,"revenue":9961580,"open_rate":18.33,"ctr":1.47,"ctor":8.04,"bounce_rate":0.0,"unsub_rate":0.04,"month":"2024-07","year":2024},{"id":245705,"name":"Boost Fanta","sent_at_str":"2024-07-18","sent":11688,"unique_open":2356,"unique_click":104,"tickets":19,"revenue":3516000,"open_rate":20.16,"ctr":0.89,"ctor":4.41,"bounce_rate":0.0,"unsub_rate":0.03,"month":"2024-07","year":2024},{"id":245393,"name":"Sorteo heladerita","sent_at_str":"2024-07-17","sent":11699,"unique_open":2640,"unique_click":670,"tickets":26,"revenue":6052140,"open_rate":22.57,"ctr":5.73,"ctor":25.38,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2024-07","year":2024},{"id":245083,"name":"Jugos de la semana","sent_at_str":"2024-07-15","sent":11644,"unique_open":2176,"unique_click":29,"tickets":11,"revenue":2053700,"open_rate":18.69,"ctr":0.25,"ctor":1.33,"bounce_rate":0.0,"unsub_rate":0.05,"month":"2024-07","year":2024},{"id":244822,"name":"Nuevos merch Marvel","sent_at_str":"2024-07-12","sent":11554,"unique_open":2247,"unique_click":71,"tickets":9,"revenue":1854501,"open_rate":19.45,"ctr":0.61,"ctor":3.16,"bounce_rate":0.0,"unsub_rate":0.03,"month":"2024-07","year":2024},{"id":244485,"name":"Clientes perdidos - Copas Schweppes de regalo","sent_at_str":"2024-07-11","sent":1834,"unique_open":366,"unique_click":4,"tickets":0,"revenue":0,"open_rate":19.96,"ctr":0.22,"ctor":1.09,"bounce_rate":0.0,"unsub_rate":0.05,"month":"2024-07","year":2024},{"id":244218,"name":"Clientes dormidos - Copas Schweppes de regalo","sent_at_str":"2024-07-10","sent":992,"unique_open":206,"unique_click":5,"tickets":2,"revenue":209500,"open_rate":20.77,"ctr":0.5,"ctor":2.43,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2024-07","year":2024},{"id":244223,"name":"Boost hoodies Marvel","sent_at_str":"2024-07-10","sent":11485,"unique_open":2284,"unique_click":95,"tickets":20,"revenue":3967501,"open_rate":19.89,"ctr":0.83,"ctor":4.16,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2024-07","year":2024},{"id":243426,"name":"Beneficios de compra en mi portal","sent_at_str":"2024-07-05","sent":11348,"unique_open":2344,"unique_click":70,"tickets":19,"revenue":3011580,"open_rate":20.66,"ctr":0.62,"ctor":2.99,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2024-07","year":2024},{"id":243010,"name":"Boost 350mL con envase","sent_at_str":"2024-07-03","sent":11291,"unique_open":2200,"unique_click":50,"tickets":21,"revenue":4670520,"open_rate":19.48,"ctr":0.44,"ctor":2.27,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2024-07","year":2024},{"id":242616,"name":"Ocasión merendero","sent_at_str":"2024-07-01","sent":11194,"unique_open":2204,"unique_click":23,"tickets":22,"revenue":4037830,"open_rate":19.69,"ctr":0.21,"ctor":1.04,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2024-07","year":2024},{"id":242531,"name":"Comunicación retornables","sent_at_str":"2024-06-29","sent":11101,"unique_open":2234,"unique_click":51,"tickets":21,"revenue":4169200,"open_rate":20.12,"ctr":0.46,"ctor":2.28,"bounce_rate":0.0,"unsub_rate":0.04,"month":"2024-06","year":2024},{"id":241898,"name":"Remeras y hoodies Marvel","sent_at_str":"2024-06-26","sent":10961,"unique_open":2252,"unique_click":132,"tickets":30,"revenue":5548665,"open_rate":20.55,"ctr":1.2,"ctor":5.86,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2024-06","year":2024},{"id":241231,"name":"Previa al partido","sent_at_str":"2024-06-23","sent":10820,"unique_open":2143,"unique_click":37,"tickets":30,"revenue":4328880,"open_rate":19.81,"ctr":0.34,"ctor":1.73,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2024-06","year":2024},{"id":240903,"name":"Vasos Marvel","sent_at_str":"2024-06-20","sent":10651,"unique_open":2179,"unique_click":106,"tickets":27,"revenue":3934900,"open_rate":20.46,"ctr":1.0,"ctor":4.86,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2024-06","year":2024},{"id":240280,"name":"Promo FANTA","sent_at_str":"2024-06-17","sent":10573,"unique_open":2215,"unique_click":93,"tickets":43,"revenue":7672150,"open_rate":20.95,"ctr":0.88,"ctor":4.2,"bounce_rate":0.0,"unsub_rate":0.14,"month":"2024-06","year":2024},{"id":240132,"name":"Voucher 2x1 al cine","sent_at_str":"2024-06-15","sent":10474,"unique_open":2068,"unique_click":61,"tickets":14,"revenue":2943000,"open_rate":19.74,"ctr":0.58,"ctor":2.95,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2024-06","year":2024},{"id":239601,"name":"Promo día del padre","sent_at_str":"2024-06-13","sent":10413,"unique_open":2095,"unique_click":58,"tickets":25,"revenue":4165579,"open_rate":20.12,"ctr":0.56,"ctor":2.77,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2024-06","year":2024},{"id":239011,"name":"No compradores LEADS","sent_at_str":"2024-06-11","sent":5908,"unique_open":1125,"unique_click":33,"tickets":3,"revenue":555900,"open_rate":19.04,"ctr":0.56,"ctor":2.93,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2024-06","year":2024},{"id":238588,"name":"Hasta 20% OFF descartables","sent_at_str":"2024-06-07","sent":10175,"unique_open":1980,"unique_click":59,"tickets":17,"revenue":3391630,"open_rate":19.46,"ctr":0.58,"ctor":2.98,"bounce_rate":0.0,"unsub_rate":0.11,"month":"2024-06","year":2024},{"id":237945,"name":"20% OFF retornables sin envase","sent_at_str":"2024-06-05","sent":10127,"unique_open":1983,"unique_click":108,"tickets":55,"revenue":8791885,"open_rate":19.58,"ctr":1.07,"ctor":5.45,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2024-06","year":2024},{"id":236984,"name":"Jueves OFF","sent_at_str":"2024-05-30","sent":9860,"unique_open":2413,"unique_click":136,"tickets":42,"revenue":8793080,"open_rate":24.47,"ctr":1.38,"ctor":5.64,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-05","year":2024},{"id":236902,"name":"No compradores +30 días","sent_at_str":"2024-05-30","sent":3561,"unique_open":888,"unique_click":95,"tickets":7,"revenue":1253921,"open_rate":24.94,"ctr":2.67,"ctor":10.7,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2024-05","year":2024},{"id":236694,"name":"Boost vasos de vidrio","sent_at_str":"2024-05-28","sent":9806,"unique_open":2030,"unique_click":45,"tickets":31,"revenue":5082670,"open_rate":20.7,"ctr":0.46,"ctor":2.22,"bounce_rate":0.0,"unsub_rate":0.05,"month":"2024-05","year":2024},{"id":236257,"name":"Ofertas gaseosas","sent_at_str":"2024-05-24","sent":9683,"unique_open":1918,"unique_click":30,"tickets":18,"revenue":5803925,"open_rate":19.81,"ctr":0.31,"ctor":1.56,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2024-05","year":2024},{"id":235573,"name":"Boost mega pack","sent_at_str":"2024-05-22","sent":9604,"unique_open":1851,"unique_click":57,"tickets":18,"revenue":9398660,"open_rate":19.27,"ctr":0.59,"ctor":3.08,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2024-05","year":2024},{"id":235492,"name":"Stockeo jugos","sent_at_str":"2024-05-21","sent":9576,"unique_open":2069,"unique_click":41,"tickets":27,"revenue":4861185,"open_rate":21.61,"ctr":0.43,"ctor":1.98,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-05","year":2024},{"id":235206,"name":"Happy hour 19/May","sent_at_str":"2024-05-19","sent":9501,"unique_open":1897,"unique_click":28,"tickets":14,"revenue":3513740,"open_rate":19.97,"ctr":0.29,"ctor":1.48,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2024-05","year":2024},{"id":235169,"name":"Eventos - vouchers","sent_at_str":"2024-05-18","sent":9469,"unique_open":1888,"unique_click":32,"tickets":26,"revenue":8872363,"open_rate":19.94,"ctr":0.34,"ctor":1.69,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2024-05","year":2024},{"id":233313,"name":"Promo día de las madres","sent_at_str":"2024-05-11","sent":9233,"unique_open":2101,"unique_click":48,"tickets":16,"revenue":2548920,"open_rate":22.76,"ctr":0.52,"ctor":2.28,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-05","year":2024},{"id":232744,"name":"Jueves OFF","sent_at_str":"2024-05-09","sent":9198,"unique_open":1897,"unique_click":43,"tickets":23,"revenue":5073120,"open_rate":20.62,"ctr":0.47,"ctor":2.27,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-05","year":2024},{"id":231964,"name":"Boost mega pack","sent_at_str":"2024-05-07","sent":9060,"unique_open":1936,"unique_click":51,"tickets":36,"revenue":11471280,"open_rate":21.37,"ctr":0.56,"ctor":2.63,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2024-05","year":2024},{"id":231572,"name":"Happy hour domingo 04/May","sent_at_str":"2024-05-04","sent":8946,"unique_open":1809,"unique_click":37,"tickets":23,"revenue":6426170,"open_rate":20.22,"ctr":0.41,"ctor":2.05,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2024-05","year":2024},{"id":230994,"name":"Promo mega pack","sent_at_str":"2024-05-02","sent":8828,"unique_open":1952,"unique_click":50,"tickets":37,"revenue":11378460,"open_rate":22.11,"ctr":0.57,"ctor":2.56,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2024-05","year":2024},{"id":230558,"name":"Boost vasos contour","sent_at_str":"2024-04-29","sent":8600,"unique_open":2001,"unique_click":134,"tickets":69,"revenue":15695760,"open_rate":23.27,"ctr":1.56,"ctor":6.7,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2024-04","year":2024},{"id":230010,"name":"20% OFF descartables","sent_at_str":"2024-04-26","sent":8424,"unique_open":1772,"unique_click":59,"tickets":43,"revenue":7167080,"open_rate":21.04,"ctr":0.7,"ctor":3.33,"bounce_rate":0.0,"unsub_rate":0.04,"month":"2024-04","year":2024},{"id":229749,"name":"Boost mini pack","sent_at_str":"2024-04-24","sent":8423,"unique_open":1857,"unique_click":67,"tickets":33,"revenue":6578689,"open_rate":22.05,"ctr":0.8,"ctor":3.61,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-04","year":2024},{"id":229011,"name":"Happy hour","sent_at_str":"2024-04-19","sent":8261,"unique_open":1636,"unique_click":76,"tickets":31,"revenue":7148820,"open_rate":19.8,"ctr":0.92,"ctor":4.65,"bounce_rate":0.0,"unsub_rate":0.04,"month":"2024-04","year":2024},{"id":228614,"name":"Cerro vs. Fluminense","sent_at_str":"2024-04-17","sent":8217,"unique_open":1684,"unique_click":74,"tickets":25,"revenue":4407135,"open_rate":20.49,"ctr":0.9,"ctor":4.39,"bounce_rate":0.0,"unsub_rate":0.11,"month":"2024-04","year":2024},{"id":228370,"name":"Vasos contour","sent_at_str":"2024-04-15","sent":8183,"unique_open":1954,"unique_click":167,"tickets":51,"revenue":9971350,"open_rate":23.88,"ctr":2.04,"ctor":8.55,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2024-04","year":2024},{"id":228023,"name":"20% OFF en descartables","sent_at_str":"2024-04-13","sent":8144,"unique_open":1688,"unique_click":68,"tickets":15,"revenue":2393305,"open_rate":20.73,"ctr":0.83,"ctor":4.03,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2024-04","year":2024},{"id":227526,"name":"Eventos vouchers","sent_at_str":"2024-04-11","sent":8131,"unique_open":1811,"unique_click":79,"tickets":12,"revenue":2794560,"open_rate":22.27,"ctr":0.97,"ctor":4.36,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2024-04","year":2024},{"id":227108,"name":"Arrancá la semana con KAPO","sent_at_str":"2024-04-09","sent":8085,"unique_open":1782,"unique_click":69,"tickets":47,"revenue":9166120,"open_rate":22.04,"ctr":0.85,"ctor":3.87,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2024-04","year":2024},{"id":226129,"name":"¿Tenés un cumple? - Eventos","sent_at_str":"2024-04-03","sent":7913,"unique_open":1772,"unique_click":62,"tickets":35,"revenue":5872750,"open_rate":22.39,"ctr":0.78,"ctor":3.5,"bounce_rate":0.0,"unsub_rate":0.04,"month":"2024-04","year":2024},{"id":225436,"name":"Promo mini pack","sent_at_str":"2024-04-01","sent":7866,"unique_open":1784,"unique_click":78,"tickets":39,"revenue":9814320,"open_rate":22.68,"ctr":0.99,"ctor":4.37,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2024-04","year":2024},{"id":225341,"name":"Retornable 350mL","sent_at_str":"2024-03-30","sent":7831,"unique_open":1735,"unique_click":56,"tickets":26,"revenue":5347957,"open_rate":22.16,"ctr":0.72,"ctor":3.23,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2024-03","year":2024},{"id":225025,"name":"Jueves OFF - Semana santa","sent_at_str":"2024-03-28","sent":7805,"unique_open":1724,"unique_click":59,"tickets":14,"revenue":1846659,"open_rate":22.09,"ctr":0.76,"ctor":3.42,"bounce_rate":0.0,"unsub_rate":0.03,"month":"2024-03","year":2024},{"id":224851,"name":"Descuentos imperdibles","sent_at_str":"2024-03-25","sent":7767,"unique_open":1691,"unique_click":49,"tickets":38,"revenue":7030544,"open_rate":21.77,"ctr":0.63,"ctor":2.9,"bounce_rate":0.0,"unsub_rate":0.18,"month":"2024-03","year":2024},{"id":224868,"name":"no compradores febrero","sent_at_str":"2024-03-25","sent":2893,"unique_open":666,"unique_click":78,"tickets":13,"revenue":1994420,"open_rate":23.02,"ctr":2.7,"ctor":11.71,"bounce_rate":0.0,"unsub_rate":0.14,"month":"2024-03","year":2024},{"id":224391,"name":"Jueves OFF","sent_at_str":"2024-03-21","sent":7691,"unique_open":1737,"unique_click":79,"tickets":21,"revenue":4126024,"open_rate":22.58,"ctr":1.03,"ctor":4.55,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2024-03","year":2024},{"id":223706,"name":"Sigue el calor, ¡sigue el 20% OFF ?‼","sent_at_str":"2024-03-18","sent":7623,"unique_open":1643,"unique_click":79,"tickets":51,"revenue":9179050,"open_rate":21.55,"ctr":1.04,"ctor":4.81,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2024-03","year":2024},{"id":223550,"name":"20% OFF - Aguas y saborizadas","sent_at_str":"2024-03-15","sent":7593,"unique_open":1598,"unique_click":81,"tickets":25,"revenue":5289238,"open_rate":21.05,"ctr":1.07,"ctor":5.07,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2024-03","year":2024},{"id":223173,"name":"Semana calurosa con mi portal","sent_at_str":"2024-03-14","sent":7590,"unique_open":1759,"unique_click":77,"tickets":14,"revenue":2992435,"open_rate":23.18,"ctr":1.01,"ctor":4.38,"bounce_rate":0.0,"unsub_rate":0.09,"month":"2024-03","year":2024},{"id":222710,"name":"Compradores retornables - Dormidos +30 días","sent_at_str":"2024-03-13","sent":2193,"unique_open":522,"unique_click":36,"tickets":8,"revenue":1137500,"open_rate":23.8,"ctr":1.64,"ctor":6.9,"bounce_rate":0.0,"unsub_rate":0.05,"month":"2024-03","year":2024},{"id":222005,"name":"Boost Monster","sent_at_str":"2024-03-08","sent":7492,"unique_open":1990,"unique_click":109,"tickets":39,"revenue":7433180,"open_rate":26.56,"ctr":1.45,"ctor":5.48,"bounce_rate":0.0,"unsub_rate":0.2,"month":"2024-03","year":2024},{"id":221336,"name":"Ameliano vs. Olimpia","sent_at_str":"2024-03-04","sent":68,"unique_open":19,"unique_click":1,"tickets":2,"revenue":378500,"open_rate":27.94,"ctr":1.47,"ctor":5.26,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2024-03","year":2024},{"id":220561,"name":"Beneficios exclusivos - Jugos","sent_at_str":"2024-02-28","sent":7279,"unique_open":1656,"unique_click":74,"tickets":33,"revenue":4688717,"open_rate":22.75,"ctr":1.02,"ctor":4.47,"bounce_rate":0.0,"unsub_rate":0.11,"month":"2024-02","year":2024},{"id":220115,"name":"Beneficios exclusivos - Gaseosas","sent_at_str":"2024-02-26","sent":7248,"unique_open":1675,"unique_click":95,"tickets":46,"revenue":7652460,"open_rate":23.11,"ctr":1.31,"ctor":5.67,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2024-02","year":2024},{"id":219903,"name":"Boost sampling KAPO","sent_at_str":"2024-02-23","sent":7205,"unique_open":1761,"unique_click":69,"tickets":35,"revenue":5960151,"open_rate":24.44,"ctr":0.96,"ctor":3.92,"bounce_rate":0.0,"unsub_rate":0.11,"month":"2024-02","year":2024},{"id":216827,"name":"Ofertas imperdibles","sent_at_str":"2024-02-22","sent":2591,"unique_open":592,"unique_click":14,"tickets":9,"revenue":1441030,"open_rate":22.85,"ctr":0.54,"ctor":2.36,"bounce_rate":0.0,"unsub_rate":0.08,"month":"2024-02","year":2024},{"id":218893,"name":"¡Arrancá tu semana con Ades! ❤??","sent_at_str":"2024-02-19","sent":7124,"unique_open":1584,"unique_click":81,"tickets":34,"revenue":6687230,"open_rate":22.23,"ctr":1.14,"ctor":5.11,"bounce_rate":0.0,"unsub_rate":0.14,"month":"2024-02","year":2024},{"id":218521,"name":"Promo autoliquidables","sent_at_str":"2024-02-16","sent":7071,"unique_open":1708,"unique_click":83,"tickets":27,"revenue":5139646,"open_rate":24.15,"ctr":1.17,"ctor":4.86,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2024-02","year":2024},{"id":218105,"name":"Día de los enamorados","sent_at_str":"2024-02-14","sent":7024,"unique_open":1725,"unique_click":98,"tickets":42,"revenue":8694180,"open_rate":24.56,"ctr":1.4,"ctor":5.68,"bounce_rate":0.0,"unsub_rate":0.16,"month":"2024-02","year":2024},{"id":217140,"name":"Vuelta a clases - Sampling KAPO","sent_at_str":"2024-02-07","sent":6740,"unique_open":1948,"unique_click":112,"tickets":37,"revenue":8405390,"open_rate":28.9,"ctr":1.66,"ctor":5.75,"bounce_rate":0.0,"unsub_rate":0.13,"month":"2024-02","year":2024},{"id":216853,"name":"Vuelta a clases - Combo KAPO","sent_at_str":"2024-02-05","sent":6650,"unique_open":1518,"unique_click":64,"tickets":38,"revenue":6216450,"open_rate":22.83,"ctr":0.96,"ctor":4.22,"bounce_rate":0.0,"unsub_rate":0.14,"month":"2024-02","year":2024},{"id":216232,"name":"¿Tenés un evento? ¡Te ayudamos! ?","sent_at_str":"2024-02-01","sent":6604,"unique_open":1519,"unique_click":53,"tickets":19,"revenue":3868190,"open_rate":23.0,"ctr":0.8,"ctor":3.49,"bounce_rate":0.0,"unsub_rate":0.12,"month":"2024-02","year":2024},{"id":215966,"name":"Promo CCSO descartable 1.5L x 4","sent_at_str":"2024-01-31","sent":6348,"unique_open":1526,"unique_click":60,"tickets":28,"revenue":5468200,"open_rate":24.04,"ctr":0.95,"ctor":3.93,"bounce_rate":0.0,"unsub_rate":0.14,"month":"2024-01","year":2024},{"id":215124,"name":"Verano eventos","sent_at_str":"2024-01-25","sent":6274,"unique_open":1418,"unique_click":53,"tickets":22,"revenue":4259640,"open_rate":22.6,"ctr":0.84,"ctor":3.74,"bounce_rate":0.0,"unsub_rate":0.06,"month":"2024-01","year":2024},{"id":214314,"name":"Mystery bag summer edition ☀?","sent_at_str":"2024-01-19","sent":6254,"unique_open":2411,"unique_click":122,"tickets":36,"revenue":9223180,"open_rate":38.55,"ctr":1.95,"ctor":5.06,"bounce_rate":0.0,"unsub_rate":0.24,"month":"2024-01","year":2024},{"id":213659,"name":"¡Te ayudamos a calcular la cantidad de bebidas y te mostramos el paso a paso!","sent_at_str":"2024-01-16","sent":6236,"unique_open":1531,"unique_click":76,"tickets":32,"revenue":5249540,"open_rate":24.55,"ctr":1.22,"ctor":4.96,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2024-01","year":2024},{"id":213320,"name":"¡Escapada del finde!","sent_at_str":"2024-01-12","sent":6175,"unique_open":1476,"unique_click":34,"tickets":17,"revenue":2827750,"open_rate":23.9,"ctr":0.55,"ctor":2.3,"bounce_rate":0.0,"unsub_rate":0.18,"month":"2024-01","year":2024},{"id":212245,"name":"Reyes Magos","sent_at_str":"2024-01-05","sent":5999,"unique_open":1883,"unique_click":202,"tickets":38,"revenue":6063881,"open_rate":31.39,"ctr":3.37,"ctor":10.73,"bounce_rate":0.0,"unsub_rate":0.38,"month":"2024-01","year":2024},{"id":211291,"name":"Bienvenido 2024","sent_at_str":"2023-12-28","sent":5587,"unique_open":1539,"unique_click":129,"tickets":25,"revenue":3651180,"open_rate":27.55,"ctr":2.31,"ctor":8.38,"bounce_rate":0.0,"unsub_rate":0.07,"month":"2023-12","year":2023},{"id":210856,"name":"Últimos días - Promo mega packs","sent_at_str":"2023-12-26","sent":5544,"unique_open":1404,"unique_click":92,"tickets":42,"revenue":7117682,"open_rate":25.32,"ctr":1.66,"ctor":6.55,"bounce_rate":0.0,"unsub_rate":0.13,"month":"2023-12","year":2023},{"id":209962,"name":"¿Preparativos para navidad? ???","sent_at_str":"2023-12-20","sent":5371,"unique_open":1381,"unique_click":111,"tickets":36,"revenue":6561920,"open_rate":25.71,"ctr":2.07,"ctor":8.04,"bounce_rate":0.0,"unsub_rate":0.2,"month":"2023-12","year":2023},{"id":209123,"name":"La magia navideña toca tu puerta ?","sent_at_str":"2023-12-15","sent":5133,"unique_open":1841,"unique_click":152,"tickets":32,"revenue":6412780,"open_rate":35.87,"ctr":2.96,"ctor":8.26,"bounce_rate":0.0,"unsub_rate":0.23,"month":"2023-12","year":2023},{"id":208851,"name":"Copia de 'Jueves off 30-11'","sent_at_str":"2023-12-14","sent":5096,"unique_open":1234,"unique_click":129,"tickets":24,"revenue":5077620,"open_rate":24.22,"ctr":2.53,"ctor":10.45,"bounce_rate":0.0,"unsub_rate":0.16,"month":"2023-12","year":2023},{"id":208326,"name":"Promo Schweppes","sent_at_str":"2023-12-12","sent":5025,"unique_open":1164,"unique_click":54,"tickets":32,"revenue":6149500,"open_rate":23.16,"ctr":1.07,"ctor":4.64,"bounce_rate":0.0,"unsub_rate":0.1,"month":"2023-12","year":2023},{"id":207244,"name":"Mystery Bag","sent_at_str":"2023-12-05","sent":4797,"unique_open":1354,"unique_click":188,"tickets":43,"revenue":8115040,"open_rate":28.23,"ctr":3.92,"ctor":13.88,"bounce_rate":0.0,"unsub_rate":0.13,"month":"2023-12","year":2023},{"id":206556,"name":"Jueves off 30-11","sent_at_str":"2023-11-30","sent":4623,"unique_open":1206,"unique_click":132,"tickets":42,"revenue":8290260,"open_rate":26.09,"ctr":2.86,"ctor":10.95,"bounce_rate":0.0,"unsub_rate":0.11,"month":"2023-11","year":2023},{"id":203882,"name":"Jueves OFF","sent_at_str":"2023-11-16","sent":4472,"unique_open":1248,"unique_click":125,"tickets":33,"revenue":5242260,"open_rate":27.91,"ctr":2.8,"ctor":10.02,"bounce_rate":0.0,"unsub_rate":0.27,"month":"2023-11","year":2023},{"id":199750,"name":"Olimpia vs. Cerro","sent_at_str":"2023-10-26","sent":63,"unique_open":26,"unique_click":5,"tickets":1,"revenue":128000,"open_rate":41.27,"ctr":7.94,"ctor":19.23,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2023-10","year":2023},{"id":199288,"name":"Morat - Si ayer fuera hoy","sent_at_str":"2023-10-24","sent":3149,"unique_open":937,"unique_click":29,"tickets":18,"revenue":2594900,"open_rate":29.76,"ctr":0.92,"ctor":3.09,"bounce_rate":0.0,"unsub_rate":0.29,"month":"2023-10","year":2023},{"id":197942,"name":"Paraguay vs Bolivia","sent_at_str":"2023-10-13","sent":3033,"unique_open":1057,"unique_click":56,"tickets":23,"revenue":4282350,"open_rate":34.85,"ctr":1.85,"ctor":5.3,"bounce_rate":0.0,"unsub_rate":0.49,"month":"2023-10","year":2023},{"id":196269,"name":"Promo octubre 2L SO y SA","sent_at_str":"2023-10-04","sent":3082,"unique_open":1087,"unique_click":109,"tickets":27,"revenue":3993786,"open_rate":35.27,"ctr":3.54,"ctor":10.03,"bounce_rate":0.0,"unsub_rate":0.49,"month":"2023-10","year":2023},{"id":192811,"name":"Compradores 1.5 sin envase","sent_at_str":"2023-09-19","sent":249,"unique_open":107,"unique_click":20,"tickets":8,"revenue":1207600,"open_rate":42.97,"ctr":8.03,"ctor":18.69,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2023-09","year":2023},{"id":193131,"name":"Nacional vs. Libertad - Torneo Clausura 2023","sent_at_str":"2023-09-18","sent":66,"unique_open":37,"unique_click":2,"tickets":1,"revenue":120000,"open_rate":56.06,"ctr":3.03,"ctor":5.41,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2023-09","year":2023},{"id":192734,"name":"Compradores 2L","sent_at_str":"2023-09-15","sent":321,"unique_open":171,"unique_click":36,"tickets":12,"revenue":2458646,"open_rate":53.27,"ctr":11.21,"ctor":21.05,"bounce_rate":0.0,"unsub_rate":0.31,"month":"2023-09","year":2023},{"id":191961,"name":"Olimpia vs. Gral Caballero","sent_at_str":"2023-09-12","sent":70,"unique_open":29,"unique_click":3,"tickets":2,"revenue":170700,"open_rate":41.43,"ctr":4.29,"ctor":10.34,"bounce_rate":0.0,"unsub_rate":0.0,"month":"2023-09","year":2023},{"id":191510,"name":"Nuevos merch set","sent_at_str":"2023-09-08","sent":1989,"unique_open":950,"unique_click":176,"tickets":20,"revenue":3536150,"open_rate":47.76,"ctr":8.85,"ctor":18.53,"bounce_rate":0.0,"unsub_rate":0.6,"month":"2023-09","year":2023},{"id":189515,"name":"Sin nombre","sent_at_str":"2023-08-29","sent":1615,"unique_open":560,"unique_click":62,"tickets":25,"revenue":3927436,"open_rate":34.67,"ctr":3.84,"ctor":11.07,"bounce_rate":0.0,"unsub_rate":0.93,"month":"2023-08","year":2023},{"id":187717,"name":"Combo Schweppes 2","sent_at_str":"2023-08-17","sent":329,"unique_open":186,"unique_click":36,"tickets":18,"revenue":2770596,"open_rate":56.53,"ctr":10.94,"ctor":19.35,"bounce_rate":0.0,"unsub_rate":0.91,"month":"2023-08","year":2023},{"id":187016,"name":"Recompra de 350 unica vez","sent_at_str":"2023-08-14","sent":139,"unique_open":89,"unique_click":18,"tickets":3,"revenue":413096,"open_rate":64.03,"ctr":12.95,"ctor":20.22,"bounce_rate":0.0,"unsub_rate":0.72,"month":"2023-08","year":2023}]};
+
+// ═══════════════════════════════════════════════════════
+// PALETTES & UTILS
+// ═══════════════════════════════════════════════════════
+const COLORS = ['#E8241B','#F5821F','#F5C518','#A8D95A','#5BDDE8','#9B1C1C','#3b82f6','#8b5cf6','#ec4899','#14b8a6'];
+const charts = {};
+function fmtG(n){if(Math.abs(n)>=1e9)return'₲'+(n/1e9).toFixed(2)+'B';if(Math.abs(n)>=1e6)return'₲'+Math.round(n/1e6)+'M';return'₲'+n.toLocaleString('es-PY');}
+function fmtN(n){return Math.round(n).toLocaleString('es-PY');}
+function shortStr(s,max=32){return s.length>max?s.substring(0,max)+'…':s;}
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+
+// ═══════════════════════════════════════════════════════
+// FILTER STATE
+// ═══════════════════════════════════════════════════════
+let sortCol = 'sent_at_str', sortDir = -1, currentPage = 1;
+const PAGE_SIZE = 20;
+
+function getFilters(){
+  const checked = [...document.querySelectorAll('#ms-list input:checked')].map(cb=>cb.value);
+  return {
+    year:   document.getElementById('f-year').value,
+    months: checked,
+    search: document.getElementById('search-camp').value.toLowerCase().trim(),
+    metric: 'revenue'
+  };
+}
+
+function applyFilters(){
+  const f = getFilters();
+  return RAW.campaigns.filter(c => {
+    if(f.year && String(c.year) !== f.year) return false;
+    if(f.months.length && !f.months.includes(c.month)) return false;
+    if(f.search && !c.name.toLowerCase().includes(f.search)) return false;
+    return true;
+  });
+}
+
+function getFilteredMonthly(){
+  const f = getFilters();
+  return RAW.monthly.filter(m => {
+    if(f.year && !m.month.startsWith(f.year)) return false;
+    if(f.months.length && !f.months.includes(m.month)) return false;
+    return true;
+  });
+}
+
+function resetFilters(){
+  document.getElementById('f-year').value='';
+  document.querySelectorAll('#ms-list input').forEach(cb=>cb.checked=false);
+  updateMonthLabel();
+  document.getElementById('search-camp').value='';
+  currentPage=1; sortCol='sent_at_str'; sortDir=-1;
+  renderAll();
+}
+
+function populateFilters(){
+  // Poblar años dinámicamente desde los datos
+  const years = [...new Set(RAW.campaigns.map(c=>c.year))].sort((a,b)=>b-a);
+  const yearSel = document.getElementById('f-year');
+  years.forEach(y=>{
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y;
+    yearSel.appendChild(o);
+  });
+
+  // Poblar meses con checkboxes
+  const months = [...new Set(RAW.campaigns.map(c=>c.month))].sort();
+  const list = document.getElementById('ms-list');
+  const names=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  months.forEach(m=>{
+    const [y,mo] = m.split('-');
+    const lbl = document.createElement('label');
+    lbl.className = 'ms-item';
+    lbl.innerHTML = '<input type="checkbox" value="'+m+'" onchange="onMonthChange()"> '+names[parseInt(mo)]+' '+y;
+    list.appendChild(lbl);
+  });
+
+  document.getElementById('f-year').addEventListener('change',()=>{currentPage=1;renderAll();});
+  document.getElementById('search-camp').addEventListener('input',()=>{currentPage=1;renderAll();});
+
+  // Cerrar panel al hacer clic fuera
+  document.addEventListener('click', e=>{
+    const btn = document.getElementById('ms-btn');
+    const panel = document.getElementById('ms-panel');
+    if(btn && !btn.contains(e.target) && !panel.contains(e.target)){
+      btn.classList.remove('open');
+      panel.classList.remove('open');
+    }
+  });
+}
+
+// ─── MULTI-SELECT HELPERS ────────────────────────────────────────────────
+function toggleMonthDropdown(e){
+  e.stopPropagation();
+  document.getElementById('ms-btn').classList.toggle('open');
+  document.getElementById('ms-panel').classList.toggle('open');
+}
+function updateMonthLabel(){
+  const checked = [...document.querySelectorAll('#ms-list input:checked')];
+  const label = document.getElementById('ms-label');
+  if(!label) return;
+  if(checked.length === 0){
+    label.textContent = 'Todos los meses';
+  } else if(checked.length === 1){
+    const [y,mo] = checked[0].value.split('-');
+    const names=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+    label.textContent = names[parseInt(mo)]+' '+y;
+  } else {
+    label.innerHTML = '<span class="ms-badge">'+checked.length+'</span> meses sel.';
+  }
+}
+function onMonthChange(){ updateMonthLabel(); currentPage=1; renderAll(); }
+function selectAllMonths(){
+  document.querySelectorAll('#ms-list input').forEach(cb=>cb.checked=true);
+  updateMonthLabel(); currentPage=1; renderAll();
+}
+function clearMonths(){
+  document.querySelectorAll('#ms-list input').forEach(cb=>cb.checked=false);
+  updateMonthLabel(); currentPage=1; renderAll();
+}
+
+// ═══════════════════════════════════════════════════════
+// KPIs
+// ═══════════════════════════════════════════════════════
+function renderKPIs(data){
+  const sent=data.reduce((a,b)=>a+b.sent,0);
+  const opens=data.reduce((a,b)=>a+b.unique_open,0);
+  const clicks=data.reduce((a,b)=>a+b.unique_click,0);
+  const tickets=data.reduce((a,b)=>a+b.tickets,0);
+  const revenue=data.reduce((a,b)=>a+b.revenue,0);
+  const or=sent>0?(opens/sent*100).toFixed(2):0;
+  const ctr=sent>0?(clicks/sent*100).toFixed(2):0;
+  const ctor=opens>0?(clicks/opens*100).toFixed(2):0;
+  document.getElementById('k-camp').textContent=fmtN(data.length);
+  document.getElementById('k-sent').textContent=fmtN(sent);
+  document.getElementById('k-or').textContent=or+'%';
+  document.getElementById('k-opens-abs').textContent=fmtN(opens)+' aperturas';
+  document.getElementById('k-ctr').textContent=ctr+'%';
+  document.getElementById('k-clicks-abs').textContent=fmtN(clicks)+' clics';
+  document.getElementById('k-ctor').textContent=ctor+'%';
+  document.getElementById('k-tickets').textContent=fmtN(tickets);
+  document.getElementById('k-revenue').textContent=fmtG(revenue);
+  document.getElementById('k-rev-avg').textContent='≈'+fmtG(Math.round(revenue/Math.max(data.length,1)))+' / camp.';
+  document.getElementById('filter-count').textContent=data.length < RAW.campaigns.length ? `(${data.length} de ${RAW.campaigns.length} campañas)` : '';
+}
+
+// ═══════════════════════════════════════════════════════
+// CHART: SENT + OPEN RATE
+// ═══════════════════════════════════════════════════════
+function renderSentOR(monthly){
+  const labels=monthly.map(m=>{const[y,mo]=m.month.split('-');return['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(mo)]+'\''+y.slice(2);});
+  destroyChart('sent-or');
+  charts['sent-or']=new Chart(document.getElementById('chart-sent-or'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {type:'bar',label:'Enviados',data:monthly.map(m=>m.sent),backgroundColor:'rgba(232,36,27,0.15)',borderColor:'#E8241B',borderWidth:1,borderRadius:3,yAxisID:'y'},
+      {type:'line',label:'Open Rate %',data:monthly.map(m=>m.open_rate),borderColor:'#F5821F',backgroundColor:'transparent',tension:0.4,pointRadius:4,pointBackgroundColor:'#F5821F',borderWidth:2.5,yAxisID:'y2'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:10}},tooltip:{mode:'index',intersect:false}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:10}}},
+        y:{grid:{color:'#f0f0f0'},ticks:{font:{size:10},callback:v=>fmtN(v)},position:'left'},
+        y2:{grid:{display:false},ticks:{font:{size:10},callback:v=>v+'%'},position:'right'}
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// CHART: REVENUE + TICKETS
+// ═══════════════════════════════════════════════════════
+function renderRevTickets(monthly){
+  const labels=monthly.map(m=>{const[y,mo]=m.month.split('-');return['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(mo)]+'\''+y.slice(2);});
+  destroyChart('rev-tickets');
+  charts['rev-tickets']=new Chart(document.getElementById('chart-rev-tickets'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {type:'bar',label:'Revenue ₲',data:monthly.map(m=>m.revenue),backgroundColor:'rgba(91,221,232,0.3)',borderColor:'#5BDDE8',borderWidth:1,borderRadius:3,yAxisID:'y'},
+      {type:'line',label:'Tickets',data:monthly.map(m=>m.tickets),borderColor:'#9B1C1C',backgroundColor:'transparent',tension:0.4,pointRadius:4,pointBackgroundColor:'#9B1C1C',borderWidth:2.5,yAxisID:'y2'}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:10}},tooltip:{mode:'index',intersect:false,callbacks:{label:ctx=>ctx.dataset.label==='Revenue ₲'?` Revenue: ${fmtG(ctx.parsed.y)}`:(` Tickets: ${ctx.parsed.y}`)}}},
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:10}}},
+        y:{grid:{color:'#f0f0f0'},ticks:{font:{size:10},callback:v=>fmtG(v)},position:'left'},
+        y2:{grid:{display:false},ticks:{font:{size:10}},position:'right'}
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// CHART: OR TREND
+// ═══════════════════════════════════════════════════════
+function renderORTrend(monthly){
+  const labels=monthly.map(m=>{const[y,mo]=m.month.split('-');return['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(mo)]+'\''+y.slice(2);});
+  destroyChart('or-trend');
+  charts['or-trend']=new Chart(document.getElementById('chart-or-trend'),{
+    type:'line',
+    data:{labels,datasets:[{label:'Open Rate',data:monthly.map(m=>m.open_rate),borderColor:'#F5821F',backgroundColor:'rgba(245,130,31,0.1)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#F5821F',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:9},maxRotation:45}},y:{grid:{color:'#f0f0f0'},ticks:{font:{size:10},callback:v=>v+'%'}}}
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// CHART: CTR TREND
+// ═══════════════════════════════════════════════════════
+function renderCTRTrend(monthly){
+  const labels=monthly.map(m=>{const[y,mo]=m.month.split('-');return['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(mo)]+'\''+y.slice(2);});
+  destroyChart('ctr-trend');
+  charts['ctr-trend']=new Chart(document.getElementById('chart-ctr-trend'),{
+    type:'line',
+    data:{labels,datasets:[{label:'CTR',data:monthly.map(m=>m.ctr),borderColor:'#5BDDE8',backgroundColor:'rgba(91,221,232,0.1)',fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:'#5BDDE8',borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:9},maxRotation:45}},y:{grid:{color:'#f0f0f0'},ticks:{font:{size:10},callback:v=>v+'%'}}}
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// CHART: CAMP/MONTH
+// ═══════════════════════════════════════════════════════
+function renderCampMonth(monthly){
+  const labels=monthly.map(m=>{const[y,mo]=m.month.split('-');return['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][parseInt(mo)]+'\''+y.slice(2);});
+  destroyChart('camp-month');
+  charts['camp-month']=new Chart(document.getElementById('chart-camp-month'),{
+    type:'bar',
+    data:{labels,datasets:[{label:'Campañas',data:monthly.map(m=>m.campañas),backgroundColor:COLORS.map(c=>c+'99'),borderWidth:0,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` Campañas: ${ctx.parsed.y}`}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:9},maxRotation:45}},y:{grid:{color:'#f0f0f0'},ticks:{font:{size:10}}}}
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// CHART: TOP REVENUE
+// ═══════════════════════════════════════════════════════
+function renderTopRev(data){
+  const top=[...data].sort((a,b)=>b.revenue-a.revenue).slice(0,10).reverse();
+  destroyChart('top-rev');
+  charts['top-rev']=new Chart(document.getElementById('chart-top-rev'),{
+    type:'bar',
+    data:{labels:top.map(d=>shortStr(d.name,30)),datasets:[{label:'Revenue',data:top.map(d=>d.revenue),backgroundColor:'#E8241B',borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>top[ctx[0].dataIndex].name,label:ctx=>` ${fmtG(ctx.parsed.x)}`}}},
+      scales:{x:{grid:{color:'#f0f0f0'},ticks:{font:{size:9},callback:v=>fmtG(v)}},y:{grid:{display:false},ticks:{font:{size:10}}}}
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// CHART: TOP OPEN RATE
+// ═══════════════════════════════════════════════════════
+function renderTopOR(data){
+  const top=[...data].filter(d=>d.sent>=5000).sort((a,b)=>b.open_rate-a.open_rate).slice(0,10).reverse();
+  destroyChart('top-or');
+  charts['top-or']=new Chart(document.getElementById('chart-top-or'),{
+    type:'bar',
+    data:{labels:top.map(d=>shortStr(d.name,30)),datasets:[{label:'Open Rate %',data:top.map(d=>d.open_rate),backgroundColor:'#F5821F',borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>top[ctx[0].dataIndex].name,label:ctx=>` OR: ${ctx.parsed.x}%`}}},
+      scales:{x:{grid:{color:'#f0f0f0'},ticks:{font:{size:9},callback:v=>v+'%'}},y:{grid:{display:false},ticks:{font:{size:10}}}}
+    }
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// CHART: SCATTER
+// ═══════════════════════════════════════════════════════
+function renderScatter(data){
+  const filtered=data.filter(d=>d.sent>=500);
+  const maxRev=Math.max(...filtered.map(d=>d.revenue),1);
+  const avgOR=filtered.reduce((a,b)=>a+b.open_rate,0)/filtered.length;
+  const avgCTR=filtered.reduce((a,b)=>a+b.ctr,0)/filtered.length;
+
+  destroyChart('scatter');
+  charts['scatter']=new Chart(document.getElementById('chart-scatter'),{
+    type:'bubble',
+    data:{datasets:[{
+      label:'Campañas',
+      data:filtered.map(d=>({x:d.open_rate,y:d.ctr,r:Math.max(4,Math.sqrt(d.revenue/maxRev)*28),name:d.name,revenue:d.revenue,tickets:d.tickets})),
+      backgroundColor:filtered.map(d=>{
+        if(d.open_rate>=avgOR&&d.ctr>=avgCTR)return'rgba(168,217,90,0.7)';
+        if(d.open_rate>=avgOR&&d.ctr<avgCTR)return'rgba(245,197,24,0.7)';
+        if(d.open_rate<avgOR&&d.ctr>=avgCTR)return'rgba(91,221,232,0.7)';
+        return'rgba(232,36,27,0.5)';
+      }),
+      borderColor:'rgba(0,0,0,0.1)',borderWidth:1
+    }]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{
+          label:ctx=>{const d=ctx.raw;return[` 📧 ${d.name}`,` OR: ${ctx.parsed.x}%  CTR: ${ctx.parsed.y}%`,` Revenue: ${fmtG(d.revenue)}  Tickets: ${d.tickets}`];}
+        }},
+        annotation:{annotations:{}}
+      },
+      scales:{
+        x:{title:{display:true,text:'Open Rate (%)',font:{size:11}},grid:{color:'#f0f0f0'},ticks:{font:{size:10},callback:v=>v+'%'}},
+        y:{title:{display:true,text:'CTR (%)',font:{size:11}},grid:{color:'#f0f0f0'},ticks:{font:{size:10},callback:v=>v+'%'}}
+      }
+    }
+  });
+
+  // Insight
+  const high=filtered.filter(d=>d.open_rate>=avgOR&&d.ctr>=avgCTR);
+  const bestRev=filtered.sort((a,b)=>b.revenue-a.revenue)[0];
+  document.getElementById('insight-scatter').innerHTML=
+    `💡 <strong>${high.length} campañas</strong> superan el promedio tanto en apertura (${avgOR.toFixed(1)}%) como en clic (${avgCTR.toFixed(2)}%). `+
+    `La campaña de mayor revenue fue <strong>"${bestRev?.name}"</strong> con ${fmtG(bestRev?.revenue||0)}.`+
+    ` 🟢 Alto OR + CTR &nbsp; 🟡 Solo OR &nbsp; 🔵 Solo CTR &nbsp; 🔴 Bajo engagement`;
+}
+
+// ═══════════════════════════════════════════════════════
+// TABLE
+// ═══════════════════════════════════════════════════════
+function sortTable(col){
+  if(sortCol===col) sortDir*=-1; else {sortCol=col;sortDir=-1;}
+  document.querySelectorAll('.data-table th').forEach(th=>{
+    th.classList.remove('sort-asc','sort-desc');
+    if(th.dataset.col===col) th.classList.add(sortDir===-1?'sort-desc':'sort-asc');
+  });
+  currentPage=1; renderTable(applyFilters());
+}
+
+function renderTable(data){
+  const metric='revenue';
+  const sorted=[...data].sort((a,b)=>{
+    let va=a[sortCol],vb=b[sortCol];
+    if(typeof va==='string') return sortDir*va.localeCompare(vb);
+    return sortDir*(va-vb);
+  });
+  const totalPages=Math.max(1,Math.ceil(sorted.length/PAGE_SIZE));
+  if(currentPage>totalPages) currentPage=totalPages;
+  const page=sorted.slice((currentPage-1)*PAGE_SIZE,currentPage*PAGE_SIZE);
+
+  const avgOR=data.reduce((a,b)=>a+b.open_rate,0)/Math.max(data.length,1);
+  const avgCTR=data.reduce((a,b)=>a+b.ctr,0)/Math.max(data.length,1);
+  const maxRev=Math.max(...data.map(d=>d.revenue),1);
+
+  const tbody=document.getElementById('tbody-main');
+  tbody.innerHTML=page.map(d=>{
+    let perfBadge='';
+    if(d.open_rate>=avgOR&&d.ctr>=avgCTR) perfBadge='<span class="badge badge-high">★ Top</span>';
+    else if(d.open_rate>=avgOR||d.ctr>=avgCTR) perfBadge='<span class="badge badge-mid">~ Med</span>';
+    else perfBadge='<span class="badge badge-low">↓ Bajo</span>';
+
+    const metricVal=metric==='revenue'?fmtG(d.revenue):metric==='open_rate'?d.open_rate+'%':metric==='ctr'?d.ctr+'%':fmtN(d.tickets);
+
+    return`<tr>
+      <td style="color:var(--text-muted);white-space:nowrap">${d.sent_at_str}</td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${d.name}">${d.name}</td>
+      <td>${fmtN(d.sent)}</td>
+      <td>${fmtN(d.unique_open)}</td>
+      <td><strong>${d.open_rate}%</strong><br><div class="pct-bar" style="margin-top:2px"><div class="pct-fill" style="width:${Math.min(d.open_rate,100)}%;background:#F5821F"></div></div></td>
+      <td>${fmtN(d.unique_click)}</td>
+      <td>${d.ctr}%</td>
+      <td>${d.ctor}%</td>
+      <td>${fmtN(d.tickets)}</td>
+      <td style="color:${d.revenue>0?'var(--text)':'var(--text-muted)'}">${fmtG(d.revenue)}</td>
+      <td>${perfBadge}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('table-count').textContent=`Mostrando ${(currentPage-1)*PAGE_SIZE+1}–${Math.min(currentPage*PAGE_SIZE,sorted.length)} de ${sorted.length} campañas`;
+
+  // Pagination
+  const pg=document.getElementById('pagination');
+  pg.innerHTML='';
+  const info=document.createElement('span');
+  info.id='page-info'; info.textContent=`Página ${currentPage} de ${totalPages}`;
+  pg.appendChild(info);
+  const prev=document.createElement('button');
+  prev.className='page-btn'; prev.textContent='← Ant';
+  prev.onclick=()=>{if(currentPage>1){currentPage--;renderTable(applyFilters());}};
+  pg.appendChild(prev);
+  const maxButtons=5;
+  const startPage=Math.max(1,currentPage-Math.floor(maxButtons/2));
+  const endPage=Math.min(totalPages,startPage+maxButtons-1);
+  for(let i=startPage;i<=endPage;i++){
+    const btn=document.createElement('button');
+    btn.className='page-btn'+(i===currentPage?' active':'');
+    btn.textContent=i;
+    btn.onclick=(()=>{const p=i;return()=>{currentPage=p;renderTable(applyFilters());}})();
+    pg.appendChild(btn);
+  }
+  const next=document.createElement('button');
+  next.className='page-btn'; next.textContent='Sig →';
+  next.onclick=()=>{if(currentPage<totalPages){currentPage++;renderTable(applyFilters());}};
+  pg.appendChild(next);
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
+// COMPARATIVO 2025 vs 2026
+// ═══════════════════════════════════════════════════════
+function renderComparativo(){
+  var MO_NAMES=['','Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  var f = getFilters();
+
+  // ── Año actual: derivado de los meses filtrados o el más reciente ──────
+  var currentYear;
+  if(f.months.length > 0){
+    var yCount={};
+    f.months.forEach(function(m){var y=parseInt(m.slice(0,4)); yCount[y]=(yCount[y]||0)+1;});
+    currentYear = parseInt(Object.keys(yCount).sort(function(a,b){return yCount[b]-yCount[a];})[0]);
+  } else {
+    currentYear = Math.max.apply(null, RAW.monthly.map(function(m){return parseInt(m.month.slice(0,4));}));
+  }
+  var prevYear = currentYear - 1;
+
+  var container = document.getElementById('comp-container');
+
+  // Sin año anterior disponible
+  if(!RAW.monthly.some(function(m){return parseInt(m.month.slice(0,4))===prevYear;})){
+    container.innerHTML='<div class="cmp-wrap"><p style="color:var(--text-muted);font-size:13px">⚠️ No hay datos de '+prevYear+' para comparar.</p></div>';
+    destroyChart('comp-or'); destroyChart('comp-rev');
+    document.getElementById('comp-insight').innerHTML='';
+    return;
+  }
+
+  // ── Meses a comparar ────────────────────────────────────────────────────
+  var availP = RAW.monthly.filter(function(m){return parseInt(m.month.slice(0,4))===prevYear;}).map(function(m){return m.month.slice(5);});
+  var availC = RAW.monthly.filter(function(m){return parseInt(m.month.slice(0,4))===currentYear;}).map(function(m){return m.month.slice(5);});
+  var common = availP.filter(function(mo){return availC.indexOf(mo)>=0;}).sort();
+
+  var compMos;
+  if(f.months.length === 0){
+    compMos = common;
+  } else {
+    var seen={};
+    var selNums = f.months.map(function(m){return m.slice(5);}).filter(function(mo){return seen[mo]?false:(seen[mo]=true);});
+    compMos = selNums.filter(function(mo){return common.indexOf(mo)>=0;}).sort();
+  }
+
+  if(compMos.length === 0){
+    container.innerHTML='<div class="cmp-wrap"><p style="color:var(--text-muted);font-size:13px">⚠️ Los meses seleccionados no tienen datos en '+prevYear+'.</p></div>';
+    destroyChart('comp-or'); destroyChart('comp-rev');
+    document.getElementById('comp-insight').innerHTML='';
+    return;
+  }
+
+  // ── Etiqueta de período ─────────────────────────────────────────────────
+  var moLabels = compMos.map(function(mo){return MO_NAMES[parseInt(mo)];});
+  var periodLbl = moLabels.length===1 ? moLabels[0] : moLabels[0]+'–'+moLabels[moLabels.length-1];
+  var titleEl = document.getElementById('comp-title');
+  if(titleEl) titleEl.textContent = 'Comparativo '+periodLbl+' · '+prevYear+' vs '+currentYear;
+
+  // ── Obtener datos ───────────────────────────────────────────────────────
+  var emptyM = {campañas:0,sent:0,opens:0,clicks:0,tickets:0,revenue:0,open_rate:0};
+  function getData(yr, mos){
+    if(f.search){
+      var base=RAW.campaigns.filter(function(c){
+        return c.year===yr && mos.indexOf(c.month.slice(5))>=0 &&
+               c.name.toLowerCase().indexOf(f.search)>=0;
+      });
+      return mos.map(function(mo){
+        var mcs=base.filter(function(c){return c.month.slice(5)===mo;});
+        var s=mcs.reduce(function(a,b){return a+b.sent;},0),
+            o=mcs.reduce(function(a,b){return a+b.unique_open;},0),
+            cl=mcs.reduce(function(a,b){return a+b.unique_click;},0);
+        return {campañas:mcs.length,sent:s,opens:o,clicks:cl,
+                tickets:mcs.reduce(function(a,b){return a+b.tickets;},0),
+                revenue:mcs.reduce(function(a,b){return a+b.revenue;},0),
+                open_rate:s>0?o/s*100:0};
+      });
+    }
+    return mos.map(function(mo){return RAW.monthly.find(function(m){return m.month===yr+'-'+mo;})||emptyM;});
+  }
+
+  var mP=getData(prevYear, compMos), mC=getData(currentYear, compMos);
+  function agg(ms,k){return ms.reduce(function(a,b){return a+(b[k]||0);},0);}
+  var sP=agg(mP,'sent'),oP=agg(mP,'opens'),cP=agg(mP,'clicks');
+  var sC=agg(mC,'sent'),oC=agg(mC,'opens'),cC=agg(mC,'clicks');
+  var ORP=sP>0?oP/sP*100:0, ORC=sC>0?oC/sC*100:0;
+  var CTP=sP>0?cP/sP*100:0, CTC=sC>0?cC/sC*100:0;
+
+  // ── Renderizar métricas ─────────────────────────────────────────────────
+  var metrics=[
+    {lbl:'Campañas',  vP:agg(mP,'campañas'), vC:agg(mC,'campañas'), fmt:function(v){return fmtN(v);}},
+    {lbl:'Enviados',  vP:sP,                  vC:sC,                 fmt:function(v){return fmtN(v);}},
+    {lbl:'Open Rate', vP:ORP,                 vC:ORC,                fmt:function(v){return v.toFixed(2)+'%';}},
+    {lbl:'CTR',       vP:CTP,                 vC:CTC,                fmt:function(v){return v.toFixed(2)+'%';}},
+    {lbl:'Tickets',   vP:agg(mP,'tickets'),   vC:agg(mC,'tickets'),  fmt:function(v){return fmtN(v);}},
+    {lbl:'Revenue',   vP:agg(mP,'revenue'),   vC:agg(mC,'revenue'),  fmt:function(v){return fmtG(v);}}
+  ];
+
+  function badge(vP,vC){
+    var d=vP>0?(vC-vP)/vP*100:(vC>0?100:0);
+    var cls=Math.abs(d)<0.5?'cb-neu':(d>0?'cb-up':'cb-dn');
+    var ar=Math.abs(d)<0.5?'–':(d>0?'▲':'▼');
+    return {cls:cls, html:'<span class="cmp-badge '+cls+'">'+ar+' '+(d>0?'+':'')+d.toFixed(1)+'%</span>', d:d};
+  }
+
+  var cardsHtml = metrics.map(function(m){
+    var b = badge(m.vP,m.vC);
+    return '<div class="cmp-metric">'+
+      '<div class="cmp-mlbl">'+m.lbl+'</div>'+
+      '<div class="cmp-prev">'+prevYear+': '+m.fmt(m.vP)+'</div>'+
+      '<div class="cmp-curr">'+m.fmt(m.vC)+'</div>'+
+      b.html+
+    '</div>';
+  }).join('');
+
+  var stag = f.search ? ' · <em>"'+f.search+'"</em>' : '';
+  container.innerHTML =
+    '<div class="cmp-wrap">'+
+      '<div class="cmp-hdr">'+
+        '<span class="cmp-title">'+prevYear+' → '+currentYear+'</span>'+
+        '<span class="cmp-sub">'+periodLbl+stag+'</span>'+
+      '</div>'+
+      '<div class="cmp-metrics">'+cardsHtml+'</div>'+
+    '</div>';
+
+  // ── Insight ──────────────────────────────────────────────────────────────
+  var orD=ORC-ORP, rvD=agg(mP,'revenue')>0?(agg(mC,'revenue')-agg(mP,'revenue'))/agg(mP,'revenue')*100:0;
+  var tkD=agg(mP,'tickets')>0?(agg(mC,'tickets')-agg(mP,'tickets'))/agg(mP,'tickets')*100:0;
+  var insight = orD>0&&rvD>=0 ?
+    '✅ <strong>'+currentYear+' supera a '+prevYear+'</strong>: OR <strong>'+(orD>=0?'+':'')+orD.toFixed(1)+'pp</strong> · Revenue <strong>'+(rvD>=0?'+':'')+rvD.toFixed(1)+'%</strong> · Tickets <strong>'+(tkD>=0?'+':'')+tkD.toFixed(1)+'%</strong>.' :
+    orD>0&&rvD<0 ?
+    '📬 <strong>Mayor apertura, menor conversión:</strong> OR <strong>'+(orD>=0?'+':'')+orD.toFixed(1)+'pp</strong> · Revenue <strong>'+rvD.toFixed(1)+'%</strong> · Tickets <strong>'+(tkD>=0?'+':'')+tkD.toFixed(1)+'%</strong>.' :
+    '📊 <strong>'+prevYear+' vs '+currentYear+':</strong> OR <strong>'+(orD>=0?'+':'')+orD.toFixed(1)+'pp</strong> · Revenue <strong>'+(rvD>=0?'+':'')+rvD.toFixed(1)+'%</strong> · Tickets <strong>'+(tkD>=0?'+':'')+tkD.toFixed(1)+'%</strong>.';
+  document.getElementById('comp-insight').innerHTML = insight;
+
+  // ── Gráficos: año actual vs anterior ────────────────────────────────────
+  var YCOLS = ['rgba(180,180,180,0.6)','rgba(232,36,27,0.9)'];
+  function chartData(yr){
+    return compMos.map(function(mo){
+      if(f.search){
+        var mcs=RAW.campaigns.filter(function(c){return c.year===yr&&c.month.slice(5)===mo&&c.name.toLowerCase().indexOf(f.search)>=0;});
+        var s=mcs.reduce(function(a,b){return a+b.sent;},0),o=mcs.reduce(function(a,b){return a+b.unique_open;},0);
+        return {open_rate:s>0?o/s*100:0,revenue:mcs.reduce(function(a,b){return a+b.revenue;},0)};
+      }
+      return RAW.monthly.find(function(m){return m.month===yr+'-'+mo;})||{open_rate:0,revenue:0};
+    });
+  }
+  var dP=chartData(prevYear), dC=chartData(currentYear);
+
+  destroyChart('comp-or');
+  charts['comp-or']=new Chart(document.getElementById('chart-comp-or'),{type:'bar',
+    data:{labels:moLabels,datasets:[
+      {label:String(prevYear),data:dP.map(function(m){return Math.round(m.open_rate*100)/100;}),backgroundColor:YCOLS[0],borderRadius:4},
+      {label:String(currentYear),data:dC.map(function(m){return Math.round(m.open_rate*100)/100;}),backgroundColor:YCOLS[1],borderRadius:4}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:10}},
+        tooltip:{callbacks:{label:function(ctx){return ' '+ctx.dataset.label+': '+ctx.parsed.y.toFixed(2)+'%';}}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{grid:{color:'#f0f0f0'},ticks:{font:{size:10},callback:function(v){return v+'%';}}}}}});
+
+  destroyChart('comp-rev');
+  charts['comp-rev']=new Chart(document.getElementById('chart-comp-rev'),{type:'bar',
+    data:{labels:moLabels,datasets:[
+      {label:String(prevYear),data:dP.map(function(m){return m.revenue;}),backgroundColor:YCOLS[0],borderRadius:4},
+      {label:String(currentYear),data:dC.map(function(m){return m.revenue;}),backgroundColor:YCOLS[1],borderRadius:4}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:10}},
+        tooltip:{callbacks:{label:function(ctx){return ' '+ctx.dataset.label+': '+fmtG(ctx.parsed.y);}}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:11}}},y:{grid:{color:'#f0f0f0'},ticks:{font:{size:10},callback:function(v){return fmtG(v);}}}}}});
+}
+function renderAll(){
+  renderComparativo();
+  const data=applyFilters();
+  const monthly=getFilteredMonthly();
+  renderKPIs(data);
+  renderSentOR(monthly);
+  renderRevTickets(monthly);
+  renderORTrend(monthly);
+  renderCTRTrend(monthly);
+  renderCampMonth(monthly);
+  renderTopRev(data);
+  renderTopOR(data);
+  renderScatter(data);
+  renderTable(data);
+}
+
+// ═══════════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════════
+function getMailingExportData(){
+  const data = applyFilters();
+  return data.map(d => ({
+    'Fecha Envío': d.sent_at_str,
+    'Campaña': d.name,
+    'Mes': d.month,
+    'Año': d.year,
+    'Enviados': d.sent,
+    'Aperturas Únicas': d.unique_open,
+    'Open Rate (%)': d.open_rate,
+    'Clicks Únicos': d.unique_click,
+    'CTR (%)': d.ctr,
+    'CTOR (%)': d.ctor,
+    'Tickets': d.tickets,
+    'Revenue (₲)': d.revenue,
+    'Bounce Rate (%)': d.bounce_rate,
+    'Unsub Rate (%)': d.unsub_rate
+  }));
+}
+function exportMailingCSV(){
+  const rows = getMailingExportData();
+  if(!rows.length) return;
+  const headers = Object.keys(rows[0]);
+  const csv = [headers.join(';'), ...rows.map(r => headers.map(h => {
+    const v = r[h];
+    const s = String(v ?? '').replace(/"/g,'""');
+    return s.includes(';') || s.includes('"') || s.includes('\n') ? `"${s}"` : s;
+  }).join(';'))].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = `mailing_campanas_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+function exportMailingXLSX(){
+  const rows = getMailingExportData();
+  if(!rows.length) return;
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Campañas');
+  const headers = Object.keys(rows[0]);
+  ws['!cols'] = headers.map(h => ({ wch: Math.max(h.length, 12) }));
+  XLSX.writeFile(wb, `mailing_campanas_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+// ── Export mensual (filtrado) ──────────────────────────────────────────────
+function getMonthlyExportData(){
+  return getFilteredMonthly().map(m => ({
+    'Mes':           m.month,
+    'Campañas':      m.campañas,
+    'Enviados':      m.sent,
+    'Aperturas':     m.opens,
+    'Open Rate (%)': m.open_rate,
+    'Clicks':        m.clicks,
+    'CTR (%)':       m.ctr,
+    'Tickets':       m.tickets,
+    'Revenue (₲)':   m.revenue
+  }));
+}
+
+function exportMonthlyCSV(){
+  const rows = getMonthlyExportData();
+  if(!rows.length) return;
+  const headers = Object.keys(rows[0]);
+  const csv = [headers.join(';'), ...rows.map(r => headers.map(h => {
+    const v = r[h];
+    const s = String(v ?? '').replace(/"/g,'""');
+    return s.includes(';') || s.includes('"') || s.includes('\n') ? `"${s}"` : s;
+  }).join(';'))].join('\n');
+  const blob = new Blob(['\uFEFF' + csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url;
+  a.download = `mailing_mensual_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// ── Export completo: 2 hojas (Campañas + Mensual) ─────────────────────────
+function exportFullXLSX(){
+  const campRows    = getMailingExportData();
+  const monthlyRows = getMonthlyExportData();
+  if(!campRows.length && !monthlyRows.length) return;
+
+  const wb = XLSX.utils.book_new();
+
+  // Hoja 1 — Campañas
+  if(campRows.length){
+    const ws1 = XLSX.utils.json_to_sheet(campRows);
+    ws1['!cols'] = Object.keys(campRows[0]).map(h => ({ wch: Math.max(h.length, 14) }));
+    XLSX.utils.book_append_sheet(wb, ws1, 'Campañas');
+  }
+
+  // Hoja 2 — Resumen Mensual
+  if(monthlyRows.length){
+    const ws2 = XLSX.utils.json_to_sheet(monthlyRows);
+    ws2['!cols'] = Object.keys(monthlyRows[0]).map(h => ({ wch: Math.max(h.length, 14) }));
+    XLSX.utils.book_append_sheet(wb, ws2, 'Resumen Mensual');
+  }
+
+  XLSX.writeFile(wb, `mailing_completo_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
+  populateFilters();
+  renderAll();
+});
+</script>
+</body>
+</html>

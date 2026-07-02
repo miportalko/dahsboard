@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Retornables Dashboard · Mi Portal Coca-Cola</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -103,6 +104,14 @@
     cursor:pointer; transition:background .15s,transform .1s; flex-shrink:0;
   }
   .btn-apply:hover { background:var(--red2); transform:translateY(-1px); }
+  .btn-export {
+    display:flex; align-items:center; gap:6px;
+    padding:5px 14px; border-radius:8px; border:none; background:var(--black);
+    color:white; font-family:var(--font); font-size:12px; font-weight:700;
+    cursor:pointer; transition:background .15s,transform .1s; flex-shrink:0;
+  }
+  .btn-export:hover:not(:disabled) { background:#1A1A1A; transform:translateY(-1px); }
+  .btn-export:disabled { opacity:.4; cursor:not-allowed; }
   .range-summary {
     margin-left:auto; display:flex; align-items:center; gap:6px;
     font-size:11px; color:var(--muted); font-weight:500; white-space:nowrap; flex-shrink:0;
@@ -331,6 +340,8 @@
     <input type="date" class="date-input" id="dateTo">
     <button class="btn-apply" onclick="applyDateRange()">Aplicar</button>
   </div>
+  <div class="filter-divider"></div>
+  <button class="btn-export" id="btnExportExcel" onclick="exportExcel()" disabled title="Exporta el período mostrado (según el filtro activo)">📥 Excel</button>
   <div class="range-summary">
     <div class="range-dot"></div>
     Mostrando: <strong id="rangeLabel">—</strong>
@@ -354,7 +365,6 @@
     <button class="tab" onclick="showTab('nuevos',this)">🆕 Nuevos Clientes</button>
     <button class="tab" onclick="showTab('cohorte',this)">🔄 Cohorte</button>
     <button class="tab" onclick="showTab('productos',this)">🧴 Productos</button>
-    <button class="tab" onclick="showTab('promos',this)">🎯 Campañas</button>
     <button class="tab" onclick="showTab('segmentos',this)">👥 Segmentos</button>
   </div>
 
@@ -585,22 +595,6 @@
       <div class="card">
         <div class="card-title"><span class="card-title-dot"></span> Revenue por Marca</div>
         <div class="chart-wrap h220"><canvas id="c_brandRev"></canvas></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- S5: CAMPAÑAS -->
-  <div class="section" id="sec-promos">
-    <div class="sec-title" id="s5Title">Performance por UTM Campaign · retornables</div>
-    <div class="promo-grid" id="promoGrid"></div>
-    <div class="row cols-2">
-      <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Revenue por Campaña · Top 8 (Gs.)</div>
-        <div class="chart-wrap h280"><canvas id="c_campRev"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Órdenes por Fuente UTM</div>
-        <div class="chart-wrap h280"><canvas id="c_utmOrders"></canvas></div>
       </div>
     </div>
   </div>
@@ -1213,9 +1207,6 @@ function updateKPIs(m) {
   // ── S4 PRODUCTOS ──
   document.getElementById('s4Title').textContent = `Top SKUs retornables por revenue · ${m.periodLabel}`;
 
-  // ── S5 CAMPAÑAS ──
-  document.getElementById('s5Title').textContent = `Performance por UTM Campaign · retornables · ${m.periodLabel}`;
-
   // ── S6 SEGMENTOS ──
   setText('sg1v', NUM(m.noReuse));
   setText('sg1s', `${(100 - parseFloat(m.reuse30)).toFixed(1)}% de compradores ret.`);
@@ -1484,23 +1475,6 @@ function buildCharts() {
   new Chart('c_sizeUnits',{type:'doughnut',data:{labels:Object.keys(D.sizeUnits),datasets:[{data:Object.values(D.sizeUnits),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
   new Chart('c_brandRev',{type:'doughnut',data:{labels:Object.keys(D.brandRev),datasets:[{data:Object.values(D.brandRev),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
 
-  // S5 – Campaign revenue
-  new Chart('c_campRev',{ type:'bar', data:{
-    labels:D.campaigns.map(c=>c.name.length>24?c.name.slice(0,24)+'…':c.name),
-    datasets:[{label:'Revenue',data:D.campaigns.map(c=>c.revenue),
-      backgroundColor:D.campaigns.map((_,i)=>i<2?RED:PALETTE[i%PALETTE.length]),
-      borderRadius:4,borderSkipped:false}]},
-    options:baseOpts({indexAxis:'y',plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' Gs. '+FMT(ctx.parsed.x)}}},
-      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}},
-              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#6B6B6B',font:{size:11}}}}})
-  });
-  new Chart('c_utmOrders',{ type:'bar', data:{
-    labels:utmK,datasets:[{label:'Órdenes',data:utmV,backgroundColor:PALETTE,borderRadius:6,borderSkipped:false}]},
-    options:baseOpts({plugins:{legend:{display:false}},
-      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
-              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
-  });
-
   // S6 – Seg doughnut
   charts['c_segDoughnut'] = new Chart('c_segDoughnut',{ type:'doughnut', data:{
     labels:['Solo 1 compra','Recurrentes','Cross-sell'],
@@ -1553,24 +1527,6 @@ function buildTable() {
   table.appendChild(tb);
 }
 
-function buildPromos() {
-  const grid = document.getElementById('promoGrid');
-  const maxR = D.campaigns[0].revenue;
-  D.campaigns.forEach((c,i)=>{
-    const pct = (c.revenue/maxR*100).toFixed(0);
-    const div = document.createElement('div');
-    div.className = 'promo-card';
-    div.innerHTML = `
-      <div class="promo-name">${i+1}. ${c.name}</div>
-      <div class="promo-kpis">
-        <div><div class="promo-kpi-val">${FMT(c.revenue)}</div><div class="promo-kpi-lbl">Revenue</div></div>
-        <div><div class="promo-kpi-val">${c.orders}</div><div class="promo-kpi-lbl">Órdenes</div></div>
-        <div><div class="promo-kpi-val">${c.clients}</div><div class="promo-kpi-lbl">Clientes</div></div>
-      </div>
-      <div class="promo-rainbow-bar"><div class="promo-fill" style="width:${pct}%"></div></div>`;
-    grid.appendChild(div);
-  });
-}
 
 // ═══════════════════════════════════
 // FILTRO DE PERÍODO
@@ -1617,6 +1573,73 @@ function showTab(name, btn) {
 }
 
 // ═══════════════════════════════════
+// EXPORTAR A EXCEL (respeta el período/filtro activo)
+// ═══════════════════════════════════
+function exportExcel() {
+  if (typeof XLSX === 'undefined') {
+    alert('No se pudo cargar el motor de Excel (revisá tu conexión a internet) e intentá de nuevo.');
+    return;
+  }
+  const m = compute();
+  const wb = XLSX.utils.book_new();
+  const fmtFull = d => d ? (String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()) : '—';
+
+  // Hoja 1 — Resumen mensual (según período activo)
+  const resumenRows = [[
+    'Mes','Revenue Ret. (Gs.)','Revenue Total Tienda (Gs.)','Órdenes Ret.','Órdenes No-Ret.',
+    'Unidades Ret.','Nuevos Clientes Ret.','Recurrentes Ret.','Revenue Nuevos (Gs.)','Revenue Recurrentes (Gs.)','Cross-sell'
+  ]];
+  ACTIVE_IDX.forEach(i => {
+    resumenRows.push([
+      D.months[i], Math.round(D.retRev[i]), Math.round(D.totalRev[i]), D.ordRet[i], D.ordNoRet[i],
+      D.units[i], D.clients[i], D.retClients[i], Math.round(D.newRev[i]), Math.round(D.recRev[i]), D.crossSell[i]
+    ]);
+  });
+  const wsResumen = XLSX.utils.aoa_to_sheet(resumenRows);
+  wsResumen['!cols'] = resumenRows[0].map(()=>({wch:16}));
+  XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen mensual');
+
+  // Hoja 2 — Top SKUs (acumulado histórico completo, no varía con el filtro)
+  const skuRows = [['#','Producto','Revenue (Gs.)','Unidades','Órdenes']];
+  D.skus.forEach((s,i) => skuRows.push([i+1, s.name, Math.round(s.revenue), s.units, s.orders]));
+  const wsSkus = XLSX.utils.aoa_to_sheet(skuRows);
+  wsSkus['!cols'] = [{wch:4},{wch:55},{wch:16},{wch:12},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, wsSkus, 'Top SKUs');
+
+  // Hoja 3 — Segmentos por frecuencia (según período activo)
+  const totSeg = m.f1 + m.f2 + m.f3 + m.f4;
+  const pct = n => totSeg ? (n/totSeg*100).toFixed(1)+'%' : '—';
+  const segRows = [
+    ['Segmento','Clientes','% del total'],
+    ['Solo 1 compra',    m.f1, pct(m.f1)],
+    ['2 compras',        m.f2, pct(m.f2)],
+    ['3–5 compras',      m.f3, pct(m.f3)],
+    ['6+ compras',       m.f4, pct(m.f4)],
+  ];
+  const wsSeg = XLSX.utils.aoa_to_sheet(segRows);
+  wsSeg['!cols'] = [{wch:16},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, wsSeg, 'Segmentos');
+
+  // Hoja 4 — Info del reporte
+  const infoRows = [
+    ['Reporte', 'Dashboard Retornables · Mi Portal Coca-Cola'],
+    ['Período exportado', m.periodLabel],
+    ['Órdenes retornables (período)', m.ordRetTotal],
+    ['Revenue retornables (período, Gs.)', Math.round(m.retRevTotal)],
+    ['Clientes únicos retornables (período)', m.newClients],
+    ['Fuente', `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?gid=${SHEET_GID}`],
+    ['Datos al', fmtFull(LAST_ORDER_DATE)],
+    ['Generado', fmtFull(new Date())],
+  ];
+  const wsInfo = XLSX.utils.aoa_to_sheet(infoRows);
+  wsInfo['!cols'] = [{wch:34},{wch:60}];
+  XLSX.utils.book_append_sheet(wb, wsInfo, 'Info');
+
+  const safeLabel = m.periodLabel.replace(/[^\w-]+/g, '_');
+  XLSX.writeFile(wb, `Retornables_MiPortal_${safeLabel}.xlsx`);
+}
+
+// ═══════════════════════════════════
 // INIT
 // ═══════════════════════════════════
 window.addEventListener('DOMContentLoaded', () => { init(); });
@@ -1626,7 +1649,7 @@ async function init() {
   // Reset por si es un reintento
   charts = {};
   document.getElementById('t_topSku').innerHTML = '';
-  document.getElementById('promoGrid').innerHTML = '';
+  document.getElementById('btnExportExcel').disabled = true;
   try {
     const lines = await fetchSheetRows();
     buildDataset(lines);
@@ -1636,10 +1659,10 @@ async function init() {
     setDateBounds();
     buildCharts();
     buildTable();
-    buildPromos();
     ACTIVE_IDX = PRESETS.all.idx;
     applyFilter();
     updateSourceChip();
+    document.getElementById('btnExportExcel').disabled = false;
     hideOverlay();
   } catch (err) {
     console.error(err);

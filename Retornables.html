@@ -694,6 +694,16 @@ let DATA_MIN_DATE = null, DATA_MAX_DATE = null; // rango real de fechas del Shee
 let LAST_ORDER_DATE = null;    // fecha del pedido más reciente (para el chip de fuente)
 let LOADED_AT = null;
 
+// Datos crudos a nivel orden/línea para cálculo EXACTO por período (sin proporciones estimadas)
+let RAW = {
+  orders: [],              // {mi, clientKey, hasRet, retRev, totalValue, date, utmSource}
+  retLines: [],            // líneas retornables: {mi, skuName, qty, skuTotal, order}
+  retOrdersByClient: new Map(), // clientKey -> [{date, retRev}] ordenado por fecha
+  firstRetMi: new Map(),   // clientKey -> índice de mes de su 1ª compra ret.
+  firstRetDate: new Map(), // clientKey -> fecha de su 1ª compra ret.
+  hadPriorOrder: new Map(),// clientKey -> true si tenía pedidos ANTES de su 1ª compra ret. (cross-sell)
+};
+
 // ═══════════════════════════════════════════════════
 // ESTADO DEL FILTRO
 // ═══════════════════════════════════════════════════
@@ -921,8 +931,37 @@ function buildDataset(lines) {
     return c;
   });
 
-  // 8) Productos, mix marca/tamaño (acumulado sobre todo el histórico del Sheet)
+  // 8) Productos, mix marca/tamaño — se guardan las líneas crudas con su mes
+  //    para poder recalcular EXACTO según el período activo
   const retLines = valid.filter(l => isRetornable(l.skuName));
+  RAW.retLines = retLines.map(l => ({
+    mi: MONTH_INDEX.get(monthKeyOf(l.date)),
+    skuName: l.skuName, qty: l.qty, skuTotal: l.skuTotal, order: l.order,
+  }));
+
+  // Estructuras crudas por orden y por cliente (para cohortes exactas)
+  RAW.orders = orders.map(o => ({
+    mi: MONTH_INDEX.get(monthKeyOf(o.date)),
+    clientKey: clientKeyOf(o), hasRet: o.hasRet,
+    retRev: o.retRev, totalValue: o.totalValue,
+    date: o.date, utmSource: o.utmSource || 'Directo',
+  }));
+  RAW.retOrdersByClient = new Map();
+  retOrders.forEach(o => {
+    const k = clientKeyOf(o);
+    if (!RAW.retOrdersByClient.has(k)) RAW.retOrdersByClient.set(k, []);
+    RAW.retOrdersByClient.get(k).push({ date:o.date, retRev:o.retRev });
+  });
+  RAW.retOrdersByClient.forEach(list => list.sort((a,b) => a.date - b.date));
+  RAW.firstRetMi = firstRetMonthByClient;
+  RAW.firstRetDate = firstRetByClient;
+  RAW.hadPriorOrder = new Map();
+  firstRetByClient.forEach((firstDate, k) => {
+    const had = (ordersByClient.get(k)||[]).some(o => o.date < firstDate);
+    RAW.hadPriorOrder.set(k, had);
+  });
+
+  // Agregados históricos (fallback inicial; los charts se refrescan por período)
   const skuAgg = new Map();
   D.brandRev = {}; D.sizeRev = {}; D.sizeUnits = {};
   retLines.forEach(l => {
@@ -1032,38 +1071,113 @@ function hideOverlay() { document.getElementById('dataOverlay').classList.add('h
 
 // ═══════════════════════════════════
 // COMPUTED METRICS para el filtro activo
+// Todo se calcula EXACTO desde las órdenes crudas (sin proporciones estimadas)
 // ═══════════════════════════════════
 function compute() {
+  const activeSet = new Set(ACTIVE_IDX);
+
+  // Sumas mensuales exactas (ya deduplicadas por orden en el ETL)
   const retRevTotal  = sum(D.retRev);
   const totalRevTot  = sum(D.totalRev);
   const ordRetTotal  = sum(D.ordRet);
   const ordNoRetTot  = sum(D.ordNoRet);
   const ordTotal     = ordRetTotal + ordNoRetTot;
   const unitsTotal   = sum(D.units);
-  const newClients   = sum(D.clients);
-  const recCliTotal  = sum(D.retClients);
   const newRevTotal  = sum(D.newRev);
   const recRevTotal  = sum(D.recRev);
   const crossSellTot = sum(D.crossSell);
 
-  const ticket      = ordRetTotal ? retRevTotal / ordRetTotal : 0;
-  const newTicket   = newClients  ? newRevTotal / newClients  : 0;
-  const pctRet      = ordTotal    ? (ordRetTotal/ordTotal*100).toFixed(1)+'%' : '—';
-  const pctRevPart  = totalRevTot ? (retRevTotal/totalRevTot*100).toFixed(1)+'%' : '—';
-  const pctNewOfAll = TOTAL_CLIENTS ? (newClients/TOTAL_CLIENTS*100).toFixed(0)+'%' : '—';
+  // ── Clientes únicos EXACTOS del período (no suma de meses, que duplicaría) ──
+  const uniqueStoreClients = new Set();  // cualquier compra en el período
+  const uniqueRetClients   = new Set();  // compra ret. en el período
+  const recurrentClients   = new Set();  // compra ret. en el período que NO es su 1ª (histórico)
+  RAW.orders.forEach(o => {
+    if (!activeSet.has(o.mi)) return;
+    uniqueStoreClients.add(o.clientKey);
+    if (o.hasRet) {
+      uniqueRetClients.add(o.clientKey);
+      if (o.date > RAW.firstRetDate.get(o.clientKey)) recurrentClients.add(o.clientKey);
+    }
+  });
 
-  // Recompra (escala proporcional al todo — 33.9% total)
-  const reuseRate   = newClients  ? Math.min(33.9, (recCliTotal/newClients)*100) : 33.9;
-  const reuse30     = reuseRate.toFixed(1);
-  const reuse15     = (reuseRate * 0.856).toFixed(1);  // ~29/33.9
-  const reuse7      = (reuseRate * 0.620).toFixed(1);  // ~21/33.9
-  const reuseN      = Math.round(newClients * reuseRate / 100);
-  const noReuse     = newClients - reuseN;
+  // Nuevos del período: su 1ª compra ret. cae en un mes activo
+  const newClientKeys = [];
+  RAW.firstRetMi.forEach((mi, k) => { if (activeSet.has(mi)) newClientKeys.push(k); });
+  const newClients = newClientKeys.length;
+
+  // ── Cohorte de recompra EXACTA (nuevos del período, ventanas reales de días) ──
+  const DAY = 864e5;
+  let n7 = 0, n15 = 0, n30 = 0, reuseN = 0;
+  const freq = { f1:0, f2:0, f3:0, f45:0, f6:0 };       // 1 / 2 / 3 / 4–5 / 6+ compras ret. (histórico)
+  const segRev = { s1:0, s2:0, s35:0, s6:0 };            // revenue ret. del período por segmento
+  newClientKeys.forEach(k => {
+    const list = RAW.retOrdersByClient.get(k) || [];
+    const nOrd = list.length;
+    const first = list[0]?.date;
+    if (nOrd >= 2) {
+      reuseN++;
+      const delta = list[1].date - first;               // días hasta la 2ª compra ret.
+      if (delta <= 7*DAY)  n7++;
+      if (delta <= 15*DAY) n15++;
+      if (delta <= 30*DAY) n30++;
+    }
+    if      (nOrd === 1) freq.f1++;
+    else if (nOrd === 2) freq.f2++;
+    else if (nOrd === 3) freq.f3++;
+    else if (nOrd <= 5)  freq.f45++;
+    else                 freq.f6++;
+    // Revenue del período aportado por este cliente, asignado a su segmento
+    let rev = 0;
+    list.forEach(o => { if (activeSet.has(MONTH_INDEX.get(monthKeyOf(o.date)))) rev += o.retRev; });
+    if      (nOrd === 1) segRev.s1  += rev;
+    else if (nOrd === 2) segRev.s2  += rev;
+    else if (nOrd <= 5)  segRev.s35 += rev;
+    else                 segRev.s6  += rev;
+  });
+  const noReuse   = newClients - reuseN;
+  const reuse7    = newClients ? (n7 /newClients*100).toFixed(1) : '0.0';
+  const reuse15   = newClients ? (n15/newClients*100).toFixed(1) : '0.0';
+  const reuse30   = newClients ? (n30/newClients*100).toFixed(1) : '0.0';
+  const reuseRate = newClients ? (reuseN/newClients*100).toFixed(1) : '0.0';
+
+  // Cross-sell exacto (nuevos del período con pedidos previos no-ret.)
+  const crossSellExact = newClientKeys.filter(k => RAW.hadPriorOrder.get(k)).length;
+
+  // ── Productos / mix / UTM del PERÍODO (exactos, no histórico completo) ──
+  const skuAgg = new Map();
+  const brandRevP = {}, sizeRevP = {}, sizeUnitsP = {};
+  RAW.retLines.forEach(l => {
+    if (!activeSet.has(l.mi)) return;
+    let s = skuAgg.get(l.skuName);
+    if (!s) { s = {name:l.skuName, units:0, revenue:0, ordersSet:new Set()}; skuAgg.set(l.skuName, s); }
+    s.units += l.qty; s.revenue += l.skuTotal; s.ordersSet.add(l.order);
+    const b = brandOf(l.skuName), sz = sizeOf(l.skuName);
+    brandRevP[b]  = (brandRevP[b] ||0) + l.skuTotal;
+    sizeRevP[sz]  = (sizeRevP[sz] ||0) + l.skuTotal;
+    sizeUnitsP[sz]= (sizeUnitsP[sz]||0) + l.qty;
+  });
+  const skusP = Array.from(skuAgg.values())
+    .map(s => ({ name:s.name, units:Math.round(s.units), revenue:Math.round(s.revenue), orders:s.ordersSet.size }))
+    .sort((a,b) => b.revenue - a.revenue).slice(0,10);
+
+  const utmSourceP = {};
+  RAW.orders.forEach(o => {
+    if (!activeSet.has(o.mi) || !o.hasRet) return;
+    utmSourceP[o.utmSource] = (utmSourceP[o.utmSource]||0) + 1;
+  });
+
+  // ── Ratios ──
+  const ticket       = ordRetTotal ? retRevTotal / ordRetTotal : 0;
+  const storeTicket  = ordTotal    ? totalRevTot / ordTotal    : 0;
+  const newTicket    = newClients  ? newRevTotal / newClients  : 0;
+  const pctRet       = ordTotal    ? (ordRetTotal/ordTotal*100).toFixed(1)+'%' : '—';
+  const pctRevPart   = totalRevTot ? (retRevTotal/totalRevTot*100).toFixed(1)+'%' : '—';
+  const pctNewOfAll  = uniqueStoreClients.size ? (uniqueRetClients.size/uniqueStoreClients.size*100).toFixed(0)+'%' : '—';
 
   // Semana con más nuevos en rango activo
   const filtWeeks = D.newByWeek.filter((_,i) => ACTIVE_IDX.includes(D.weekMonth[i]));
   const filtWkLbl = D.weeks.filter((_,i)      => ACTIVE_IDX.includes(D.weekMonth[i]));
-  const maxWk     = Math.max(...filtWeeks);
+  const maxWk     = filtWeeks.length ? Math.max(...filtWeeks) : 0;
   const maxWkLbl  = filtWkLbl[filtWeeks.indexOf(maxWk)] || '—';
 
   // Mes activo con más nuevos
@@ -1079,11 +1193,11 @@ function compute() {
   const prevNew    = prevI !== null ? D.clients[prevI] : null;
   const lastVsPrev = prevNew ? ((lastNew - prevNew)/prevNew*100).toFixed(1) : null;
 
-  // Frecuencia estimada proporcional
-  const f1 = Math.round(noReuse);
-  const f2 = Math.round(reuseN * 0.648);
-  const f3 = Math.round(reuseN * 0.224);
-  const f4 = Math.round(reuseN * 0.130) || 1;
+  // Frecuencia EXACTA (buckets de la UI: 1 / 2 / 3–5 / 6+)
+  const f1 = freq.f1;
+  const f2 = freq.f2;
+  const f3 = freq.f3 + freq.f45;
+  const f4 = freq.f6;
 
   // Label del período
   const periodLabel = ACTIVE_IDX.length === 1
@@ -1092,9 +1206,14 @@ function compute() {
 
   return {
     retRevTotal, totalRevTot, ordRetTotal, ordTotal, ordNoRetTot, unitsTotal,
-    newClients, recCliTotal, newRevTotal, recRevTotal, crossSellTot,
-    ticket, newTicket, pctRet, pctRevPart, pctNewOfAll,
-    reuse30, reuse15, reuse7, reuseN, noReuse, reuseRate,
+    newClients, newRevTotal, recRevTotal, crossSellTot,
+    uniqueRetClients: uniqueRetClients.size,
+    uniqueStoreClients: uniqueStoreClients.size,
+    recurrentClients: recurrentClients.size,
+    crossSellExact,
+    ticket, storeTicket, newTicket, pctRet, pctRevPart, pctNewOfAll,
+    reuse30, reuse15, reuse7, n7, n15, n30, reuseN, noReuse, reuseRate,
+    freq, segRev, skusP, brandRevP, sizeRevP, sizeUnitsP, utmSourceP,
     filtWeeks, filtWkLbl, maxWk, maxWkLbl,
     maxNc, maxNcMonth,
     lastMonth, lastNew, lastVsPrev, prevNew,
@@ -1135,8 +1254,10 @@ function updateKPIs(m) {
   const ticket4 = FMTn(m.ticket);
   setText('k4v', ticket4);
   setText('k4s', 'Gs. por orden retornable');
+  const k4bEl = document.getElementById('k4b');
+  if (k4bEl) { k4bEl.textContent = `vs ${FMTn(m.storeTicket)} tienda`; flash('k4b'); }
 
-  setText('k5v', NUM(m.newClients));
+  setText('k5v', NUM(m.uniqueRetClients));
   setText('k5s', 'compradores únicos en ret.');
   setText('k5b', `${m.pctNewOfAll} del base total`);
 
@@ -1152,7 +1273,7 @@ function updateKPIs(m) {
   setText('n1b', `${m.maxNcMonth}: pico con ${m.maxNc}`);
 
   setText('n2v', m.pctNewOfAll);
-  setText('n2s', `de ${NUM(TOTAL_CLIENTS)} clientes únicos totales`);
+  setText('n2s', `de ${NUM(m.uniqueStoreClients)} clientes únicos del período`);
 
   setText('n3v', FMT(m.newRevTotal));
   setText('n3s', `Gs. ${NUM(m.newRevTotal)} generados`);
@@ -1164,9 +1285,9 @@ function updateKPIs(m) {
   setText('n4s', 'Gs. primer orden promedio');
   setText('n4b', `${tktDiff > 0 ? '+' : ''}${tktDiff}% vs ticket ret.`);
 
-  setText('n5v', NUM(m.crossSellTot));
+  setText('n5v', NUM(m.crossSellExact));
   setText('n5s', 'ya compraban no-retornables');
-  setText('n5b', `${PCT(m.crossSellTot, m.newClients)} del total`);
+  setText('n5b', `${PCT(m.crossSellExact, m.newClients)} del total`);
 
   setText('n6v', m.maxWk);
   setText('n6s', `nuevos/semana (${m.maxWkLbl})`);
@@ -1174,24 +1295,24 @@ function updateKPIs(m) {
   document.getElementById('s2Title').textContent = `Clientes que compran retornables por primera vez · ${m.periodLabel}`;
 
   // ── S3 COHORTE ──
-  setText('c1v', `${m.reuse30}%`);
+  setText('c1v', `${m.reuseRate}%`);
   setText('c1s', `${NUM(m.reuseN)} compraron 2+ veces en ret.`);
-  const noReuseRate = (100 - parseFloat(m.reuse30)).toFixed(1);
+  const noReuseRate = (100 - parseFloat(m.reuseRate)).toFixed(1);
   setText('c2v', `${noReuseRate}%`);
   setText('c2s', `${NUM(m.noReuse)} clientes · target reactivar`);
   setText('c3v', NUM(m.reuseN));
   setText('c3s', 'compraron ret. en 2+ ocasiones');
 
-  // Cohort boxes
+  // Cohort boxes — ventanas reales de 7/15/30 días desde la 1ª compra ret.
   const r7  = parseFloat(m.reuse7);
   const r15 = parseFloat(m.reuse15);
   const r30 = parseFloat(m.reuse30);
   document.getElementById('ch7v').innerHTML  = `${m.reuse7}<span>%</span>`;
   document.getElementById('ch15v').innerHTML = `${m.reuse15}<span>%</span>`;
   document.getElementById('ch30v').innerHTML = `${m.reuse30}<span>%</span>`;
-  setText('ch7s',  `~${Math.round(m.newClients*r7/100)} clientes en la 1ª semana`);
-  setText('ch15s', `~${Math.round(m.newClients*r15/100)} clientes dentro de 2 semanas`);
-  setText('ch30s', `${NUM(m.reuseN)} clientes en el primer mes`);
+  setText('ch7s',  `${NUM(m.n7)} clientes en la 1ª semana`);
+  setText('ch15s', `${NUM(m.n15)} clientes dentro de 2 semanas`);
+  setText('ch30s', `${NUM(m.n30)} clientes en el primer mes`);
   document.getElementById('ch7bar').style.width  = `${r7}%`;
   document.getElementById('ch15bar').style.width = `${r15}%`;
   document.getElementById('ch30bar').style.width = `${r30}%`;
@@ -1199,7 +1320,7 @@ function updateKPIs(m) {
   // Insights dinámicos
   setText('ins1', `${NUM(m.noReuse)} clientes hicieron 1 sola compra en este período. Una campaña con descuento en 2ª orden puede duplicar el LTV de esta base en 30 días.`);
   setText('ins2', `El ${m.reuse7}% recompra en 7 días naturalmente. Un mensaje automático al día 6 puede llevar esa tasa al ${(r7*1.4).toFixed(0)}%+.`);
-  setText('ins3', `El ${m.reuse30}% vuelve en 30 días. Un modelo de suscripción mensual captura a estos ${NUM(m.reuseN)} recurrentes y reduce el costo de adquisición.`);
+  setText('ins3', `El ${m.reuse30}% vuelve dentro de 30 días de su 1ª compra. Un modelo de suscripción mensual captura a estos ${NUM(m.n30)} recurrentes y reduce el costo de adquisición.`);
   setText('ins4', `Los ${NUM(m.reuseN)} recurrentes del período son el segmento de mayor valor. Puntos para 3ª compra puede multiplicar rápidamente este número.`);
 
   document.getElementById('s3Title').textContent = `Recompra y comportamiento de los ${NUM(m.newClients)} compradores de retornables`;
@@ -1209,10 +1330,10 @@ function updateKPIs(m) {
 
   // ── S6 SEGMENTOS ──
   setText('sg1v', NUM(m.noReuse));
-  setText('sg1s', `${(100 - parseFloat(m.reuse30)).toFixed(1)}% de compradores ret.`);
+  setText('sg1s', `${noReuseRate}% de compradores ret.`);
 
   setText('sg2v', NUM(m.reuseN));
-  setText('sg2s', `${m.reuse30}% — compraron 2+ veces`);
+  setText('sg2s', `${m.reuseRate}% — compraron 2+ veces`);
 
   setText('sg3v', NUM(m.lastNew));
   setText('sg3s', `nuevos en ${m.lastMonth}`);
@@ -1222,19 +1343,21 @@ function updateKPIs(m) {
     document.getElementById('sg3b').className = `kpi-badge ${parseFloat(m.lastVsPrev) >= 0 ? 'badge-green' : 'badge-red'}`;
   }
 
-  setText('sg4v', NUM(m.crossSellTot));
+  setText('sg4v', NUM(m.crossSellExact));
   setText('sg4s', `tenían compras no-ret previas`);
 
-  // Seg bars
+  // Seg bars — frecuencia EXACTA de compra (histórico de los nuevos del período)
   const totSeg = m.f1 + m.f2 + m.f3 + m.f4;
-  document.getElementById('sb1fill').style.width = `${(m.f1/totSeg*100).toFixed(1)}%`;
-  document.getElementById('sb2fill').style.width = `${(m.f2/totSeg*100).toFixed(1)}%`;
-  document.getElementById('sb3fill').style.width = `${(m.f3/totSeg*100).toFixed(1)}%`;
-  document.getElementById('sb4fill').style.width = `${(m.f4/totSeg*100).toFixed(1)}%`;
+  if (totSeg) {
+    document.getElementById('sb1fill').style.width = `${(m.f1/totSeg*100).toFixed(1)}%`;
+    document.getElementById('sb2fill').style.width = `${(m.f2/totSeg*100).toFixed(1)}%`;
+    document.getElementById('sb3fill').style.width = `${(m.f3/totSeg*100).toFixed(1)}%`;
+    document.getElementById('sb4fill').style.width = `${(m.f4/totSeg*100).toFixed(1)}%`;
+  }
   setText('sb1val', NUM(m.f1));
-  setText('sb2val', `~${NUM(m.f2)}`);
-  setText('sb3val', `~${NUM(m.f3)}`);
-  setText('sb4val', `~${NUM(m.f4)}`);
+  setText('sb2val', NUM(m.f2));
+  setText('sb3val', NUM(m.f3));
+  setText('sb4val', NUM(m.f4));
 
   document.getElementById('s6Title').textContent = `Nuevos vs recurrentes · ${m.periodLabel}`;
 
@@ -1278,9 +1401,9 @@ function doughnutOpts(pos='bottom') {
 }
 
 // ═══════════════════════════════════
-// REFRESH CHARTS (filtro activo)
+// REFRESH CHARTS (filtro activo) — recibe métricas exactas de compute()
 // ═══════════════════════════════════
-function refreshCharts() {
+function refreshCharts(m) {
   const months = ACTIVE_IDX.map(i => D.months[i]);
 
   function upd(id, datasets, labels) {
@@ -1329,17 +1452,47 @@ function refreshCharts() {
   let acc = 0;
   upd('c_newAccum', [ACTIVE_IDX.map(i => { acc += D.clients[i]; return acc; })]);
 
-  // Seg doughnut
-  const m = compute();
+  // ── Doughnuts de producto / mix — EXACTOS del período activo ──
+  function updDoughnut(id, obj) {
+    const ch = charts[id]; if (!ch) return;
+    const entries = Object.entries(obj).sort((a,b) => b[1] - a[1]);
+    ch.data.labels = entries.map(e => e[0]);
+    ch.data.datasets[0].data = entries.map(e => Math.round(e[1]));
+    ch.update('active');
+  }
+  updDoughnut('c_brandMix',  m.brandRevP);
+  updDoughnut('c_sizeMix',   m.sizeRevP);
+  updDoughnut('c_brandRev',  m.brandRevP);
+  updDoughnut('c_sizeRev',   m.sizeRevP);
+  updDoughnut('c_sizeUnits', m.sizeUnitsP);
+  updDoughnut('c_utmSource', m.utmSourceP);
+
+  // Top SKUs del período (chart + tabla)
+  if (charts['c_topSku']) {
+    charts['c_topSku'].data.labels = m.skusP.map(s=>s.name.length>28?s.name.slice(0,28)+'…':s.name);
+    charts['c_topSku'].data.datasets[0].data = m.skusP.map(s=>s.units);
+    charts['c_topSku'].update('active');
+  }
+  buildTable(m.skusP);
+
+  // Seg doughnut — composición EXACTA de los compradores del período
   if (charts['c_segDoughnut']) {
-    charts['c_segDoughnut'].data.datasets[0].data = [m.noReuse, Math.round(m.reuseN * 0.77), Math.round(m.reuseN * 0.23)];
+    charts['c_segDoughnut'].data.datasets[0].data = [m.noReuse, m.reuseN, m.crossSellExact];
     charts['c_segDoughnut'].update('active');
   }
 
-  // Freq dist
+  // Distribución de frecuencia EXACTA (1 / 2 / 3 / 4–5 / 6+ compras ret.)
   if (charts['c_freqDist']) {
-    charts['c_freqDist'].data.datasets[0].data = [m.f1, m.f2, m.f3, Math.round(m.f4*1.8), Math.round(m.f4*0.6)];
+    charts['c_freqDist'].data.datasets[0].data =
+      [m.freq.f1, m.freq.f2, m.freq.f3, m.freq.f45, m.freq.f6];
     charts['c_freqDist'].update('active');
+  }
+
+  // Revenue por segmento — EXACTO (revenue ret. del período por frecuencia del cliente)
+  if (charts['c_segValue']) {
+    charts['c_segValue'].data.datasets[0].data =
+      [Math.round(m.segRev.s1), Math.round(m.segRev.s2), Math.round(m.segRev.s35), Math.round(m.segRev.s6)];
+    charts['c_segValue'].update('active');
   }
 }
 
@@ -1434,10 +1587,10 @@ function buildCharts() {
     options:doughnutOpts('right')
   });
 
-  // S3 – Freq dist
+  // S3 – Freq dist (data exacta se inyecta en refreshCharts)
   charts['c_freqDist'] = new Chart('c_freqDist',{ type:'bar', data:{
     labels:['1 compra','2 compras','3 compras','4-5 compras','6+ compras'],
-    datasets:[{label:'Clientes',data:[1358,452,156,72,18],
+    datasets:[{label:'Clientes',data:[0,0,0,0,0],
       backgroundColor:PALETTE.slice().reverse(),borderRadius:6,borderSkipped:false}]},
     options:baseOpts({plugins:{legend:{display:false}},
       scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
@@ -1470,15 +1623,15 @@ function buildCharts() {
               y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#6B6B6B',font:{size:10}}}}})
   });
 
-  // S4 – Size / Brand
-  new Chart('c_sizeRev',{type:'doughnut',data:{labels:Object.keys(D.sizeRev),datasets:[{data:Object.values(D.sizeRev),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
-  new Chart('c_sizeUnits',{type:'doughnut',data:{labels:Object.keys(D.sizeUnits),datasets:[{data:Object.values(D.sizeUnits),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
-  new Chart('c_brandRev',{type:'doughnut',data:{labels:Object.keys(D.brandRev),datasets:[{data:Object.values(D.brandRev),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
+  // S4 – Size / Brand (se refrescan por período en refreshCharts)
+  charts['c_sizeRev']   = new Chart('c_sizeRev',{type:'doughnut',data:{labels:Object.keys(D.sizeRev),datasets:[{data:Object.values(D.sizeRev),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
+  charts['c_sizeUnits'] = new Chart('c_sizeUnits',{type:'doughnut',data:{labels:Object.keys(D.sizeUnits),datasets:[{data:Object.values(D.sizeUnits),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
+  charts['c_brandRev']  = new Chart('c_brandRev',{type:'doughnut',data:{labels:Object.keys(D.brandRev),datasets:[{data:Object.values(D.brandRev),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
 
-  // S6 – Seg doughnut
+  // S6 – Seg doughnut (data exacta se inyecta en refreshCharts)
   charts['c_segDoughnut'] = new Chart('c_segDoughnut',{ type:'doughnut', data:{
-    labels:['Solo 1 compra','Recurrentes','Cross-sell'],
-    datasets:[{data:[1358,540,158],backgroundColor:[RED,PALETTE[1],PALETTE[0]],borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
+    labels:['Solo 1 compra','Recurrentes (2+)','Cross-sell'],
+    datasets:[{data:[0,0,0],backgroundColor:[RED,PALETTE[1],PALETTE[0]],borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
     options:doughnutOpts('right')
   });
 
@@ -1494,10 +1647,10 @@ function buildCharts() {
               y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
   });
 
-  // S6 – Seg value
-  new Chart('c_segValue',{ type:'bar', data:{
+  // S6 – Seg value (revenue ret. EXACTO del período por segmento de frecuencia)
+  charts['c_segValue'] = new Chart('c_segValue',{ type:'bar', data:{
     labels:['Solo 1 compra','2 compras','3–5 compras','6+ compras'],
-    datasets:[{label:'Revenue est. (Gs.)',data:[104843280,35000000,14000000,4839454],
+    datasets:[{label:'Revenue (Gs.)',data:[0,0,0,0],
       backgroundColor:PALETTE.slice(0,4).reverse(),borderRadius:6,borderSkipped:false}]},
     options:baseOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' Gs. '+FMT(ctx.parsed.y)}}},
       scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
@@ -1508,12 +1661,14 @@ function buildCharts() {
 // ═══════════════════════════════════
 // BUILD TABLE & PROMO CARDS
 // ═══════════════════════════════════
-function buildTable() {
+function buildTable(skus) {
   const table = document.getElementById('t_topSku');
-  const maxR = D.skus[0].revenue;
+  const list = skus || D.skus;
   table.innerHTML = `<thead><tr><th>#</th><th>Producto</th><th>Revenue</th><th>Unds.</th></tr></thead>`;
+  if (!list.length) return;
+  const maxR = list[0].revenue || 1;
   const tb = document.createElement('tbody');
-  D.skus.forEach((s,i)=>{
+  list.forEach((s,i)=>{
     const pct = (s.revenue/maxR*100).toFixed(0);
     const tr = document.createElement('tr');
     tr.innerHTML = `
@@ -1532,8 +1687,9 @@ function buildTable() {
 // FILTRO DE PERÍODO
 // ═══════════════════════════════════
 function applyFilter() {
-  updateKPIs(compute());
-  refreshCharts();
+  const m = compute();
+  updateKPIs(m);
+  refreshCharts(m);
 }
 
 function setPeriod(key, btn) {
@@ -1599,40 +1755,56 @@ function exportExcel() {
   wsResumen['!cols'] = resumenRows[0].map(()=>({wch:16}));
   XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen mensual');
 
-  // Hoja 2 — Top SKUs (acumulado histórico completo, no varía con el filtro)
+  // Hoja 2 — Top SKUs del período activo (exacto)
   const skuRows = [['#','Producto','Revenue (Gs.)','Unidades','Órdenes']];
-  D.skus.forEach((s,i) => skuRows.push([i+1, s.name, Math.round(s.revenue), s.units, s.orders]));
+  m.skusP.forEach((s,i) => skuRows.push([i+1, s.name, Math.round(s.revenue), s.units, s.orders]));
   const wsSkus = XLSX.utils.aoa_to_sheet(skuRows);
   wsSkus['!cols'] = [{wch:4},{wch:55},{wch:16},{wch:12},{wch:10}];
   XLSX.utils.book_append_sheet(wb, wsSkus, 'Top SKUs');
 
-  // Hoja 3 — Segmentos por frecuencia (según período activo)
+  // Hoja 3 — Cohorte de recompra exacta (nuevos del período)
+  const cohRows = [
+    ['Métrica','Clientes','% de nuevos'],
+    ['Nuevos en retornables (1ª compra en período)', m.newClients, '100%'],
+    ['Recompraron dentro de 7 días',  m.n7,  m.reuse7+'%'],
+    ['Recompraron dentro de 15 días', m.n15, m.reuse15+'%'],
+    ['Recompraron dentro de 30 días', m.n30, m.reuse30+'%'],
+    ['Recompraron alguna vez (2+ compras)', m.reuseN, m.reuseRate+'%'],
+    ['Sin recompra (1 sola compra)', m.noReuse, (100-parseFloat(m.reuseRate)).toFixed(1)+'%'],
+    ['Cross-sell (tenían compras no-ret. previas)', m.crossSellExact, PCT(m.crossSellExact, m.newClients)],
+  ];
+  const wsCoh = XLSX.utils.aoa_to_sheet(cohRows);
+  wsCoh['!cols'] = [{wch:44},{wch:12},{wch:14}];
+  XLSX.utils.book_append_sheet(wb, wsCoh, 'Cohorte recompra');
+
+  // Hoja 4 — Segmentos por frecuencia exacta + revenue del período
   const totSeg = m.f1 + m.f2 + m.f3 + m.f4;
   const pct = n => totSeg ? (n/totSeg*100).toFixed(1)+'%' : '—';
   const segRows = [
-    ['Segmento','Clientes','% del total'],
-    ['Solo 1 compra',    m.f1, pct(m.f1)],
-    ['2 compras',        m.f2, pct(m.f2)],
-    ['3–5 compras',      m.f3, pct(m.f3)],
-    ['6+ compras',       m.f4, pct(m.f4)],
+    ['Segmento','Clientes','% del total','Revenue del período (Gs.)'],
+    ['Solo 1 compra', m.freq.f1, pct(m.freq.f1), Math.round(m.segRev.s1)],
+    ['2 compras',     m.freq.f2, pct(m.freq.f2), Math.round(m.segRev.s2)],
+    ['3–5 compras',   m.freq.f3 + m.freq.f45, pct(m.freq.f3 + m.freq.f45), Math.round(m.segRev.s35)],
+    ['6+ compras',    m.freq.f6, pct(m.freq.f6), Math.round(m.segRev.s6)],
   ];
   const wsSeg = XLSX.utils.aoa_to_sheet(segRows);
-  wsSeg['!cols'] = [{wch:16},{wch:12},{wch:12}];
+  wsSeg['!cols'] = [{wch:16},{wch:12},{wch:12},{wch:22}];
   XLSX.utils.book_append_sheet(wb, wsSeg, 'Segmentos');
 
-  // Hoja 4 — Info del reporte
+  // Hoja 5 — Info del reporte
   const infoRows = [
     ['Reporte', 'Dashboard Retornables · Mi Portal Coca-Cola'],
     ['Período exportado', m.periodLabel],
     ['Órdenes retornables (período)', m.ordRetTotal],
     ['Revenue retornables (período, Gs.)', Math.round(m.retRevTotal)],
-    ['Clientes únicos retornables (período)', m.newClients],
+    ['Clientes únicos retornables (período)', m.uniqueRetClients],
+    ['Clientes nuevos en ret. (1ª compra en período)', m.newClients],
     ['Fuente', `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?gid=${SHEET_GID}`],
     ['Datos al', fmtFull(LAST_ORDER_DATE)],
     ['Generado', fmtFull(new Date())],
   ];
   const wsInfo = XLSX.utils.aoa_to_sheet(infoRows);
-  wsInfo['!cols'] = [{wch:34},{wch:60}];
+  wsInfo['!cols'] = [{wch:40},{wch:60}];
   XLSX.utils.book_append_sheet(wb, wsInfo, 'Info');
 
   const safeLabel = m.periodLabel.replace(/[^\w-]+/g, '_');
@@ -1658,7 +1830,6 @@ async function init() {
     renderPeriodPills();
     setDateBounds();
     buildCharts();
-    buildTable();
     ACTIVE_IDX = PRESETS.all.idx;
     applyFilter();
     updateSourceChip();

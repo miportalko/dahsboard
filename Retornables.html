@@ -33,77 +33,26 @@
   * { box-sizing:border-box; margin:0; padding:0; }
   body { background:var(--bg); font-family:var(--font); color:var(--text); min-height:100vh; }
 
-  /* HEADER */
+  /* HEADER (estándar index.html) */
   .header-rainbow { height:4px; background:var(--rainbow); position:sticky; top:0; z-index:101; }
   .header {
-    background:var(--black); padding:0 28px;
+    background:var(--black); padding:0 32px;
     display:flex; align-items:center; justify-content:space-between;
-    height:58px; position:sticky; top:4px; z-index:100;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    height:64px; position:sticky; top:4px; z-index:100;
+    box-shadow:0 2px 8px rgba(0,0,0,.4);
   }
 
-  /* LOGO marca */
-  .header-logo {
-    display:flex; align-items:center; gap:12px; flex-shrink:0;
-  }
-  .logo-icon {
-    width:34px; height:34px; border-radius:8px; overflow:hidden;
-    flex-shrink:0; display:flex; align-items:center; justify-content:center;
-    background: linear-gradient(135deg, #82E1FF 0%, #78E6A0 30%, #FFB400 55%, #FF8700 75%, #E8241B 100%);
-    box-shadow: 0 2px 8px rgba(232,36,27,0.35);
-  }
-  .logo-icon svg { width:20px; height:20px; }
-  .logo-wordmark { display:flex; flex-direction:column; gap:0px; line-height:1; }
-  .logo-top {
-    font-size:10px; font-weight:800; letter-spacing:1.5px;
-    text-transform:uppercase; color:rgba(255,255,255,0.45);
-  }
-  .logo-bottom {
-    font-size:15px; font-weight:800; letter-spacing:-0.3px;
-    background: var(--rainbow);
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
+  /* LOGO Mi Portal (imagen real, clickeable a index.html) */
+  .h-left { display:flex; align-items:center; gap:16px; }
+  .h-logo-link { display:flex; align-items:center; flex-shrink:0; }
+  .h-logo-link img { height:34px; display:block; }
 
   /* SEPARADOR vertical */
-  .header-sep {
-    width:1px; height:28px;
-    background:rgba(255,255,255,0.12);
-    flex-shrink:0; margin:0 4px;
-  }
+  .h-vsep { width:1px; height:26px; background:rgba(255,255,255,.15); flex-shrink:0; }
 
   /* TÍTULO de la vista actual */
-  .header-view {
-    display:flex; flex-direction:column; gap:1px;
-  }
-  .header-view-label {
-    font-size:10px; font-weight:600; letter-spacing:.8px;
-    text-transform:uppercase; color:rgba(255,255,255,0.35);
-  }
-  .header-view-name {
-    font-size:14px; font-weight:700; color:white; letter-spacing:-0.2px;
-  }
-  .header-view-name span { color:#82E1FF; }
-
-  /* NAVEGACIÓN */
-  .header-nav {
-    display:flex; align-items:center; gap:2px;
-    background:rgba(255,255,255,0.05);
-    border:1px solid rgba(255,255,255,0.08);
-    border-radius:8px; padding:3px;
-  }
-  .nav-link {
-    padding:5px 12px; border-radius:6px;
-    font-size:11px; font-weight:600; letter-spacing:0.2px;
-    color:rgba(255,255,255,0.45);
-    text-decoration:none; transition:all .15s; white-space:nowrap;
-    cursor:pointer; border:none; background:none; font-family:var(--font);
-  }
-  .nav-link:hover { color:rgba(255,255,255,0.85); background:rgba(255,255,255,0.07); }
-  .nav-link.active {
-    background:rgba(255,255,255,0.12); color:white;
-    box-shadow:0 1px 4px rgba(0,0,0,0.2);
-  }
+  .h-title { color:#fff; font-size:15px; font-weight:700; letter-spacing:-.2px; }
+  .h-title span { color:#82E1FF; }
 
   /* DERECHA */
   .header-right { display:flex; align-items:center; gap:10px; }
@@ -120,6 +69,7 @@
   }
   .live-dot { width:5px; height:5px; background:#78E6A0; border-radius:50%; animation:blink 2s ease infinite; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+  @media(max-width:760px){ .h-vsep, .h-title { display:none; } .header { padding:0 16px; } }
 
   /* FILTER BAR */
   .filter-bar {
@@ -306,46 +256,86 @@
     .filter-bar { gap:10px; padding:0 16px; flex-wrap:wrap; height:auto; padding:8px 16px; }
     .range-summary { display:none; }
   }
+
+  /* DATA OVERLAY (carga / error) */
+  .data-overlay {
+    position:fixed; inset:0; z-index:200; background:rgba(242,242,242,.97);
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+    text-align:center; padding:24px;
+  }
+  .data-overlay.hidden { display:none; }
+  .hidden { display:none !important; }
+  .overlay-spinner {
+    width:40px; height:40px; border-radius:50%;
+    border:3px solid var(--border); border-top-color:var(--red);
+    animation:spin .9s linear infinite;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .overlay-title { font-size:16px; font-weight:700; color:var(--black); }
+  .overlay-sub { font-size:13px; color:var(--muted); max-width:460px; line-height:1.6; }
+  .overlay-err-icon { font-size:38px; }
+  .overlay-retry {
+    padding:9px 20px; border-radius:8px; border:none; background:var(--red); color:#fff;
+    font-family:var(--font); font-size:13px; font-weight:700; cursor:pointer; transition:background .15s;
+  }
+  .overlay-retry:hover { background:var(--red2); }
+  .overlay-code {
+    font-family:ui-monospace,Menlo,monospace; font-size:11px; color:var(--muted);
+    background:rgba(0,0,0,.04); padding:8px 12px; border-radius:6px; max-width:520px;
+    word-break:break-word; border:1px solid var(--border);
+  }
+  .source-chip {
+    font-size:11px; color:var(--muted); font-weight:500; margin-top:4px;
+    display:flex; align-items:center; gap:5px; text-decoration:none;
+  }
+  .source-chip a { color:var(--muted); text-decoration:underline; }
+  .source-chip a:hover { color:var(--red); }
 </style>
 </head>
 <body>
 
+<div class="data-overlay" id="dataOverlay">
+  <div class="overlay-spinner" id="ovSpinner"></div>
+  <div class="overlay-err-icon hidden" id="ovErrIcon">⚠️</div>
+  <div class="overlay-title" id="ovTitle">Cargando datos desde Google Sheets…</div>
+  <div class="overlay-sub" id="ovSub">Trayendo la hoja de retornables y reconstruyendo las métricas del período.</div>
+  <div class="overlay-code hidden" id="ovCode"></div>
+  <button class="overlay-retry hidden" id="ovRetry" onclick="init()">Reintentar</button>
+</div>
+
 <div class="header-rainbow"></div>
 <div class="header">
-  <div class="header-brand">
-    <div class="brand-badge">Mi Portal</div>
-    <div class="brand-name">Coca-Cola · <span>Dashboard Retornables</span></div>
+  <div class="h-left">
+    <a class="h-logo-link" href="index.html" title="Volver al inicio · Mi Portal">
+      <img src="data:image/png;base64,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" alt="Mi Portal Coca-Cola">
+    </a>
+    <div class="h-vsep"></div>
+    <div class="h-title">Dashboard <span>Retornables</span></div>
   </div>
   <div class="header-right">
-    <div class="live-chip"><div class="live-dot"></div> Datos reales</div>
-    <div class="period-chip" id="headerPeriodChip">Ene – May 2026</div>
+    <div class="live-chip" id="liveChip" title=""><div class="live-dot"></div> <span id="liveChipText">Datos reales</span></div>
+    <div class="period-chip" id="headerPeriodChip">Cargando…</div>
   </div>
 </div>
 
 <!-- FILTER BAR -->
 <div class="filter-bar">
   <span class="filter-label">Período</span>
-  <div class="period-pills">
-    <button class="ppill" onclick="setPeriod('jan',this)">Ene</button>
-    <button class="ppill" onclick="setPeriod('feb',this)">Feb</button>
-    <button class="ppill" onclick="setPeriod('mar',this)">Mar</button>
-    <button class="ppill" onclick="setPeriod('apr',this)">Abr</button>
-    <button class="ppill" onclick="setPeriod('may',this)">May</button>
+  <div class="period-pills" id="periodPills">
     <button class="ppill active" onclick="setPeriod('all',this)">Todo</button>
-    <button class="ppill" onclick="setPeriod('q1',this)">Q1</button>
   </div>
   <div class="filter-divider"></div>
   <div class="date-range">
-    <input type="date" class="date-input" id="dateFrom" value="2026-01-01" min="2026-01-01" max="2026-05-29">
+    <input type="date" class="date-input" id="dateFrom">
     <span class="date-sep">→</span>
-    <input type="date" class="date-input" id="dateTo"   value="2026-05-29" min="2026-01-01" max="2026-05-29">
+    <input type="date" class="date-input" id="dateTo">
     <button class="btn-apply" onclick="applyDateRange()">Aplicar</button>
   </div>
   <div class="range-summary">
     <div class="range-dot"></div>
-    Mostrando: <strong id="rangeLabel">Ene 2026 – May 2026</strong>
-    &nbsp;·&nbsp; <strong id="rangeOrders">9.054</strong> órdenes ret.
-    &nbsp;·&nbsp; <strong id="rangeRevenue">Gs. 342M</strong> en ret.
+    Mostrando: <strong id="rangeLabel">—</strong>
+    &nbsp;·&nbsp; <strong id="rangeOrders">—</strong> órdenes ret.
+    &nbsp;·&nbsp; <strong id="rangeRevenue">—</strong> en ret.
   </div>
 </div>
 
@@ -354,7 +344,8 @@
   <div class="page-header">
     <div>
       <div class="page-title">Análisis de <span>Retornables</span></div>
-      <div class="page-sub" id="pageSub">9.054 órdenes totales · 31.622 líneas · Período: Enero – Mayo 2026</div>
+      <div class="page-sub" id="pageSub">Cargando datos…</div>
+      <a class="source-chip" id="sourceChip" href="#" target="_blank" rel="noopener"></a>
     </div>
   </div>
 
@@ -690,71 +681,28 @@
 
 <script>
 // ═══════════════════════════════════════════════════
-// DATOS COMPLETOS POR MES (5 meses: Ene→May 2026)
+// CONFIG — Fuente de datos: Google Sheet en vivo (gviz)
+// Hoja: export crudo VTEX a nivel SKU (una fila por SKU/orden)
 // ═══════════════════════════════════════════════════
-const D = {
-  months:     ['Ene 26','Feb 26','Mar 26','Abr 26','May 26'],
+const SHEET_ID  = '1oDuPtSdspEqvoo_0RDWg2eku2zrejNhrp711oqBgUp8';
+const SHEET_GID = '1442594514';
+const VALID_STATUS = ['faturado', 'pronto para o manuseio'];
 
-  // Revenue retornables por mes (SKU Total Price)
-  retRev:     [61225631, 52651064, 62656877, 59046512, 106584650],
-  // Revenue total tienda por mes (estimado proporcional)
-  totalRev:   [270000000, 248000000, 291000000, 259000000, 389000000],
-  // Órdenes retornables
-  ordRet:     [751, 772, 973, 725, 833],
-  // Órdenes no-retornables
-  ordNoRet:   [1557, 1042, 1141, 1150, 1110],
-  // Unidades retornables por mes
-  units:      [7820, 6940, 9310, 8190, 10103],
-  // Clientes únicos ret. por mes
-  clients:    [577, 363, 440, 283, 393],
-  // Clientes recurrentes (recompra dentro del mes)
-  retClients: [0, 221, 296, 289, 296],
-  // Revenue de nuevos clientes por mes
-  newRev:     [61225631, 22343264, 25762015, 22320462, 63488800],
-  // Revenue de recurrentes por mes
-  recRev:     [0, 30307800, 36894862, 36726050, 43095850],
-  // Cross-sell por mes (aprox proporcional)
-  crossSell:  [35, 30, 45, 40, 39],
+// D se reconstruye por completo en cada carga a partir del Sheet
+let D = { months:[], retRev:[], totalRev:[], ordRet:[], ordNoRet:[], units:[],
+  clients:[], retClients:[], newRev:[], recRev:[], crossSell:[],
+  weeks:[], weekMonth:[], newByWeek:[], skus:[], brandRev:{}, sizeRev:{}, sizeUnits:{},
+  campaigns:[], utmSource:{} };
 
-  // Semanas con su mes de referencia (índice 0-4)
-  weeks:       ['5-11 ene','12-18 ene','19-25 ene','26ene-1feb','2-8 feb','9-15 feb','16-22 feb','23feb-1mar','2-8 mar','9-15 mar','16-22 mar','23-29 mar','30mar-5abr','6-12 abr','13-19 abr','20-26 abr','27abr-3may','4-10 may','11-17 may','18-24 may','25-31 may'],
-  weekMonth:   [0,0,0,1,1,1,1,2,2,2,2,2,3,3,3,3,4,4,4,4,4],
-  newByWeek:   [162,124,140,111,98,101,82,94,94,98,94,105,67,78,74,69,44,53,42,138,142],
+let MONTH_INDEX = new Map();   // 'YYYY-MM' -> índice en D.months
+let TOTAL_CLIENTS = 0;         // clientes únicos en TODA la tienda (todos los pedidos válidos)
+let DATA_MIN_DATE = null, DATA_MAX_DATE = null; // rango real de fechas del Sheet
+let LAST_ORDER_DATE = null;    // fecha del pedido más reciente (para el chip de fuente)
+let LOADED_AT = null;
 
-  // SKUs: array completo (no varía con filtro mensual — son acumulados)
-  skus: [
-    {name:'CC s/azúcar ret. 2L x8 (S/env.)',    units:571, revenue:41578563, orders:362},
-    {name:'CC original ret. 1.5L x8 (S/env.)',  units:606, revenue:37540969, orders:379},
-    {name:'CC original ret. 2L x8 (S/env.)',    units:450, revenue:32447456, orders:319},
-    {name:'CC s/azúcar ret. 350ml x24 (S/env.)',units:312, revenue:30851353, orders:217},
-    {name:'CC original ret. 350ml x24 (C/env.)',units:212, revenue:26319200, orders:173},
-    {name:'CC s/azúcar ret. 1L x12 (S/env.)',   units:254, revenue:17806246, orders:203},
-    {name:'CC original ret. 350ml x24 (S/env.)',units:176, revenue:17455423, orders:138},
-    {name:'CC original ret. 350ml x12+Vasos',   units:95,  revenue:15403000, orders:72},
-    {name:'CC original ret. 1L x12 (S/env.)',   units:189, revenue:13377077, orders:147},
-    {name:'CC s/azúcar ret. 350ml x12+Vasos',   units:51,  revenue:8043000,  orders:51},
-  ],
-  // Mix por tamaño y marca (proporciones fijas)
-  brandRev:   {'CC Original':194981100,'CC Zero':134471794,'Sprite':7305847,'Fanta':5405993},
-  sizeRev:    {'350ml':140438037,'2L':107047226,'1.5L':47698881,'1L':46980590},
-  sizeUnits:  {'350ml':15693,'2L':11794,'1.5L':8176,'1L':6700},
-  // Campañas
-  campaigns: [
-    {name:'Search · Productos',  orders:609, revenue:53642824, clients:461},
-    {name:'Meta · Productos',    orders:203, revenue:13641500, clients:168},
-    {name:'Meta Campaign #1',    orders:121, revenue:10093900, clients:106},
-    {name:'Meta Campaign #2',    orders:61,  revenue:8626500,  clients:57},
-    {name:'Meta Campaign #3',    orders:35,  revenue:1791000,  clients:32},
-    {name:'Vasos Canción',       orders:9,   revenue:1502000,  clients:9},
-    {name:'Posavasos Albirrojo', orders:6,   revenue:1074500,  clients:6},
-    {name:'Lanz. 350ml x12',     orders:7,   revenue:961000,   clients:7},
-  ],
-  utmSource: {Search:1989, Meta:795, WooWup:627, Facebook:404, Instagram:345, Otros:5},
-};
-
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════
 // ESTADO DEL FILTRO
-// ═══════════════════════════════════
+// ═══════════════════════════════════════════════════
 const PALETTE = ['#82E1FF','#78E6A0','#FFB400','#FF8700','#FF5A00','#E8241B'];
 const RED = '#E8241B';
 Chart.defaults.font.family = "'Inter', sans-serif";
@@ -767,12 +715,326 @@ const FMTn = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed
 const PCT  = (a,b) => b ? (a/b*100).toFixed(1)+'%' : '—';
 const NUM  = n => Math.round(n).toLocaleString('es-PY');
 
-let ACTIVE_IDX = [0,1,2,3,4];
+let ACTIVE_IDX = [];
+let PRESETS = {};
 let charts = {};
 
 // Slice helpers
 const sl  = arr => ACTIVE_IDX.map(i => arr[i]);
 const sum = arr => sl(arr).reduce((a,b)=>a+b,0);
+
+// ═══════════════════════════════════════════════════
+// ETL — traer y transformar la hoja cruda VTEX
+// ═══════════════════════════════════════════════════
+function isRetornable(skuName) { return /retorn/i.test(skuName || ''); }
+
+function sizeOf(name) {
+  const s = (name || '').toLowerCase();
+  if (/350\s*ml/.test(s)) return '350ml';
+  if (/500\s*ml/.test(s)) return '500ml';
+  if (/1[.,]5\s*l(?!\w)/.test(s)) return '1.5L';
+  if (/\b2\s*l(?!\w)/.test(s)) return '2L';
+  if (/\b3\s*l(?!\w)/.test(s)) return '3L';
+  if (/\b1\s*l(?!\w)/.test(s)) return '1L';
+  return 'Otro';
+}
+function brandOf(name) {
+  const s = (name || '').toLowerCase();
+  if (/sin az[uú]car|zero/.test(s)) return 'CC Zero';
+  if (/sprite/.test(s)) return 'Sprite';
+  if (/fanta/.test(s)) return 'Fanta';
+  if (/del valle/.test(s)) return 'Del Valle';
+  if (/coca[\s-]?cola/.test(s)) return 'CC Original';
+  return 'Otros';
+}
+function clientKeyOf(o) {
+  if (o.doc)   return 'doc:'   + o.doc;
+  if (o.email) return 'email:' + o.email;
+  return 'ord:' + o.order;
+}
+function monthKeyOf(d)   { return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0'); }
+const MES_ABR = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const MES_MIN = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function monthLabelOf(key) {
+  const [y,m] = key.split('-');
+  return MES_ABR[+m-1] + ' ' + y.slice(2);
+}
+
+async function fetchSheetRows() {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}&headers=1&cb=${Date.now()}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('HTTP ' + res.status + ' al leer el Sheet');
+  const text = await res.text();
+  const jsonStr = text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1);
+  let json;
+  try { json = JSON.parse(jsonStr); }
+  catch(e) { throw new Error('No se pudo leer la respuesta del Sheet (¿está compartido como público?)'); }
+  if (json.status === 'error') throw new Error((json.errors||[]).map(e=>e.message).join(', ') || 'Error de gviz');
+
+  const cols = json.table.cols.map(c => (c.label || '').trim());
+  const rows = json.table.rows || [];
+  const idx = {};
+  cols.forEach((c,i) => { if (c) idx[c] = i; });
+
+  const need = ['Order','Creation Date','Status','Client Document','Email','Quantity_SKU','SKU Name','SKU Total Price','Total Value'];
+  const missing = need.filter(n => !(n in idx));
+  if (missing.length) throw new Error('Faltan columnas en la hoja: ' + missing.join(', '));
+
+  const gv = (row,i) => (i!=null && row.c && row.c[i] && row.c[i].v != null) ? row.c[i].v : null;
+  const gDate = (row,i) => {
+    const v = gv(row,i); if (v == null) return null;
+    const s = String(v);
+    const m = s.match(/Date\((\d+),(\d+),(\d+)/);
+    if (m) return new Date(+m[1], +m[2], +m[3]);
+    const d = new Date(s);
+    return isNaN(d) ? null : d;
+  };
+  const gNum = (row,i) => { const v = gv(row,i); return v == null ? 0 : (+v || 0); };
+  const gStr = (row,i) => { const v = gv(row,i); return v == null ? '' : String(v).trim(); };
+
+  const out = [];
+  rows.forEach(r => {
+    const order = gStr(r, idx['Order']);
+    if (!order) return;
+    const date = gDate(r, idx['Creation Date']);
+    if (!date) return;
+    out.push({
+      order, date,
+      status: gStr(r, idx['Status']).toLowerCase(),
+      doc: gStr(r, idx['Client Document']),
+      email: gStr(r, idx['Email']).toLowerCase(),
+      utmSource: gStr(r, idx['UtmSource']) || 'Directo',
+      utmCampaign: gStr(r, idx['UtmCampaign']) || 'Sin campaña',
+      qty: gNum(r, idx['Quantity_SKU']),
+      skuName: gStr(r, idx['SKU Name']),
+      skuTotal: gNum(r, idx['SKU Total Price']),
+      totalValue: gNum(r, idx['Total Value']),
+    });
+  });
+  return out;
+}
+
+function buildDataset(lines) {
+  // 1) Filtrar sólo estados válidos (misma convención que el resto de tus pipelines)
+  const valid = lines.filter(l => VALID_STATUS.includes(l.status));
+  if (!valid.length) throw new Error('No se encontraron filas con estado válido (Faturado / Pronto para o manuseio) en la hoja.');
+
+  // 2) Deduplicar a nivel de orden
+  const ordersMap = new Map();
+  valid.forEach(l => {
+    let o = ordersMap.get(l.order);
+    if (!o) {
+      o = { order:l.order, date:l.date, doc:l.doc, email:l.email,
+            utmSource:l.utmSource, utmCampaign:l.utmCampaign,
+            totalValue:l.totalValue, retRev:0, retUnits:0, hasRet:false };
+      ordersMap.set(l.order, o);
+    }
+    if (l.date < o.date) o.date = l.date;
+    if (isRetornable(l.skuName)) {
+      o.hasRet = true;
+      o.retRev += l.skuTotal;
+      o.retUnits += l.qty;
+    }
+  });
+  const orders = Array.from(ordersMap.values()).sort((a,b) => a.date - b.date);
+
+  // 3) Meses dinámicos según lo que haya en el Sheet
+  const monthKeys = Array.from(new Set(orders.map(o => monthKeyOf(o.date)))).sort();
+  MONTH_INDEX = new Map(monthKeys.map((k,i) => [k,i]));
+  D.months = monthKeys.map(monthLabelOf);
+  const n = monthKeys.length;
+
+  DATA_MIN_DATE = orders[0].date;
+  DATA_MAX_DATE = orders[orders.length-1].date;
+  LAST_ORDER_DATE = DATA_MAX_DATE;
+
+  // 4) Clientes totales de la tienda (todos los pedidos válidos, no sólo ret.)
+  TOTAL_CLIENTS = new Set(orders.map(clientKeyOf)).size;
+
+  // 5) Agregados mensuales base
+  D.retRev = Array(n).fill(0);  D.totalRev = Array(n).fill(0);
+  D.ordRet = Array(n).fill(0);  D.ordNoRet = Array(n).fill(0);
+  D.units  = Array(n).fill(0);
+  orders.forEach(o => {
+    const mi = MONTH_INDEX.get(monthKeyOf(o.date));
+    D.totalRev[mi] += o.totalValue;
+    if (o.hasRet) { D.ordRet[mi]++; D.retRev[mi] += o.retRev; D.units[mi] += o.retUnits; }
+    else D.ordNoRet[mi]++;
+  });
+
+  // 6) Cohortes nuevos vs recurrentes (sobre pedidos con retornables)
+  const retOrders = orders.filter(o => o.hasRet);
+  const ordersByClient = new Map();
+  orders.forEach(o => {
+    const k = clientKeyOf(o);
+    if (!ordersByClient.has(k)) ordersByClient.set(k, []);
+    ordersByClient.get(k).push(o);
+  });
+  const firstRetByClient = new Map();     // clientKey -> fecha de 1ª compra ret.
+  const firstRetMonthByClient = new Map();// clientKey -> índice de mes de 1ª compra ret.
+  retOrders.forEach(o => {
+    const k = clientKeyOf(o);
+    if (!firstRetByClient.has(k)) {
+      firstRetByClient.set(k, o.date);
+      firstRetMonthByClient.set(k, MONTH_INDEX.get(monthKeyOf(o.date)));
+    }
+  });
+
+  D.clients = Array(n).fill(0); D.retClients = Array(n).fill(0);
+  D.newRev  = Array(n).fill(0); D.recRev     = Array(n).fill(0);
+  D.crossSell = Array(n).fill(0);
+  const newClientsByMonth = Array.from({length:n}, () => new Set());
+  const recClientsByMonth = Array.from({length:n}, () => new Set());
+
+  retOrders.forEach(o => {
+    const k = clientKeyOf(o);
+    const mi = MONTH_INDEX.get(monthKeyOf(o.date));
+    const firstMi = firstRetMonthByClient.get(k);
+    if (firstMi === mi) { newClientsByMonth[mi].add(k); D.newRev[mi] += o.retRev; }
+    else                { recClientsByMonth[mi].add(k); D.recRev[mi] += o.retRev; }
+  });
+  for (let i=0;i<n;i++) { D.clients[i] = newClientsByMonth[i].size; D.retClients[i] = recClientsByMonth[i].size; }
+
+  // Cross-sell: nuevos del mes que YA tenían pedidos previos (necesariamente no-ret.) antes de su 1ª compra ret.
+  for (let i=0;i<n;i++) {
+    let c = 0;
+    newClientsByMonth[i].forEach(k => {
+      const firstDate = firstRetByClient.get(k);
+      const had = (ordersByClient.get(k)||[]).some(o => o.date < firstDate);
+      if (had) c++;
+    });
+    D.crossSell[i] = c;
+  }
+
+  // 7) Semanas (lunes a domingo) cubriendo todo el rango de datos
+  function startOfWeek(d){ const nd=new Date(d.getFullYear(),d.getMonth(),d.getDate()); const day=(nd.getDay()+6)%7; nd.setDate(nd.getDate()-day); return nd; }
+  const fmtDM = d => d.getDate() + ' ' + MES_MIN[d.getMonth()];
+  D.weeks = []; D.weekMonth = []; D.newByWeek = [];
+  let cursor = startOfWeek(DATA_MIN_DATE);
+  const weekRanges = [];
+  while (cursor <= DATA_MAX_DATE) {
+    const wEnd = new Date(cursor); wEnd.setDate(wEnd.getDate()+6); wEnd.setHours(23,59,59,999);
+    weekRanges.push({ start:new Date(cursor), end:wEnd });
+    D.weeks.push(`${fmtDM(cursor)}–${fmtDM(wEnd)}`);
+    let mi = MONTH_INDEX.get(monthKeyOf(cursor));
+    if (mi == null) mi = MONTH_INDEX.get(monthKeyOf(wEnd)) ?? 0;
+    D.weekMonth.push(mi);
+    cursor = new Date(cursor); cursor.setDate(cursor.getDate()+7);
+  }
+  D.newByWeek = weekRanges.map(w => {
+    let c = 0;
+    firstRetByClient.forEach(d => { if (d >= w.start && d <= w.end) c++; });
+    return c;
+  });
+
+  // 8) Productos, mix marca/tamaño (acumulado sobre todo el histórico del Sheet)
+  const retLines = valid.filter(l => isRetornable(l.skuName));
+  const skuAgg = new Map();
+  D.brandRev = {}; D.sizeRev = {}; D.sizeUnits = {};
+  retLines.forEach(l => {
+    let s = skuAgg.get(l.skuName);
+    if (!s) { s = {name:l.skuName, units:0, revenue:0, ordersSet:new Set()}; skuAgg.set(l.skuName, s); }
+    s.units += l.qty; s.revenue += l.skuTotal; s.ordersSet.add(l.order);
+    const b = brandOf(l.skuName), sz = sizeOf(l.skuName);
+    D.brandRev[b] = (D.brandRev[b]||0) + l.skuTotal;
+    D.sizeRev[sz] = (D.sizeRev[sz]||0) + l.skuTotal;
+    D.sizeUnits[sz] = (D.sizeUnits[sz]||0) + l.qty;
+  });
+  D.skus = Array.from(skuAgg.values())
+    .map(s => ({ name:s.name, units:Math.round(s.units), revenue:Math.round(s.revenue), orders:s.ordersSet.size }))
+    .sort((a,b) => b.revenue - a.revenue).slice(0,10);
+
+  // 9) Campañas UTM y fuentes (sobre pedidos con retornables)
+  const campAgg = new Map();
+  const utmAgg = {};
+  retOrders.forEach(o => {
+    const camp = o.utmCampaign || 'Sin campaña';
+    let c = campAgg.get(camp);
+    if (!c) { c = {name:camp, revenue:0, ordersSet:new Set(), clientsSet:new Set()}; campAgg.set(camp,c); }
+    c.revenue += o.retRev; c.ordersSet.add(o.order); c.clientsSet.add(clientKeyOf(o));
+    const src = o.utmSource || 'Directo';
+    utmAgg[src] = (utmAgg[src]||0) + 1;
+  });
+  D.campaigns = Array.from(campAgg.values())
+    .map(c => ({ name:c.name, revenue:Math.round(c.revenue), orders:c.ordersSet.size, clients:c.clientsSet.size }))
+    .sort((a,b) => b.revenue - a.revenue).slice(0,8);
+  D.utmSource = utmAgg;
+
+  // 10) Presets de período dinámicos: un botón por mes + "Todo"
+  const iso = d => d.toISOString().slice(0,10);
+  PRESETS = { all: { idx: monthKeys.map((_,i)=>i), from: iso(DATA_MIN_DATE), to: iso(DATA_MAX_DATE) } };
+  monthKeys.forEach((k,i) => {
+    const [y,m] = k.split('-').map(Number);
+    const first = new Date(y, m-1, 1);
+    const last  = new Date(y, m, 0);
+    PRESETS['m'+i] = {
+      idx: [i],
+      from: iso(i===0 ? DATA_MIN_DATE : first),
+      to:   iso(i===monthKeys.length-1 ? DATA_MAX_DATE : last),
+    };
+  });
+}
+
+function monthIdxForDate(dateStr) {
+  const key = dateStr.slice(0,7);
+  if (MONTH_INDEX.has(key)) return MONTH_INDEX.get(key);
+  const keys = Array.from(MONTH_INDEX.keys()).sort();
+  if (!keys.length) return 0;
+  if (key < keys[0]) return 0;
+  if (key > keys[keys.length-1]) return keys.length-1;
+  let idx = 0; for (let i=0;i<keys.length;i++) if (keys[i] <= key) idx = i;
+  return idx;
+}
+
+function renderPeriodPills() {
+  const box = document.getElementById('periodPills');
+  const monthKeys = Array.from(MONTH_INDEX.keys());
+  let html = `<button class="ppill active" onclick="setPeriod('all',this)">Todo</button>`;
+  monthKeys.forEach((k,i) => {
+    html += `<button class="ppill" onclick="setPeriod('m${i}',this)">${D.months[i]}</button>`;
+  });
+  box.innerHTML = html;
+}
+
+function setDateBounds() {
+  const from = document.getElementById('dateFrom');
+  const to   = document.getElementById('dateTo');
+  const iso = d => d.toISOString().slice(0,10);
+  from.min = to.min = iso(DATA_MIN_DATE);
+  from.max = to.max = iso(DATA_MAX_DATE);
+  from.value = iso(DATA_MIN_DATE);
+  to.value   = iso(DATA_MAX_DATE);
+}
+
+function updateSourceChip() {
+  const chip = document.getElementById('sourceChip');
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?gid=${SHEET_GID}`;
+  const fmtFull = d => String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
+  const fmtHM = d => String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  chip.href = url;
+  chip.textContent = `📄 Google Sheet · datos al ${fmtFull(LAST_ORDER_DATE)} · cargado ${fmtFull(LOADED_AT)} ${fmtHM(LOADED_AT)}`;
+  const liveChip = document.getElementById('liveChip');
+  document.getElementById('liveChipText').textContent = 'Datos en vivo';
+  liveChip.title = 'Última actualización: ' + fmtFull(LOADED_AT) + ' ' + fmtHM(LOADED_AT);
+}
+
+function showOverlay(mode, msg) {
+  const ov = document.getElementById('dataOverlay');
+  ov.classList.remove('hidden');
+  document.getElementById('ovSpinner').classList.toggle('hidden', mode !== 'loading');
+  document.getElementById('ovErrIcon').classList.toggle('hidden', mode !== 'error');
+  document.getElementById('ovRetry').classList.toggle('hidden', mode !== 'error');
+  document.getElementById('ovCode').classList.toggle('hidden', mode !== 'error');
+  if (mode === 'error') {
+    document.getElementById('ovTitle').textContent = 'No se pudieron cargar los datos';
+    document.getElementById('ovSub').textContent = 'Revisá que la hoja esté compartida como "Cualquiera con el enlace · Lector" y volvé a intentar.';
+    document.getElementById('ovCode').textContent = msg || '';
+  } else {
+    document.getElementById('ovTitle').textContent = 'Cargando datos desde Google Sheets…';
+    document.getElementById('ovSub').textContent = 'Trayendo la hoja de retornables y reconstruyendo las métricas del período.';
+  }
+}
+function hideOverlay() { document.getElementById('dataOverlay').classList.add('hidden'); }
 
 // ═══════════════════════════════════
 // COMPUTED METRICS para el filtro activo
@@ -794,7 +1056,7 @@ function compute() {
   const newTicket   = newClients  ? newRevTotal / newClients  : 0;
   const pctRet      = ordTotal    ? (ordRetTotal/ordTotal*100).toFixed(1)+'%' : '—';
   const pctRevPart  = totalRevTot ? (retRevTotal/totalRevTot*100).toFixed(1)+'%' : '—';
-  const pctNewOfAll = 5145        ? (newClients/5145*100).toFixed(0)+'%' : '—';
+  const pctNewOfAll = TOTAL_CLIENTS ? (newClients/TOTAL_CLIENTS*100).toFixed(0)+'%' : '—';
 
   // Recompra (escala proporcional al todo — 33.9% total)
   const reuseRate   = newClients  ? Math.min(33.9, (recCliTotal/newClients)*100) : 33.9;
@@ -830,9 +1092,7 @@ function compute() {
   const f4 = Math.round(reuseN * 0.130) || 1;
 
   // Label del período
-  const periodLabel = ACTIVE_IDX.length === 5
-    ? 'Ene 2026 – May 2026'
-    : ACTIVE_IDX.length === 1
+  const periodLabel = ACTIVE_IDX.length === 1
     ? D.months[ACTIVE_IDX[0]]
     : `${D.months[ACTIVE_IDX[0]]} – ${D.months[ACTIVE_IDX[ACTIVE_IDX.length-1]]}`;
 
@@ -898,7 +1158,7 @@ function updateKPIs(m) {
   setText('n1b', `${m.maxNcMonth}: pico con ${m.maxNc}`);
 
   setText('n2v', m.pctNewOfAll);
-  setText('n2s', 'de 5.145 clientes únicos totales');
+  setText('n2s', `de ${NUM(TOTAL_CLIENTS)} clientes únicos totales`);
 
   setText('n3v', FMT(m.newRevTotal));
   setText('n3s', `Gs. ${NUM(m.newRevTotal)} generados`);
@@ -1101,7 +1361,7 @@ function buildCharts() {
     labels: D.months,
     datasets:[
       {type:'bar',  label:'Revenue Ret.', data:D.retRev,
-        backgroundColor: D.retRev.map((_,i)=>i===4?RED:'rgba(232,36,27,0.4)'),
+        backgroundColor: D.retRev.map((_,i)=>i===D.retRev.length-1?RED:'rgba(232,36,27,0.4)'),
         borderRadius:6, borderSkipped:false},
       {type:'line', label:'Tendencia', data:D.retRev,
         borderColor:PALETTE[2], backgroundColor:'transparent',
@@ -1144,7 +1404,7 @@ function buildCharts() {
   charts['c_newByMonth'] = new Chart('c_newByMonth',{ type:'bar', data:{
     labels:D.months,
     datasets:[{label:'Nuevos clientes',data:D.clients,
-      backgroundColor:D.clients.map((_,i)=>i===0?RED:'rgba(232,36,27,0.4)'),
+      backgroundColor:D.clients.map((_,i)=>i===D.clients.indexOf(Math.max(...D.clients))?RED:'rgba(232,36,27,0.4)'),
       borderRadius:6,borderSkipped:false}]},
     options:baseOpts({plugins:{legend:{display:false}},
       scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
@@ -1315,16 +1575,6 @@ function buildPromos() {
 // ═══════════════════════════════════
 // FILTRO DE PERÍODO
 // ═══════════════════════════════════
-const PRESETS = {
-  all:{ idx:[0,1,2,3,4], from:'2026-01-01', to:'2026-05-29' },
-  jan:{ idx:[0],         from:'2026-01-01', to:'2026-01-31' },
-  feb:{ idx:[1],         from:'2026-02-01', to:'2026-02-28' },
-  mar:{ idx:[2],         from:'2026-03-01', to:'2026-03-31' },
-  apr:{ idx:[3],         from:'2026-04-01', to:'2026-04-30' },
-  may:{ idx:[4],         from:'2026-05-01', to:'2026-05-29' },
-  q1: { idx:[0,1,2],     from:'2026-01-01', to:'2026-03-31' },
-};
-
 function applyFilter() {
   updateKPIs(compute());
   refreshCharts();
@@ -1344,16 +1594,15 @@ function applyDateRange() {
   const from = document.getElementById('dateFrom').value;
   const to   = document.getElementById('dateTo').value;
   if (!from || !to || from > to) return;
-  const mMap = {'2026-01':0,'2026-02':1,'2026-03':2,'2026-04':3,'2026-05':4};
-  const fi = mMap[from.slice(0,7)] ?? 0;
-  const ti = mMap[to.slice(0,7)]   ?? 4;
+  const fi = monthIdxForDate(from);
+  const ti = monthIdxForDate(to);
   ACTIVE_IDX = [];
   for (let i=fi; i<=ti; i++) ACTIVE_IDX.push(i);
   document.querySelectorAll('.ppill').forEach(b=>b.classList.remove('active'));
   // Marcar si coincide con preset
   for (const [k,p] of Object.entries(PRESETS)) {
     if (JSON.stringify(p.idx) === JSON.stringify(ACTIVE_IDX)) {
-      document.querySelector(`.ppill[onclick*="${k}"]`)?.classList.add('active');
+      document.querySelector(`.ppill[onclick*="'${k}'"]`)?.classList.add('active');
       break;
     }
   }
@@ -1370,12 +1619,33 @@ function showTab(name, btn) {
 // ═══════════════════════════════════
 // INIT
 // ═══════════════════════════════════
-window.addEventListener('DOMContentLoaded', () => {
-  buildCharts();
-  buildTable();
-  buildPromos();
-  applyFilter(); // renderiza KPIs con el período completo
-});
+window.addEventListener('DOMContentLoaded', () => { init(); });
+
+async function init() {
+  showOverlay('loading');
+  // Reset por si es un reintento
+  charts = {};
+  document.getElementById('t_topSku').innerHTML = '';
+  document.getElementById('promoGrid').innerHTML = '';
+  try {
+    const lines = await fetchSheetRows();
+    buildDataset(lines);
+    LOADED_AT = new Date();
+
+    renderPeriodPills();
+    setDateBounds();
+    buildCharts();
+    buildTable();
+    buildPromos();
+    ACTIVE_IDX = PRESETS.all.idx;
+    applyFilter();
+    updateSourceChip();
+    hideOverlay();
+  } catch (err) {
+    console.error(err);
+    showOverlay('error', err.message || String(err));
+  }
+}
 </script>
 </body>
 </html>

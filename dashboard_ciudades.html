@@ -617,6 +617,25 @@ const GSHEET = {
   gid: '1742393063'   // pestaña nueva (verificar nombre en el Sheet)
 };
 
+/* --- Normalización precisa de valores gviz --- */
+// Fecha gviz "Date(YYYY,M,D[,h,m,s])" (mes 0-indexado) -> "YYYY-MM-DD[ HH:MM:SS]" ISO exacto,
+// independiente del locale del Sheet (nunca usar cell.f: en locale es-PY sale "13/6/2026" y rompe slice/orden).
+function gvizNormDate(v){
+  const m = /^Date\((\d+),(\d+),(\d+)(?:,(\d+))?(?:,(\d+))?(?:,(\d+))?/.exec(v);
+  if(!m) return v;
+  const p = n => String(n).padStart(2,'0');
+  let out = m[1] + '-' + p(+m[2]+1) + '-' + p(+m[3]);
+  if(m[4] != null) out += ' ' + p(+m[4]) + ':' + p((+m[5])||0) + ':' + p((+m[6])||0);
+  return out;
+}
+// Si la fecha llegó como texto "DD/MM/YYYY[ hh:mm]" la convierte a ISO; si ya es ISO la deja igual.
+function normCreationDate(s){
+  s = String(s).trim();
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})(.*)$/.exec(s);
+  if(m){ const p=n=>String(n).padStart(2,'0'); return m[3]+'-'+p(m[2])+'-'+p(m[1])+(m[4]||''); }
+  return s;
+}
+
 async function gvizFetchRows(){
   const url = 'https://docs.google.com/spreadsheets/d/'+GSHEET.id+
               '/gviz/tq?gid='+GSHEET.gid+'&tqx=out:json&headers=1&_='+Date.now();
@@ -636,10 +655,13 @@ async function gvizFetchRows(){
       let v = '';
       if(cell != null){
         v = (cell.v != null) ? cell.v : (cell.f != null ? cell.f : '');
-        if(typeof v==='string' && v.indexOf('Date(')===0 && cell.f!=null) v = cell.f;
+        if(typeof v==='string' && v.indexOf('Date(')===0) v = gvizNormDate(v);
       }
       o[cols[idx]] = v;
     });
+    // Precisión: Order siempre como string (dedup consistente) y Creation Date siempre ISO
+    if(o['Order'] != null && o['Order'] !== '') o['Order'] = String(o['Order']).trim();
+    if(o['Creation Date'] != null && o['Creation Date'] !== '') o['Creation Date'] = normCreationDate(o['Creation Date']);
     out.push(o);
   });
   return out;

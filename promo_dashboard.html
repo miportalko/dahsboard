@@ -19,6 +19,9 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 .h-title{color:#fff;font-size:15px;font-weight:700;line-height:1}
 .h-sub{color:#888;font-size:11px;margin-top:2px}
 .h-period{color:#ccc;font-size:12px;background:rgba(255,255,255,.07);padding:5px 14px;border-radius:18px;border:1px solid rgba(255,255,255,.1)}
+@keyframes syncPulse{0%{box-shadow:0 0 0 0 rgba(120,230,160,.55)}70%{box-shadow:0 0 0 7px rgba(120,230,160,0)}100%{box-shadow:0 0 0 0 rgba(120,230,160,0)}}
+#syncDot{animation:syncPulse 2.4s infinite}
+#syncDot.busy{background:#FFB400!important;animation:syncPulse 1s infinite}
 .hnav{display:flex;align-items:center;gap:10px}
 .hnav-link{color:#aaa;font-size:12px;font-weight:600;text-decoration:none;padding:5px 14px;border-radius:18px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);transition:background .2s,color .2s;white-space:nowrap}
 .hnav-link:hover{background:rgba(255,255,255,.12);color:#fff}
@@ -112,6 +115,7 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
   </div>
   <div style="display:flex;align-items:center;gap:10px;margin-left:auto;padding-right:10px">
     <span id="uploadMsg" style="font-size:11px;color:#1E9E5A;opacity:0;transition:opacity .3s;max-width:260px"></span>
+    <span id="syncDot" title="Sincronización automática con Google Sheet (cada 5 min)" style="width:8px;height:8px;border-radius:50%;background:#78E6A0;box-shadow:0 0 0 0 rgba(120,230,160,.6);flex-shrink:0"></span>
     <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" style="display:none">
   </div>
 </header>
@@ -625,7 +629,7 @@ function populateCampSelect(){
   if(active.indexOf(cur)>=0) sel.value=cur;
   else if(active.length) sel.value=active[0];
 }
-window.addEventListener('DOMContentLoaded',function(){populateCampSelect();refreshDataBanner();showPromoUploadMsg('⏳ Cargando datos del Sheet…','ok');loadPromoFromSheet();});
+window.addEventListener('DOMContentLoaded',function(){populateCampSelect();refreshDataBanner();showPromoUploadMsg('⏳ Cargando datos del Sheet…','ok');autoSyncPromo('init');});
 
 function refreshDataBanner(){
   let minD=null, maxD=null;
@@ -821,6 +825,25 @@ const GSHEET = {
   gid: '1742393063'   // pestaña nueva (verificar nombre en el Sheet)
 };
 
+/* --- Normalización precisa de valores gviz --- */
+// Fecha gviz "Date(YYYY,M,D[,h,m,s])" (mes 0-indexado) -> "YYYY-MM-DD[ HH:MM:SS]" ISO exacto,
+// independiente del locale del Sheet (nunca usar cell.f: en locale es-PY sale "13/6/2026" y rompe slice/dedup).
+function gvizNormDate(v){
+  const m = /^Date\((\d+),(\d+),(\d+)(?:,(\d+))?(?:,(\d+))?(?:,(\d+))?/.exec(v);
+  if(!m) return v;
+  const p = n => String(n).padStart(2,'0');
+  let out = m[1] + '-' + p(+m[2]+1) + '-' + p(+m[3]);
+  if(m[4] != null) out += ' ' + p(+m[4]) + ':' + p((+m[5])||0) + ':' + p((+m[6])||0);
+  return out;
+}
+// Si la fecha llegó como texto "DD/MM/YYYY[ hh:mm]" la convierte a ISO; si ya es ISO la deja igual.
+function normCreationDate(s){
+  s = String(s).trim();
+  const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})(.*)$/.exec(s);
+  if(m){ const p=n=>String(n).padStart(2,'0'); return m[3]+'-'+p(m[2])+'-'+p(m[1])+(m[4]||''); }
+  return s;
+}
+
 async function gvizFetchRows(){
   const url = 'https://docs.google.com/spreadsheets/d/'+GSHEET.id+
               '/gviz/tq?gid='+GSHEET.gid+'&tqx=out:json&headers=1&_='+Date.now();
@@ -840,10 +863,15 @@ async function gvizFetchRows(){
       let v = '';
       if(cell != null){
         v = (cell.v != null) ? cell.v : (cell.f != null ? cell.f : '');
-        if(typeof v==='string' && v.indexOf('Date(')===0 && cell.f!=null) v = cell.f;
+        if(typeof v==='string' && v.indexOf('Date(')===0) v = gvizNormDate(v);
       }
       o[cols[idx]] = v;
     });
+    // Precisión: Order como string (dedup por order_id consistente), fecha ISO, UTM siempre string
+    if(o['Order'] != null && o['Order'] !== '') o['Order'] = String(o['Order']).trim();
+    if(o['Creation Date'] != null && o['Creation Date'] !== '') o['Creation Date'] = normCreationDate(o['Creation Date']);
+    if(o['UtmSource'] != null) o['UtmSource'] = String(o['UtmSource']);
+    if(o['UtmMedium'] != null) o['UtmMedium'] = String(o['UtmMedium']);
     out.push(o);
   });
   return out;
@@ -870,7 +898,37 @@ async function loadPromoFromSheet(){
 }
 
 
+/* ============================================================
+   SINCRONIZACIÓN AUTOMÁTICA (tiempo real)
+   - Carga al abrir
+   - Refresca cada AUTO_MIN minutos
+   - Refresca al volver a la pestaña (si pasó > 60s desde la última)
+   La precisión la garantiza buildPromoDelta: dedup por order_id,
+   solo agrega líneas de pedidos nuevos.
+   ============================================================ */
+const AUTO_MIN = 5;            // intervalo de auto-refresco (minutos)
+let _lastSync = 0;
 
+async function autoSyncPromo(reason){
+  const dot = document.getElementById('syncDot');
+  if(dot) dot.classList.add('busy');
+  try{
+    await loadPromoFromSheet();
+    _lastSync = Date.now();
+  } finally {
+    if(dot) dot.classList.remove('busy');
+  }
+}
+
+// Refresco periódico
+setInterval(()=>autoSyncPromo('interval'), AUTO_MIN*60*1000);
+
+// Refresco al recuperar el foco de la pestaña
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState==='visible' && (Date.now()-_lastSync) > 60*1000){
+    autoSyncPromo('focus');
+  }
+});
 
 </script>
 </body>

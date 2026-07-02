@@ -454,23 +454,27 @@ let RAW = { kpis:{}, monthly:[], campaigns:[] }; // se completa en runtime via f
 // CONEXION A GOOGLE SHEETS (gviz/tq) — Fuente Campanas Mailing
 // ═══════════════════════════════════════════════════════
 const SHEET_ID = '1l6cCYgNh_e9bN-uOPyn8m6-QMXvsfj-Nw_jxJBWHbCI';
-const SHEET_GID = 0; // cambiar si los datos van en otra pestana (ver gid en la URL de esa pestana)
+const SHEET_GID = 898845227; // pestaña de campañas de mailing (una fila por día de atribución)
 
 function norm(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]/g,''); }
 
 const FIELD_ALIASES = {
   id:           ['id','campaignid','idcampana'],
   name:         ['name','nombre','campaign','campana','nombrecampana'],
+  type:         ['type','tipo'],
   sent_at:      ['sentat','fecha','fechaenvio','date','sentdate','fechadeenvio'],
   sent:         ['sent','enviados','sentcount','totalenviados'],
   unique_open:  ['uniqueopen','uniqueopens','aperturas','aperturasunicas','opens','open'],
   unique_click: ['uniqueclick','uniqueclicks','clicks','clicksunicos','click'],
+  spam:         ['spamreport','spam','spamreports'],
+  bounce:       ['bounce','bounces','rebotes'],
+  unsub:        ['unsubscribe','unsubscribes','bajas','desuscripciones'],
   tickets:      ['tickets','ventas','pedidos'],
   revenue:      ['revenue','ingresos','monto','revenuegs','facturacion'],
   open_rate:    ['openrate','tasadeapertura','tasaapertura'],
   ctr:          ['ctr'],
   ctor:         ['ctor'],
-  bounce_rate:  ['bouncerate','rebote','tasaderebote'],
+  bounce_rate:  ['bouncerate','tasaderebote'],
   unsub_rate:   ['unsubrate','bajarate','desuscripcion','tasadedesuscripcion']
 };
 
@@ -499,42 +503,72 @@ function parseGvizDate(raw){
 function cellVal(cell){ return cell ? cell.v : null; }
 
 async function fetchSheetData(){
-  const url = 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json&gid='+SHEET_GID+'&cb='+Date.now();
+  const url = 'https://docs.google.com/spreadsheets/d/'+SHEET_ID+'/gviz/tq?tqx=out:json&gid='+SHEET_GID+'&headers=1&cb='+Date.now();
   const res = await fetch(url);
   if(!res.ok) throw new Error('HTTP '+res.status);
   const text = await res.text();
   const jsonStr = text.substring(text.indexOf('{'), text.lastIndexOf('}')+1);
   const data = JSON.parse(jsonStr);
+  if(data.status==='error') throw new Error((data.errors||[]).map(e=>e.message).join(', ')||'Error de gviz');
   const cols = data.table.cols;
   const rows = data.table.rows || [];
   const map = mapHeaders(cols);
+  if(map.id==null || map.sent_at==null) throw new Error('No se encontraron las columnas "id" y "sent at" en la pestaña (gid '+SHEET_GID+')');
 
-  const seen = new Set();
-  const campaigns = [];
+  // ── AGREGACIÓN por campaña ──
+  // La hoja trae UNA FILA POR DÍA de atribución: la fila del envío tiene sent/opens/clicks,
+  // y las filas siguientes tienen sent=0 pero suman tickets y revenue de días posteriores.
+  // Por eso se SUMAN todas las filas de un mismo id (nunca descartar: se perdería revenue).
+  const byId = new Map();
   rows.forEach(r=>{
     const c = r.c;
     const get = k => (map[k]!=null ? cellVal(c[map[k]]) : null);
-    const id = get('id');
-    if(id==null || id==='') return;
-    if(seen.has(id)) return; // dedupe por id
-    seen.add(id);
+    const idRaw = get('id');
+    if(idRaw==null || idRaw==='') return;
+    const id = String(idRaw);
+    const dateStr = parseGvizDate(get('sent_at'));
 
-    const sent_at_str = parseGvizDate(get('sent_at'));
+    let agg = byId.get(id);
+    if(!agg){
+      agg = { id, name:'', sent:0, unique_open:0, unique_click:0,
+              spam:0, bounce:0, unsub:0, tickets:0, revenue:0,
+              sentDate:'', minDate:'' };
+      byId.set(id, agg);
+    }
+    const name = String(get('name')||'').trim();
+    if(name && !agg.name) agg.name = name;
+
     const sent = Number(get('sent'))||0;
-    const unique_open = Number(get('unique_open'))||0;
-    const unique_click = Number(get('unique_click'))||0;
-    const tickets = Number(get('tickets'))||0;
-    const revenue = Number(get('revenue'))||0;
+    agg.sent         += sent;
+    agg.unique_open  += Number(get('unique_open'))||0;
+    agg.unique_click += Number(get('unique_click'))||0;
+    agg.spam         += Number(get('spam'))||0;
+    agg.bounce       += Number(get('bounce'))||0;
+    agg.unsub        += Number(get('unsub'))||0;
+    agg.tickets      += Number(get('tickets'))||0;
+    agg.revenue      += Number(get('revenue'))||0;
 
-    const open_rate = map.open_rate!=null ? Number(get('open_rate'))||0 : (sent>0?unique_open/sent*100:0);
-    const ctr = map.ctr!=null ? Number(get('ctr'))||0 : (sent>0?unique_click/sent*100:0);
-    const ctor = map.ctor!=null ? Number(get('ctor'))||0 : (unique_open>0?unique_click/unique_open*100:0);
-    const bounce_rate = map.bounce_rate!=null ? Number(get('bounce_rate'))||0 : 0;
-    const unsub_rate = map.unsub_rate!=null ? Number(get('unsub_rate'))||0 : 0;
+    // Fecha de la campaña = fecha de la fila del ENVÍO (sent>0); fallback: fecha mínima.
+    if(dateStr){
+      if(sent>0 && (!agg.sentDate || dateStr < agg.sentDate)) agg.sentDate = dateStr;
+      if(!agg.minDate || dateStr < agg.minDate) agg.minDate = dateStr;
+    }
+  });
 
+  const campaigns = [];
+  byId.forEach(a=>{
+    const sent_at_str = a.sentDate || a.minDate;
+    if(!sent_at_str) return; // sin fecha válida no puede ubicarse en la serie temporal
+    const open_rate   = a.sent>0 ? a.unique_open /a.sent*100 : 0;
+    const ctr         = a.sent>0 ? a.unique_click/a.sent*100 : 0;
+    const ctor        = a.unique_open>0 ? a.unique_click/a.unique_open*100 : 0;
+    const bounce_rate = a.sent>0 ? a.bounce/a.sent*100 : 0;
+    const unsub_rate  = a.sent>0 ? a.unsub /a.sent*100 : 0;
     campaigns.push({
-      id, name: get('name')||'Sin nombre', sent_at_str, sent, unique_open, unique_click,
-      tickets, revenue,
+      id:a.id, name: a.name || ('Campaña #'+a.id), sent_at_str,
+      sent:a.sent, unique_open:a.unique_open, unique_click:a.unique_click,
+      spam:a.spam, bounce:a.bounce, unsub:a.unsub,
+      tickets:a.tickets, revenue:a.revenue,
       open_rate: Math.round(open_rate*100)/100,
       ctr: Math.round(ctr*100)/100,
       ctor: Math.round(ctor*100)/100,
@@ -1180,8 +1214,11 @@ function getMailingExportData(){
     'CTOR (%)': d.ctor,
     'Tickets': d.tickets,
     'Revenue (₲)': d.revenue,
+    'Bounces': d.bounce,
     'Bounce Rate (%)': d.bounce_rate,
-    'Unsub Rate (%)': d.unsub_rate
+    'Desuscripciones': d.unsub,
+    'Unsub Rate (%)': d.unsub_rate,
+    'Spam Reports': d.spam
   }));
 }
 function exportMailingCSV(){

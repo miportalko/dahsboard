@@ -321,6 +321,52 @@ function renderAll(){
   renderInsights(agg,aggPrev,camp);
 }
 
+/* ============================================================
+   AUTO-DESACTIVACIÓN POR INACTIVIDAD
+   Toda campaña "activa" sin pedidos nuevos hace más de
+   INACTIVITY_DAYS días aparece como "desactivado".
+   - Referencia "hoy" = fecha más reciente de los datos del Sheet
+     (no el reloj local: evita falsos positivos si falla la conexión).
+   - Reversible: si vuelve a vender, recupera sola su estado activa.
+   - Se recalcula en cada sincronización (Sheet o archivo).
+   ============================================================ */
+const INACTIVITY_DAYS = 10;
+
+function _dateUTC(s){
+  const p = String(s).slice(0,10).split('-');
+  return Date.UTC(+p[0], +p[1]-1, +p[2]);
+}
+
+function applyAutoDeactivation(){
+  // "Hoy" según los datos: máx entre el rango del Sheet y el último pedido cargado
+  let ref = (window.SHEET_RANGE && window.SHEET_RANGE.max) ? window.SHEET_RANGE.max : null;
+  RAW.campaigns.forEach(c=>{
+    (c.rows||[]).forEach(r=>{ const d=r[0]; if(d && (!ref || d>ref)) ref=d; });
+  });
+  if(!ref) return; // sin datos cargados todavía: no juzgar
+
+  RAW.campaigns.forEach(c=>{
+    if(c._origStatus === undefined) c._origStatus = c.status; // estado curado original
+    if(c._origStatus !== 'activa') return;                    // solo se auditan las activas
+    // Último movimiento real: fecha máxima de sus pedidos; si nunca vendió, su fecha de inicio
+    let last = null;
+    (c.rows||[]).forEach(r=>{ const d=r[0]; if(d && (!last || d>last)) last=d; });
+    if(!last) last = c.start;
+    const days = Math.floor((_dateUTC(ref) - _dateUTC(last)) / 86400000);
+    if(days > INACTIVITY_DAYS){
+      c.status = 'desactivado';
+      c._autoOff = true;
+      c._daysIdle = days;
+      c._lastMove = last;
+    } else {
+      c.status = 'activa';
+      c._autoOff = false;
+      c._daysIdle = days;
+      c._lastMove = last;
+    }
+  });
+}
+
 /* Fechas dinámicas por campaña.
    - start: fecha oficial curada (c.start); si hubo ventas reales antes, se extiende hacia atrás.
    - end  : para campañas ACTIVAS, = último pedido real cargado del Sheet (se refresca solo).
@@ -352,7 +398,9 @@ function renderCampCards(agg){
     const u=isActive?agg.totalUn:c.rows.reduce((a,r)=>a+r[2],0);
     const o=isActive?agg.orders:new Set(c.rows.map(r=>r[5])).size;
     return '<div class="camp-card '+(isActive?'active':'')+(off?' off':'')+(disabled?' soon':'')+'"'+(disabled?'':' onclick="selectCamp(\''+c.id+'\')"')+'>'+
-      '<span class="camp-status'+(off?' off':'')+(disabled?' soon':'')+'">'+c.status+'</span>'+
+      '<span class="camp-status'+(off?' off':'')+(disabled?' soon':'')+'"'+
+        (c._autoOff?' title="Desactivada automáticamente: sin pedidos hace '+c._daysIdle+' días (último movimiento: '+c._lastMove+')"':'')+
+        '>'+c.status+(c._autoOff?' · '+c._daysIdle+'d sin mov.':'')+'</span>'+
       '<div class="camp-name">'+c.name+'</div>'+
 
       (function(){var dd=getCampDisplayDates(c);return '<div class="camp-dates" title="'+(dd.live?'Fin actualizado en vivo desde el Sheet (último pedido real)':'Fechas oficiales de la campaña')+'">📅 '+dd.start+' → '+dd.end+(dd.live?' <span style="color:#1E9E5A" title="en vivo">•</span>':'')+'</div>';})()+
@@ -785,6 +833,7 @@ function handlePromoFile(file){
       }
       const {addedCount, touchedCampaigns}=buildPromoDelta(rows);
       recomputeImportMeta(rows);
+      applyAutoDeactivation();
       populateCampSelect();
       renderAll();
       refreshDataBanner();
@@ -887,6 +936,7 @@ async function loadPromoFromSheet(){
     window.SHEET_RANGE = (smin&&smax)?{min:smin,max:smax}:null;
     const {addedCount, touchedCampaigns} = buildPromoDelta(rows);
     recomputeImportMeta(rows);
+    applyAutoDeactivation();
     populateCampSelect();
     renderAll();
     refreshDataBanner();

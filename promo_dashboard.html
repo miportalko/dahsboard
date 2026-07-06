@@ -103,6 +103,39 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
 [title]{cursor:help}
 .tbl td[title]:hover{background:#fffbf0 !important}
 @media(max-width:1100px){.kgrid{grid-template-columns:repeat(3,1fr)}.g2,.g21{grid-template-columns:1fr}.main,.filters{padding-left:14px;padding-right:14px}.header{padding:0 14px}}
+
+/* ─── Gestor de campañas manuales ─── */
+.sec .sec-actions{display:flex;gap:6px;align-items:center;margin-left:8px}
+.btn-newcamp{display:inline-flex;align-items:center;gap:5px;background:var(--red);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.3px;transition:opacity .15s}
+.btn-newcamp:hover{opacity:.85}
+.sec-link{font-size:9px;font-weight:700;color:var(--muted);cursor:pointer;text-transform:lowercase;letter-spacing:.5px;background:none;border:none;font-family:inherit;padding:2px 4px}
+.sec-link:hover{color:var(--red);text-decoration:underline}
+.camp-tools{float:right;display:flex;gap:4px;margin-left:6px}
+.camp-tool-btn{border:1px solid var(--border);background:#fff;border-radius:5px;width:22px;height:22px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s;padding:0}
+.camp-tool-btn:hover{border-color:var(--red);color:var(--red);background:#fff5f5}
+.camp-manual-chip{display:inline-block;font-size:8px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;padding:1px 7px;border-radius:8px;background:#FFF3E0;color:#E65100;border:1px solid rgba(230,81,0,.2);margin-left:6px;vertical-align:2px}
+.modal-bg{position:fixed;inset:0;background:rgba(13,13,13,.55);z-index:500;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto;backdrop-filter:blur(2px)}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:12px;width:100%;max-width:560px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;animation:modalIn .18s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.modal-head{background:#0D0D0D;color:#fff;padding:16px 22px;display:flex;align-items:center;justify-content:space-between}
+.modal-head h3{font-size:14px;font-weight:800;margin:0}
+.modal-head .m-close{background:none;border:none;color:#888;font-size:18px;cursor:pointer;line-height:1;padding:2px 6px}
+.modal-head .m-close:hover{color:#fff}
+.modal-rainbow{height:3px;background:linear-gradient(90deg,#E8241B,#F5821F,#F5C518,#A8D95A,#5BDDE8)}
+.modal-body{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+.mf{display:flex;flex-direction:column;gap:5px}
+.mf label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.mf input[type=text],.mf input[type=date],.mf select,.mf textarea{border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:'Inter',sans-serif;font-size:12px;color:var(--text);background:#fafafa;outline:none;width:100%;box-sizing:border-box}
+.mf input:focus,.mf select:focus,.mf textarea:focus{border-color:var(--red);background:#fff}
+.mf textarea{resize:vertical;min-height:74px;line-height:1.6}
+.mf .mf-hint{font-size:10px;color:#999;line-height:1.5}
+.mf-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.kw-preview{background:#fafafa;border:1px dashed var(--border);border-radius:8px;padding:10px 12px;font-size:11px;color:#555;max-height:140px;overflow-y:auto}
+.kw-preview .kwp-count{font-weight:800;color:var(--red)}
+.kw-preview ul{margin:6px 0 0;padding-left:16px;display:flex;flex-direction:column;gap:2px}
+.kw-preview li{font-size:10px;color:#666}
+.modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:#fafafa}
 </style>
 </head>
 <body>
@@ -152,7 +185,14 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
   <span class="fcount" id="fcount"></span>
 </div>
 <div class="main">
-  <div class="sec">Campañas Activas</div>
+  <div class="sec">Campañas Activas
+    <span class="sec-actions">
+      <button class="btn-newcamp" onclick="openCampModal()" title="Crear una campaña manual: se detecta por palabras clave en el nombre del SKU">＋ Nueva campaña</button>
+      <button class="sec-link" onclick="exportCustomCampaigns()" title="Descargar backup JSON de tus campañas manuales">exportar</button>
+      <button class="sec-link" onclick="document.getElementById('campImportInput').click()" title="Restaurar campañas manuales desde un backup JSON">importar</button>
+      <input type="file" id="campImportInput" accept=".json" style="display:none">
+    </span>
+  </div>
   <div class="camp-grid" id="camp-cards"></div>
   <div class="sec">KPIs del Período Seleccionado</div>
   <div class="kgrid">
@@ -217,10 +257,132 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
   <div class="insights" id="insights"></div>
 </div>
 <div class="footer"><span>Mi Portal CC — Coca-Cola Paraguay</span> &nbsp;|&nbsp; Fuente: VTEX Report Export &nbsp;|&nbsp; Enero – Mayo 2026</div>
+
+<!-- ─── Modal: crear / editar campaña manual ─── -->
+<div class="modal-bg" id="campModal" onclick="if(event.target===this)closeCampModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="campModalTitle">Nueva campaña</h3>
+      <button class="m-close" onclick="closeCampModal()" title="Cerrar">✕</button>
+    </div>
+    <div class="modal-rainbow"></div>
+    <div class="modal-body">
+      <input type="hidden" id="cm-id">
+      <div class="mf">
+        <label>Nombre de la campaña *</label>
+        <input type="text" id="cm-name" placeholder="Ej: Vasos Navidad 2026" maxlength="60">
+      </div>
+      <div class="mf-row">
+        <div class="mf">
+          <label>Tipo</label>
+          <input type="text" id="cm-type" placeholder="Ej: Combo + Regalo" maxlength="40" list="cm-type-list">
+          <datalist id="cm-type-list">
+            <option value="Combo"></option>
+            <option value="Combo + Regalo"></option>
+            <option value="Combo + Merchandising"></option>
+            <option value="Promo con Regalo"></option>
+            <option value="Descuento"></option>
+          </datalist>
+        </div>
+        <div class="mf">
+          <label>Estado</label>
+          <select id="cm-status">
+            <option value="activa">Activa</option>
+            <option value="desactivado">Desactivado</option>
+            <option value="proximamente">Próximamente</option>
+          </select>
+        </div>
+      </div>
+      <div class="mf">
+        <label>Descripción</label>
+        <input type="text" id="cm-desc" placeholder="Qué incluye la promo" maxlength="140">
+      </div>
+      <div class="mf-row">
+        <div class="mf"><label>Fecha inicio *</label><input type="date" id="cm-start"></div>
+        <div class="mf"><label>Fecha fin *</label><input type="date" id="cm-end"></div>
+      </div>
+      <div class="mf">
+        <label>Palabras clave de SKU *</label>
+        <textarea id="cm-keywords" placeholder="Una regla por línea. Ej:&#10;Vaso Navidad&#10;Pack Coca-Cola &amp; Gorro Navideño" oninput="updateKeywordPreview()"></textarea>
+        <div class="mf-hint">El pedido se asigna a esta campaña si el nombre del SKU contiene alguna de estas reglas (sin distinguir mayúsculas ni tildes). Usá <strong>&amp;</strong> dentro de una línea para exigir que aparezcan varias palabras juntas: <em>«Coca-Cola &amp; Vaso Navidad»</em>.</div>
+      </div>
+      <div class="kw-preview" id="kw-preview">Escribí palabras clave para ver qué SKUs de la base actual coinciden.</div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-out" onclick="closeCampModal()">Cancelar</button>
+      <button class="btn btn-red" onclick="saveCampaignForm()">Guardar campaña</button>
+    </div>
+  </div>
+</div>
 <script>
 const RAW = {"campaigns": [{"id": "posavasos", "name": "Posavasos Albirroja", "type": "Combo", "status": "activa", "description": "5 Posavasos Albirroja + 1 Porta Posavasos", "start": "2026-05-08", "end": "2026-06-16", "rows": []}, {"id": "pasion", "name": "Combo Pasión Albirroja", "type": "Combo + Regalo", "status": "activa", "description": "Vasos Pasión (Rojo + Blanco + Azul) + Pack Coca-Cola", "start": "2026-04-22", "end": "2026-06-17", "rows": []}, {"id": "panini", "name": "Figuritas PANINI", "type": "Promo con Regalo", "status": "activa", "description": "Packs Coca-Cola + Figuritas PANINI de regalo", "start": "2026-05-01", "end": "2026-06-17", "rows": []}, {"id": "sprite", "name": "Combos Sprite", "type": "Combo", "status": "activa", "description": "Pack Sprite + Mugs / vasos Cool Sprite", "start": "2026-01-01", "end": "2026-06-17", "rows": []}, {"id": "cancion", "name": "Vasos Canción", "type": "Combo", "status": "activa", "description": "Cajas retornables Coca-Cola / Sprite / Fanta + Vasos Canción x6", "start": "2026-05-20", "end": "2026-06-16", "rows": []}, {"id": "garra", "name": "Garra Guaraní / Choppera", "type": "Combo + Merchandising", "status": "activa", "description": "Packs Coca-Cola + Vasos Garra Guaraní, Vaso Garra Azul y Choppera Albirroja", "start": "2026-01-14", "end": "2026-06-17", "rows": []}, {"id": "pelota", "name": "Pelota PUMA 2026", "type": "Combo + Regalo", "status": "desactivado", "description": "Cajas retornables Coca-Cola + Pelota PUMA 2026 de regalo", "start": "2026-05-22", "end": "2026-06-01", "rows": []}, {"id": "vaso_mundial", "name": "Vaso Aluminio CC Mundial", "type": "Combo + Merchandising", "status": "activa", "description": "Packs Coca-Cola 2L x4 (original y sin azúcar) + Vaso Aluminio CC Mundial", "start": "2026-06-05", "end": "2026-06-17", "rows": []}, {"id": "snack_mundial", "name": "Snack Bowl CC Mundial", "type": "Combo + Merchandising", "status": "activa", "description": "Packs Coca-Cola 3L x4 (original y sin azúcar) + Snack Bowl CC Mundial", "start": "2026-06-05", "end": "2026-06-16", "rows": []}, {"id": "llavero_mundial", "name": "Llavero CC Mundial", "type": "Combo + Merchandising", "status": "activa", "description": "Packs Coca-Cola latas por selección + Llavero CC Mundial", "start": "2026-06-05", "end": "2026-06-15", "rows": []}, {"id": "abridor_rojo_mundial", "name": "Abridor Rojo CC Mundial", "type": "Combo + Merchandising", "status": "activa", "description": "Cajas Coca-Cola retornable 350mL + Abridor Rojo CC Mundial", "start": "2026-06-05", "end": "2026-06-16", "rows": []}, {"id": "abridor_blanco_mundial", "name": "Abridor Blanco CC Mundial", "type": "Combo + Merchandising", "status": "activa", "description": "Cajas Coca-Cola retornable 350mL + Abridor Blanco CC Mundial", "start": "2026-06-05", "end": "2026-06-16", "rows": []}], "import_meta": {"pedidos": 0, "facturado": 0, "preparacion": 0}};
 const CAMPAIGN_VOCAB_RAW = {"posavasos": ["Caja Coca-Cola sabor original retornable 350mL x 12 (Con envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sabor original retornable 350mL x 12 (Con envase) + 5 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sabor original retornable 350mL x 12 (Con envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sabor original retornable 350mL x 12 (Sin envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sabor original retornable 350mL x 12 (Sin envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sabor original retornable 350mL x24 (Con envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sabor original retornable 350mL x24 (Sin envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x 12 (Con envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x 12 (Con envase) + 5 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x 12 (Con envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x 12 (Sin envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x 12 (Sin envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x24 (Con envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x24 (Sin envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Coca-Cola sabor original retornable 1L (Con envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Coca-Cola sabor original retornable 1L (Sin envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Coca-Cola sabor original retornable 1L x12 (Con envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Coca-Cola sabor original retornable 1L x12 (Sin envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Coca-Cola sin azúcar retornable 1L (Con envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Coca-Cola sin azúcar retornable 1L x12 (Con envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Coca-Cola sin azúcar retornable 1L x12(Sin envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Pack Coca-Cola Sprite 3L x4 + 5 Posavasos Albirroja + 1 Porta Posavasos", "Pack Coca-Cola sabor original 3L x4 + 5 Posavasos Albirroja + 1 Porta Posavasos", "Pack Coca-Cola sin azúcar 3L x4 + 5 Posavasos Albirroja + 1 Porta Posavasos", "Pack Sprite 3L x4 + 5 Posavasos Albirroja + 1 Porta Posavasos"], "pasion": ["Caja Coca-Cola sabor original retornable 350mL x 12 (Con envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sabor original retornable 350mL x 12 (Con envase) + 5 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sabor original retornable 350mL x 12 (Con envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sabor original retornable 350mL x 12 (Sin envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sabor original retornable 350mL x24 (Con envase) + 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra", "Caja Coca-Cola sabor original retornable 350mL x24 (Con envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sabor original retornable 350mL x24 (Sin envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x 12 (Con envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x 12 (Con envase) + 5 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x 12 (Con envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x 12 (Sin envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x 12 (Sin envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x24 (Con envase) + 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra", "Caja Coca-Cola sin azúcar retornable 350mL x24 (Con envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Coca-Cola sabor original retornable 1L x12 (Con envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Coca-Cola sabor original retornable 1L x12 (Sin envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Coca-Cola sin azúcar retornable 1L x12 (Con envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Coca-Cola sin azúcar retornable 1L x12(Sin envase) + 5 Posavasos Albirroja + 1 Porta Posavasos", "Combo Pack Coca-Cola sabor original 500ml x6 + 2 Vaso Plástico Garra Azul Albirroja", "Combo Pack Coca-Cola sin azúcar 2L x4 + 1 Vaso Plástico Garra Azul + Choppera Albirroja Jugadores Combo Pack Coca-Cola sabor original 2L x4 + 1 Vaso Plástico Garra Azul + Choppera Albirroja Jugadores", "Combo Pack Coca-Cola sin azúcar 500ml x6 + 2 Vaso Plástico Garra Azul Albirroja", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + 2 Mega Pack Coca-Cola sabor original 1L x4", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + 2 Mega Pack Coca-Cola sin azúcar 1L x4", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + 2 Pack Coca-Cola sabor original 500ml x6", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + 2 Pack Coca-Cola sin azúcar 500ml x6", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Caja Coca-Cola sabor original retornable 1.5L x8 (Con envase)", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Caja Coca-Cola sabor original retornable 1.5L x8 (Sin envase)", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Caja Coca-Cola sabor original retornable 350mL x 12 (Con envase)", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Caja Coca-Cola sabor original retornable 350mL x 12 (Sin envase)", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Caja Coca-Cola sin azúcar retornable 350mL x 12 (Con envase)", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Caja Coca-Cola sin azúcar retornable 350mL x 12 (Sin envase)", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Pack Coca-Cola sabor original 1.5L x4", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Pack Coca-Cola sabor original 2L x4", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Pack Coca-Cola sabor original 3L x4", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Pack Coca-Cola sin azúcar 1.5L x4", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Pack Coca-Cola sin azúcar 2L x4", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Pack Coca-Cola sin azúcar 3L x4", "Combo Pasión Albirroja 2 Vasos Rojo Pasión + 2 Vasos Blanco Alma + 2 Vasos Azul Garra + 2 Mega Pack Coca-Cola sabor original 1L x4", "Combo Pasión Albirroja 2 Vasos Rojo Pasión + 2 Vasos Blanco Alma + 2 Vasos Azul Garra + Pack Coca-Cola sabor original 1.5L x4", "Pack Coca-Cola Sprite 3L x4 + 5 Posavasos Albirroja + 1 Porta Posavasos", "Pack Coca-Cola sabor original 3L x4 + 5 Posavasos Albirroja + 1 Porta Posavasos", "Pack Coca-Cola sin azúcar 3L x4 + 5 Posavasos Albirroja + 1 Porta Posavasos", "Pack Sprite 3L x4 + 5 Posavasos Albirroja + 1 Porta Posavasos", "Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra"], "panini": ["Caja Coca-Cola sabor original retornable 350mL x 12 (Con envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sabor original retornable 350mL x 12 (Con envase) + 5 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sabor original retornable 350mL x 12 (Sin envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sabor original retornable 350mL x24 (Con envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sabor original retornable 350mL x24 (Sin envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x 12 (Con envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x 12 (Con envase) + 5 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x 12 (Sin envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x24 (Con envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Coca-Cola sin azúcar retornable 350mL x24 (Sin envase) + 2 Paquetes de Figuritas Panini + 5 Posavasos Albirroja + 1 Porta Posavasos", "Caja Figuritas Panini x20 Paquetes de Figuritas", "Caja Figuritas Panini x30 Paquetes de Figuritas", "Caja Figuritas Panini x450 Paquetes de Figuritas", "Coca-Cola sabor original 354ml Mix Países + 1 Figurita Panini de Regalo", "Coca-Cola sabor original 354ml Mix Países + 2 Figurita Panini de Regalo", "Coca-Cola sabor original 354ml Mix Países + 3 Figurita Panini de Regalo", "Coca-Cola sabor original descartable 1L x4 + 1 Figurita Panini de Regalo", "Coca-Cola sabor original descartable 1L x4 + 2 Figurita Panini de Regalo", "Coca-Cola sin azúcar descartable 1L x4 + 1 Figurita Panini de Regalo", "Coca-Cola sin azúcar descartable 1L x4 + 2 Figurita Panini de Regalo", "Figuritas PANINI (paquete x5)", "Pack Ades Frutas Tropicales 200ml x6 + 2 Paquetes de Figuritas Panini de Regalo", "Pack Ades Frutas Tropicales 200ml x6 + 5 Paquetes de Figurita Panini de Regalo", "Pack Ades Frutas Tropicales 200ml x6 + 5 Paquetes de Figuritas Panini de Regalo", "Pack Ades Manzana 200ml x6 + 2 Paquetes de Figuritas Panini de Regalo", "Pack Ades Manzana 200ml x6 + 5 Paquetes de Figurita Panini de Regalo", "Pack Ades Manzana 200ml x6 + 5 Paquetes de Figuritas Panini de Regalo", "Pack Ades Naranja 200ml x6 + 2 Paquetes de Figuritas Panini de Regalo", "Pack Ades Naranja 200ml x6 + 5 Paquetes de Figurita Panini de Regalo", "Pack Ades Naranja 200ml x6 + 5 Paquetes de Figuritas Panini de Regalo", "Pack Coca-Cola sabor original 1.5L x4 + 2 Paquetes de Figuritas PANINI", "Pack Coca-Cola sabor original 1.5L x4 + 5 Paquetes de Figuritas PANINI", "Pack Coca-Cola sabor original 3L x4 + 2 Paquetes de Figuritas de Regalo", "Pack Coca-Cola sabor original 3L x4 + 5 Paquetes de Figuritas", "Pack Coca-Cola sabor original descartable 500 ml x6 + 1 Figurita Panini de Regalo", "Pack Coca-Cola sabor original descartable 500 ml x6 + 2 Paquetes de Figuritas Panini de Regalo", "Pack Coca-Cola sabor original descartable 500 ml x6 + 3 Figurita Panini de Regalo", "Pack Coca-Cola sabor original descartable 500 ml x6 + 5 Figurita Panini de Regalo", "Pack Coca-Cola sabor original descartable 500 ml x6 + 5 Paquetes de Figuritas Panini", "Pack Coca-Cola sabor original descartable 500 ml x6 + 5 Paquetes de Figuritas Panini de Regalo", "Pack Coca-Cola sabor original lata Alemania 354 ml x6 + 5 Figuritas Panini de Regalo", "Pack Coca-Cola sabor original lata Argentina 354 ml x6 + 5 Figuritas Panini de Regalo", "Pack Coca-Cola sabor original lata Brasil 354 ml x6 + 2 Figuritas Panini de Regalo", "Pack Coca-Cola sabor original lata Brasil 354 ml x6 + 5 Figuritas Panini de Regalo", "Pack Coca-Cola sabor original lata España 354 ml x6 + 5 Figuritas Panini de Regalo", "Pack Coca-Cola sabor original lata Francia 354 ml x6 + 5 Figuritas Panini de Regalo", "Pack Coca-Cola sabor original lata Inglaterra 354 ml x6 + 5 Figuritas Panini de Regalo", "Pack Coca-Cola sin azúcar 1.5L x4 + 2 Paquetes de Figuritas PANINI", "Pack Coca-Cola sin azúcar 1.5L x4 + 5 Paquetes de Figuritas PANINI", "Pack Coca-Cola sin azúcar 3L x4 + 2 Paquetes de Figuritas de Regalo", "Pack Coca-Cola sin azúcar 3L x4 + 5 Paquetes de Figuritas", "Pack Coca-Cola sin azúcar descartable 500 ml x6 + 1 Figurita Panini de Regalo", "Pack Coca-Cola sin azúcar descartable 500 ml x6 + 2 Paquetes de Figuritas Panini de Regalo", "Pack Coca-Cola sin azúcar descartable 500 ml x6 + 3 Figurita Panini de Regalo", "Pack Coca-Cola sin azúcar descartable 500 ml x6 + 5 Figurita Panini de Regalo", "Pack Coca-Cola sin azúcar descartable 500 ml x6 + 5 Paquetes de Figuritas Panini", "Pack Coca-Cola sin azúcar lata Paraguay 354 ml x6 + 2 Figuritas Panini de Regalo", "Pack Coca-Cola sin azúcar lata Paraguay 354 ml x6 + 5 Figuritas Panini de Regalo", "Pack Fanta Guaraná descartable 1L x4 + 2 Paquetes Figurita Panini de Regalo", "Pack Fanta Guaraná descartable 1L x4 + 5 Figurita Panini de Regalo", "Pack Fanta Naranja descartable 1L x4 + 2 Paquetes Figurita Panini de Regalo", "Pack Fanta Naranja descartable 1L x4 + 5 Figurita Panini de Regalo", "Pack Fanta Naranja descartable 1L x4 + 5 Paquetes Figurita Panini de Regalo", "Pack Fanta guaraná descartable 2L x 4 + 2 Figuritas Panini de Regalo", "Pack Fanta guaraná descartable 2L x 4 + 5 Figuritas Panini de Regalo", "Pack Fanta naranja descartable 2L x 4 + 2 Figuritas Panini de Regalo", "Pack Fanta naranja descartable 2L x 4 + 5 Figuritas Panini de Regalo", "Pack Fanta piña descartable 500 ml x 6 + 2 Figurita Panini de Regalo", "Pack Fanta piña descartable 500 ml x 6 + 5 Figurita Panini de Regalo", "Pack Powerade Manzana 500 ml x6 + 2 Paquetes de Figuritas Panini de Regalo", "Pack Powerade Manzana 500 ml x6 + 5 Paquetes de Figuritas Panini de Regalo", "Pack Powerade Multifrutas 500ml x6 + 5 Paquetes de Figuritas Panini de Regalo", "Pack Powerade mountain blast (Mora) 990 ml x6 + 2 Paquetes de Figuritas Panini de Regalo", "Pack Powerade mountain blast (Mora) 990 ml x6 + 5 Paquetes de Figurita Panini de Regalo", "Pack Powerade mountain blast (Mora) 990 ml x6 + 5 Paquetes de Figuritas Panini de Regalo", "Pack Powerade multifrutas 500ml x6 + 2 Paquetes de Figuritas Panini de Regalo", "Pack Schweppes Pomelo ZERO AZÚCARES 500 ml x6 + 2 Figurita Panini de Regalo", "Pack Schweppes Pomelo ZERO AZÚCARES 500 ml x6 + 5 Figurita Panini de Regalo", "Pack Sprite lima limón descartable 1L x4 + 5 Figurita Panini de Regalo", "Pack Sprite lima limón descartable 1L x4 + 5 Paquetes Figurita Panini de Regalo", "Pack Sprite lima limón sin azúcar descartable 500 ml x6 + 2 Figurita Panini de Regalo", "Pack Sprite lima limón sin azúcar descartable 500 ml x6 + 5 Figurita Panini de Regalo", "Schweppes Pomelo Zero Azúcares 2L x1 + 5 paquetes de PANINI"], "sprite": ["Caja Sprite lima limón retornable 1.5 L x 8 (Con envase)", "Caja Sprite lima limón retornable 1.5 L x 8 (Sin envase)", "Caja Sprite lima limón retornable 2 L x 8 (Con envase)", "Caja Sprite lima limón retornable 350 ml x 24 (Con envase)", "Caja Sprite lima limón retornable 350 ml x 24 (Sin envase)", "Caja Sprite lima limón retornable 350 ml x24 (Con envase) + Vasos Canción x6", "Caja Sprite lima limón retornable 350 ml x24 (Sin envase) + Vasos Canción x6", "Combo Pack Sprite lima limón 2L x4 + 2 vasos Cool Sprite", "Combo Pack Sprite lima limón 3L x4 + 1 Mug Sprite", "Combo Pack Sprite lima limón 500mL x6 + 1 Mugs Sprite", "Combo Pack Sprite lima limón 500mL x6 + 2 Mugs Sprite", "Combo Pack Sprite lima limón descartable 1L x4 + 2 vasos coleccionables verdes", "Combo Pack Sprite lima limón sin azúcar 2L x4 + 2 vasos Cool Sprite", "Combo Pack Sprite lima limón sin azúcar 2L x4 + Gin Gordon's 750mL + 1 vaso Cool Sprite", "Combo Pack Sprite lima limón sin azúcar 500mL x6 + 2 Mugs Sprite", "Mini pack Sprite lima limón 250 ml x 6", "Pack Sprite lima limón descartable 1 L x 4 - Mega", "Pack Sprite lima limón descartable 1L x4 + 5 Figurita Panini de Regalo", "Pack Sprite lima limón descartable 1L x4 + 5 Paquetes Figurita Panini de Regalo", "Pack Sprite lima limón descartable 2 L x 4", "Pack Sprite lima limón descartable 3L x 4", "Pack Sprite lima limón descartable 500 ml x 6", "Pack Sprite lima limón sin azúcar descartable 2 L x 4", "Pack Sprite lima limón sin azúcar descartable 500 ml x 6", "Pack Sprite lima limón sin azúcar descartable 500 ml x6 + 2 Figurita Panini de Regalo", "Pack Sprite lima limón sin azúcar descartable 500 ml x6 + 5 Figurita Panini de Regalo", "Sprite lima limón descartable 2 L", "Sprite lima limón retornable 1 L", "Sprite lima limón retornable 1 L (Con envase)", "Sprite lima limón retornable 1 L (Con envase) Caja Sprite lima limón retornable 1 L x 12 (Con envase)", "Sprite lima limón retornable 1 L (Sin envase)", "Sprite lima limón retornable 1 L - RF", "Sprite lima limón retornable 1.5 L", "Sprite lima limón retornable 1.5 L (Con envase)", "Sprite lima limón retornable 1.5 L (Sin envase)", "Sprite lima limón retornable 1.5 L - RF", "Sprite lima limón retornable 2 L", "Sprite lima limón retornable 2 L (Con envase)", "Sprite lima limón retornable 2 L (Sin envase)", "Sprite lima limón retornable 2 L (Sin envase) Caja Sprite lima limón retornable 2 L x 8 (Sin envase)", "Sprite lima limón retornable 2 L - RF", "Sprite lima limón retornable 350 ml - RF", "Sprite lima limón sin azúcar descartable 2 L", "Sprite sabor lima limón 1L x4 + Cinzano Vermouth 1L", "Vaso Cool Sprite"], "cancion": ["Caja Coca-Cola sabor original retornable 2L x8 (Con envase) + Vasos Canción x6", "Caja Coca-Cola sabor original retornable 2L x8 (Sin envase) + Vasos Canción x6", "Caja Coca-Cola sabor original retornable 350mL x12 (Con envase) + Vasos Canción x6", "Caja Coca-Cola sabor original retornable 350mL x12 (Sin envase) + Vasos Canción x6", "Caja Coca-Cola sabor original retornable 350mL x24 (Con envase) + Vasos Canción x6", "Caja Coca-Cola sabor original retornable 350mL x24 (Sin envase) + Vasos Canción x6", "Caja Coca-Cola sin azúcar retornable 2L x8 (Con envase) + Vasos Canción x6", "Caja Coca-Cola sin azúcar retornable 2L x8 (Sin envase) + Vasos Canción x6", "Caja Coca-Cola sin azúcar retornable 350mL x12 (Con envase) + Vasos Canción x6", "Caja Coca-Cola sin azúcar retornable 350mL x12 (Sin envase) + Vasos Canción x6", "Caja Coca-Cola sin azúcar retornable 350mL x24 (Con envase) + Vasos Canción x6", "Caja Coca-Cola sin azúcar retornable 350mL x24 (Sin envase) + Vasos Canción x6", "Caja Fanta naranja retornable 350 ml x24 (Con envase) + Vasos Canción x6", "Caja Fanta naranja retornable 350 ml x24 (Sin envase) + Vasos Canción x6", "Caja Sprite lima limón retornable 350 ml x24 (Con envase) + Vasos Canción x6", "Caja Sprite lima limón retornable 350 ml x24 (Sin envase) + Vasos Canción x6", "Caja Vaso Canción x6", "Vaso Canción x1", "Vaso Canción x1 (Frase Desde que Nací soy albirrojo )"], "garra": ["Caja Coca-Cola sabor original retornable 350mL x24 (Con envase) + 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra", "Caja Coca-Cola sin azúcar retornable 350mL x24 (Con envase) + 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra", "Combo Pack Coca-Cola sabor original 2L x4 + 1 Choppera Albirroja Jugadores", "Combo Pack Coca-Cola sabor original 2L x4 + 1 Vaso Plástico Garra Azul + Choppera Albirroja Jugadores", "Combo Pack Coca-Cola sabor original 2L x4 + 1 Vaso plástico Garra Guaraní Rojo + 1 Vaso plástico Garra Guaraní Azul", "Combo Pack Coca-Cola sabor original 2L x4 + 1 Vaso vidrio Garra Guaraní", "Combo Pack Coca-Cola sabor original 2L x4 + 2 Vasos plásticos Garra Guaraní rojo y azul", "Combo Pack Coca-Cola sabor original 500ml x6 + 2 Vaso Plástico Garra Azul Albirroja", "Combo Pack Coca-Cola sin azúcar 2L x4 + 1 Choppera Albirroja Jugadores", "Combo Pack Coca-Cola sin azúcar 2L x4 + 1 Vaso Plástico Garra Azul + Choppera Albirroja Jugadores Combo Pack Coca-Cola sabor original 2L x4 + 1 Vaso Plástico Garra Azul + Choppera Albirroja Jugadores", "Combo Pack Coca-Cola sin azúcar 2L x4 + 1 Vaso plástico Garra Guaraní Rojo + 1 Vaso plástico Garra Guaraní Azul", "Combo Pack Coca-Cola sin azúcar 2L x4 + 1 Vaso vidrio Garra Guaraní", "Combo Pack Coca-Cola sin azúcar 2L x4 + 2 Vasos plásticos Garra Guaraní rojo y azul", "Combo Pack Coca-Cola sin azúcar 500ml x6 + 2 Vaso Plástico Garra Azul Albirroja", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + 2 Mega Pack Coca-Cola sabor original 1L x4", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + 2 Mega Pack Coca-Cola sin azúcar 1L x4", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + 2 Pack Coca-Cola sabor original 500ml x6", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + 2 Pack Coca-Cola sin azúcar 500ml x6", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Caja Coca-Cola sabor original retornable 1.5L x8 (Con envase)", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Caja Coca-Cola sabor original retornable 1.5L x8 (Sin envase)", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Caja Coca-Cola sabor original retornable 350mL x 12 (Con envase)", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Caja Coca-Cola sabor original retornable 350mL x 12 (Sin envase)", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Caja Coca-Cola sin azúcar retornable 350mL x 12 (Con envase)", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Caja Coca-Cola sin azúcar retornable 350mL x 12 (Sin envase)", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Pack Coca-Cola sabor original 2L x4", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Pack Coca-Cola sabor original 3L x4", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Pack Coca-Cola sin azúcar 1.5L x4", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Pack Coca-Cola sin azúcar 2L x4", "Combo Pasión Albirroja 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Pack Coca-Cola sin azúcar 3L x4", "Combo Sentimiento Albirojo 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Pack Coca-Cola sabor original 2L x4", "Combo Sentimiento Albirojo 1 Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra + Pack Coca-Cola sin azúcar 2L x4", "Combo Taza Garra Guaraní + Vaso Plástico Garra Azul + Choppera Albirroja Jugadores", "Vaso Rojo Pasión + 1 Vaso Blanco Alma + 1 Vaso Azul Garra"], "pelota": ["Caja Coca-Cola sabor original retornable 2L x8 (Con envase) + 1 Pelota PUMA 2026", "Caja Coca-Cola sabor original retornable 2L x8 (Sin envase) + 1 Pelota PUMA 2026", "Caja Coca-Cola sabor original retornable 350mL x 12 (Con envase) + 1 Pelota PUMA 2026", "Caja Coca-Cola sabor original retornable 350mL x 12 (Sin envase) + 1 Pelota PUMA 2026", "Caja Coca-Cola sin azúcar retornable 2L x8 (Con envase) + 1 Pelota PUMA 2026", "Caja Coca-Cola sin azúcar retornable 2L x8 (Sin envase) + 1 Pelota PUMA 2026", "Caja Coca-Cola sin azúcar retornable 350mL x 12 (Con envase) + 1 Pelota PUMA 2026"], "vaso_mundial": ["Caja Coca-Cola sabor original retornable 1.5L x8 (Con envase) + Vaso Aluminio CC Mundial", "Caja Coca-Cola sabor original retornable 1.5L x8 (Sin envase) + Vaso Aluminio CC Mundial", "Caja Coca-Cola sabor original retornable 2L x8 (Con envase) + Vaso Aluminio CC Mundial", "Caja Coca-Cola sabor original retornable 2L x8 (Sin envase) + Vaso Aluminio CC Mundial", "Caja Coca-Cola sin azúcar retornable 2L x8 (Con envase) + Vaso Aluminio CC Mundial", "Pack Coca-Cola sabor original 2L x4 + Vaso Aluminio CC Mundial", "Pack Coca-Cola sin azúcar 2L x4 + Vaso Aluminio CC Mundial", "Vaso Mundial Azul", "Vaso Mundial Blanco"], "snack_mundial": ["Caja Coca-Cola sabor original retornable 1.5L x8 (Con envase) + Snack Bowl CC Mundial", "Caja Coca-Cola sabor original retornable 1.5L x8 (Sin envase) + Snack Bowl CC Mundial", "Caja Coca-Cola sabor original retornable 2L x8 (Con envase) + Snack Bowl CC Mundial", "Caja Coca-Cola sabor original retornable 2L x8 (Sin envase) + Snack Bowl CC Mundial", "Caja Coca-Cola sin azúcar retornable 2L x8 (Con envase) + Snack Bowl CC Mundial", "Caja Coca-Cola sin azúcar retornable 2L x8 (Sin envase) + Snack Bowl CC Mundial", "Pack Coca-Cola sabor original 3L x4 + Snack Bowl CC Mundial", "Pack Coca-Cola sin azúcar 3L x4 + Snack Bowl CC Mundial"], "llavero_mundial": ["Coca-Cola sabor original retornable 1L x12 (Con envase) + Llavero CC Mundial", "Coca-Cola sabor original retornable 1L x12 (Sin envase) + Llavero CC Mundial", "Coca-Cola sin azúcar retornable 1L x12 (Con envase) + Llavero CC Mundial", "Coca-Cola sin azúcar retornable 1L x12(Sin envase) + Llavero CC Mundial", "Pack Coca-Cola sabor original lata Alemania 354 ml x6 + Llavero CC Mundial", "Pack Coca-Cola sabor original lata Argentina 354 ml x6 + Llavero CC Mundial", "Pack Coca-Cola sabor original lata Brasil 354 ml x6 + Llavero CC Mundial", "Pack Coca-Cola sabor original lata España 354 ml x6 + Llavero CC Mundial", "Pack Coca-Cola sabor original lata Francia 354 ml x6 + Llavero CC Mundial", "Pack Coca-Cola sabor original lata Inglaterra 354 ml x6 + Llavero CC Mundial", "Pack Coca-Cola sin azúcar lata Paraguay 354 ml x6 + Llavero CC Mundial"], "abridor_rojo_mundial": ["Caja Coca-Cola sabor original retornable 350mL x 24 (Sin envase) + Abridor Rojo CC Mundial", "Caja Coca-Cola sabor original retornable 350mL x12 (Con envase) + Abridor Rojo CC Mundial", "Caja Coca-Cola sabor original retornable 350mL x24 (Con envase) + Abridor Rojo CC Mundial", "Caja Coca-Cola sin azúcar retornable 350mL x12 (Con envase) + Abridor Rojo CC Mundial", "Caja Coca-Cola sin azúcar retornable 350mL x12 (Sin envase) + Abridor Rojo CC Mundial", "Caja Coca-Cola sin azúcar retornable 350mL x24 (Con envase) + Abridor Rojo CC Mundial", "Caja Coca-Cola sin azúcar retornable 350mL x24 (Sin envase) + Abridor Rojo CC Mundial"], "abridor_blanco_mundial": ["Caja Coca-Cola sabor original retornable 350mL x12 (Con envase) + Abridor Blanco CC Mundial", "Caja Coca-Cola sabor original retornable 350mL x24 (Con envase) + Abridor Blanco CC Mundial", "Caja Coca-Cola sabor original retornable 350mL x24 (Sin envase) + Abridor Blanco CC Mundial", "Caja Coca-Cola sin azúcar retornable 350mL x12 (Con envase) + Abridor Blanco CC Mundial", "Caja Coca-Cola sin azúcar retornable 350mL x24 (Con envase) + Abridor Blanco CC Mundial", "Caja Coca-Cola sin azúcar retornable 350mL x24 (Sin envase) + Abridor Blanco CC Mundial"]};
 const CAMPAIGN_VOCAB = {}; Object.keys(CAMPAIGN_VOCAB_RAW).forEach(function(k){CAMPAIGN_VOCAB[k]=new Set(CAMPAIGN_VOCAB_RAW[k]);});
+
+/* ============================================================
+   CAMPAÑAS MANUALES (gestor desde el dashboard)
+   - Se guardan en localStorage (clave LS_CUSTOM) y se fusionan
+     en RAW.campaigns al cargar la página.
+   - Matching por PALABRAS CLAVE sobre el nombre del SKU
+     (contains, sin mayúsculas/tildes). Una regla por línea;
+     "&" dentro de una línea = todas las palabras deben aparecer.
+   - Al crear/editar, se re-matchea retroactivamente contra
+     todos los pedidos ya sincronizados (_SOURCE_ROWS).
+   ============================================================ */
+const LS_CUSTOM = 'mp_promo_custom_campaigns_v1';
+
+// Acumulador de filas fuente (Sheet + archivos subidos) para re-matching retroactivo
+const _SOURCE_ROWS = [];
+const _SOURCE_KEYS = new Set();   // orderId|sku → evita duplicar el acumulador entre syncs
+
+function _norm(s){
+  return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').trim();
+}
+function parseKeywordRules(text){
+  return String(text||'').split(/\n|,/)
+    .map(l=>l.trim()).filter(Boolean)
+    .map(l=>l.split('&').map(p=>_norm(p)).filter(Boolean))
+    .filter(parts=>parts.length);
+}
+function skuMatchesRules(sku, rules){
+  const s=_norm(sku);
+  return (rules||[]).some(parts=>parts.every(p=>s.includes(p)));
+}
+// ¿Este SKU pertenece a la campaña c? (vocab exacto para las curadas, keywords para las manuales)
+function campMatchesSku(c, sku){
+  if(c.custom) return skuMatchesRules(sku, c._rules);
+  const vocab=CAMPAIGN_VOCAB[c.id];
+  return !!(vocab && vocab.has(sku));
+}
+
+function loadCustomCampaigns(){
+  let list=[];
+  try{ list=JSON.parse(localStorage.getItem(LS_CUSTOM)||'[]'); }catch(e){ console.warn('Backup local ilegible',e); }
+  if(!Array.isArray(list)) list=[];
+  list.forEach(cc=>{
+    if(!cc || !cc.id || RAW.campaigns.some(c=>c.id===cc.id)) return;
+    RAW.campaigns.push({
+      id:cc.id, name:cc.name||cc.id, type:cc.type||'Manual', status:cc.status||'activa',
+      description:cc.description||'', start:cc.start||'', end:cc.end||'',
+      rows:[], custom:true, keywords:cc.keywords||'', _rules:parseKeywordRules(cc.keywords)
+    });
+  });
+}
+function persistCustomCampaigns(){
+  const list=RAW.campaigns.filter(c=>c.custom).map(c=>({
+    id:c.id, name:c.name, type:c.type, status:c._origStatus!==undefined?c._origStatus:c.status,
+    description:c.description, start:c.start, end:c.end, keywords:c.keywords
+  }));
+  try{ localStorage.setItem(LS_CUSTOM, JSON.stringify(list)); }
+  catch(e){ showPromoUploadMsg('✗ No se pudo guardar en el navegador: '+e.message,'err'); }
+}
+function slugifyCampId(name){
+  let base='m_'+_norm(name).replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,28);
+  if(!base||base==='m_') base='m_camp';
+  let id=base, i=2;
+  while(RAW.campaigns.some(c=>c.id===id)){ id=base+'_'+(i++); }
+  return id;
+}
 const COLORS=['#E8241B','#F5821F','#F5C518','#A8D95A','#5BDDE8','#9B1C1C','#3b82f6','#8b5cf6','#ec4899','#14b8a6'];
 const MED={'organico':'Orgánico','paid-search':'Paid Search','paid-social':'Paid Social','paid':'Paid/WooWup','email':'Email','whatsapp':'WhatsApp','meta':'Meta','social':'Social','cpm':'CPM'};
 
@@ -397,11 +559,18 @@ function renderCampCards(agg){
     const v=isActive?agg.totalVen:c.rows.reduce((a,r)=>a+r[3],0);
     const u=isActive?agg.totalUn:c.rows.reduce((a,r)=>a+r[2],0);
     const o=isActive?agg.orders:new Set(c.rows.map(r=>r[5])).size;
+    const tools=c.custom
+      ? '<span class="camp-tools">'+
+          '<button class="camp-tool-btn" title="Editar campaña" onclick="event.stopPropagation();openCampModal(\''+c.id+'\')">✎</button>'+
+          '<button class="camp-tool-btn" title="Eliminar campaña" onclick="event.stopPropagation();deleteCustomCampaign(\''+c.id+'\')">🗑</button>'+
+        '</span>'
+      : '';
     return '<div class="camp-card '+(isActive?'active':'')+(off?' off':'')+(disabled?' soon':'')+'"'+(disabled?'':' onclick="selectCamp(\''+c.id+'\')"')+'>'+
+      tools+
       '<span class="camp-status'+(off?' off':'')+(disabled?' soon':'')+'"'+
         (c._autoOff?' title="Desactivada automáticamente: sin pedidos hace '+c._daysIdle+' días (último movimiento: '+c._lastMove+')"':'')+
         '>'+c.status+(c._autoOff?' · '+c._daysIdle+'d sin mov.':'')+'</span>'+
-      '<div class="camp-name">'+c.name+'</div>'+
+      '<div class="camp-name">'+c.name+(c.custom?'<span class="camp-manual-chip" title="Campaña creada manualmente desde el dashboard (guardada en este navegador)">manual</span>':'')+'</div>'+
 
       (function(){var dd=getCampDisplayDates(c);return '<div class="camp-dates" title="'+(dd.live?'Fin actualizado en vivo desde el Sheet (último pedido real)':'Fechas oficiales de la campaña')+'">📅 '+dd.start+' → '+dd.end+(dd.live?' <span style="color:#1E9E5A" title="en vivo">•</span>':'')+'</div>';})()+
       '<div style="font-size:10px;color:var(--muted);margin-bottom:10px" title="'+c.description+'">'+c.description+'</div>'+
@@ -677,7 +846,7 @@ function populateCampSelect(){
   if(active.indexOf(cur)>=0) sel.value=cur;
   else if(active.length) sel.value=active[0];
 }
-window.addEventListener('DOMContentLoaded',function(){populateCampSelect();refreshDataBanner();showPromoUploadMsg('⏳ Cargando datos del Sheet…','ok');autoSyncPromo('init');});
+window.addEventListener('DOMContentLoaded',function(){loadCustomCampaigns();populateCampSelect();refreshDataBanner();showPromoUploadMsg('⏳ Cargando datos del Sheet…','ok');autoSyncPromo('init');});
 
 function refreshDataBanner(){
   let minD=null, maxD=null;
@@ -767,34 +936,63 @@ function getUtm(line){
   if(!src && !medium) return 'organico';
   return src || medium || 'organico';
 }
-function collectKnownOrderIds(){
-  const ids=new Set();
-  RAW.campaigns.forEach(c=>c.rows.forEach(r=>ids.add(r[5])));
-  return ids;
+/* Dedup POR CAMPAÑA por (order_id | sku): idempotente ante re-sincronizaciones
+   y permite que una campaña manual nueva capture pedidos históricos que ya
+   estaban asignados a otras campañas. Nunca duplica líneas existentes. */
+function collectKnownKeysByCamp(){
+  const map={};
+  RAW.campaigns.forEach(c=>{
+    const s=new Set();
+    (c.rows||[]).forEach(r=>s.add(r[5]+'|'+r[1]));
+    map[c.id]=s;
+  });
+  return map;
 }
 function buildPromoDelta(rawRows){
-  const knownIds=collectKnownOrderIds();
-  const campaignSkus=CAMPAIGN_VOCAB;
+  const knownByCamp=collectKnownKeysByCamp();
   let addedCount=0;
   const touchedCampaigns=new Set();
   rawRows.forEach(r=>{
     const orderId=r['Order'];
-    if(!orderId || knownIds.has(orderId)) return;
+    if(!orderId) return;
     const sku=r['SKU Name']||'';
     const date=(r['Creation Date']||'').slice(0,10);
     if(!date) return;
     let qty=parseInt(parseFloat(r['Quantity_SKU']||1))||1;
     let totalPrice=parseFloat(r['SKU Total Price']||0)||0;
     const utm=getUtm(r);
+    const key=orderId+'|'+sku;
+    // Acumular fila fuente (para re-matching retroactivo de campañas nuevas)
+    if(!_SOURCE_KEYS.has(key)){
+      _SOURCE_KEYS.add(key);
+      _SOURCE_ROWS.push({'Order':orderId,'SKU Name':sku,'Creation Date':date,'Quantity_SKU':qty,'SKU Total Price':totalPrice,'UtmSource':r['UtmSource']||'','UtmMedium':r['UtmMedium']||''});
+    }
     RAW.campaigns.forEach(c=>{
-      if(campaignSkus[c.id].has(sku)){
-        c.rows.push([date, sku, qty, Math.round(totalPrice), utm, orderId]);
-        addedCount++;
-        touchedCampaigns.add(c.id);
-      }
+      if(!campMatchesSku(c, sku)) return;
+      if(knownByCamp[c.id] && knownByCamp[c.id].has(key)) return;
+      if(!knownByCamp[c.id]) knownByCamp[c.id]=new Set();
+      knownByCamp[c.id].add(key);
+      c.rows.push([date, sku, qty, Math.round(totalPrice), utm, orderId]);
+      addedCount++;
+      touchedCampaigns.add(c.id);
     });
   });
   return {addedCount, touchedCampaigns};
+}
+
+/* Re-matchea UNA campaña (manual) contra todo lo ya sincronizado.
+   Vacía sus filas y las reconstruye desde _SOURCE_ROWS. */
+function rematchCampaign(campId){
+  const c=RAW.campaigns.find(x=>x.id===campId);
+  if(!c) return 0;
+  c.rows=[];
+  let added=0;
+  _SOURCE_ROWS.forEach(r=>{
+    if(!campMatchesSku(c, r['SKU Name'])) return;
+    c.rows.push([r['Creation Date'], r['SKU Name'], r['Quantity_SKU'], Math.round(r['SKU Total Price']), getUtm(r), r['Order']]);
+    added++;
+  });
+  return added;
 }
 
 function recomputeImportMeta(rawRows){
@@ -978,6 +1176,150 @@ document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState==='visible' && (Date.now()-_lastSync) > 60*1000){
     autoSyncPromo('focus');
   }
+});
+
+
+/* ============================================================
+   UI · GESTOR DE CAMPAÑAS MANUALES
+   ============================================================ */
+function openCampModal(editId){
+  const m=document.getElementById('campModal');
+  const c=editId?RAW.campaigns.find(x=>x.id===editId&&x.custom):null;
+  document.getElementById('campModalTitle').textContent=c?'Editar campaña':'Nueva campaña';
+  document.getElementById('cm-id').value=c?c.id:'';
+  document.getElementById('cm-name').value=c?c.name:'';
+  document.getElementById('cm-type').value=c?c.type:'';
+  document.getElementById('cm-status').value=c?(c._origStatus!==undefined?c._origStatus:c.status):'activa';
+  document.getElementById('cm-desc').value=c?c.description:'';
+  document.getElementById('cm-start').value=c?c.start:new Date().toISOString().slice(0,10);
+  document.getElementById('cm-end').value=c?c.end:'';
+  document.getElementById('cm-keywords').value=c?c.keywords:'';
+  updateKeywordPreview();
+  m.classList.add('open');
+  setTimeout(()=>document.getElementById('cm-name').focus(),50);
+}
+function closeCampModal(){document.getElementById('campModal').classList.remove('open');}
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCampModal();});
+
+// Universo de SKUs conocidos (fuente sincronizada + filas ya cargadas) para el preview
+function getKnownSkuNames(){
+  const set=new Set();
+  _SOURCE_ROWS.forEach(r=>{if(r['SKU Name'])set.add(r['SKU Name']);});
+  RAW.campaigns.forEach(c=>(c.rows||[]).forEach(r=>{if(r[1])set.add(r[1]);}));
+  return Array.from(set);
+}
+function updateKeywordPreview(){
+  const box=document.getElementById('kw-preview');
+  const rules=parseKeywordRules(document.getElementById('cm-keywords').value);
+  if(!rules.length){box.innerHTML='Escribí palabras clave para ver qué SKUs de la base actual coinciden.';return;}
+  const all=getKnownSkuNames();
+  if(!all.length){box.innerHTML='<span class="kwp-count">Sin datos sincronizados todavía.</span> El matching se aplicará automáticamente cuando el Sheet cargue.';return;}
+  const hits=all.filter(s=>skuMatchesRules(s,rules));
+  const sample=hits.slice(0,8).map(s=>'<li>'+sk(s,70)+'</li>').join('');
+  box.innerHTML='<span class="kwp-count">'+hits.length+' SKU(s)</span> de la base actual coinciden con estas reglas.'+
+    (hits.length?'<ul>'+sample+(hits.length>8?'<li style="color:#aaa">… y '+(hits.length-8)+' más</li>':'')+'</ul>'
+                :'<div style="margin-top:6px;color:#c62828">⚠ Ninguna coincidencia por ahora — verificá la ortografía o esperá pedidos nuevos con este SKU.</div>');
+}
+
+function saveCampaignForm(){
+  const name=document.getElementById('cm-name').value.trim();
+  const start=document.getElementById('cm-start').value;
+  const end=document.getElementById('cm-end').value;
+  const keywords=document.getElementById('cm-keywords').value.trim();
+  if(!name){showPromoUploadMsg('✗ La campaña necesita un nombre.','err');return;}
+  if(!start||!end){showPromoUploadMsg('✗ Completá fecha de inicio y fin.','err');return;}
+  if(end<start){showPromoUploadMsg('✗ La fecha de fin no puede ser anterior al inicio.','err');return;}
+  if(!parseKeywordRules(keywords).length){showPromoUploadMsg('✗ Agregá al menos una palabra clave de SKU.','err');return;}
+
+  const editId=document.getElementById('cm-id').value;
+  let c;
+  if(editId){
+    c=RAW.campaigns.find(x=>x.id===editId&&x.custom);
+    if(!c){showPromoUploadMsg('✗ No se encontró la campaña a editar.','err');return;}
+  } else {
+    c={id:slugifyCampId(name), rows:[], custom:true};
+    RAW.campaigns.push(c);
+  }
+  c.name=name;
+  c.type=document.getElementById('cm-type').value.trim()||'Manual';
+  c.description=document.getElementById('cm-desc').value.trim();
+  c.start=start; c.end=end;
+  c.keywords=keywords;
+  c._rules=parseKeywordRules(keywords);
+  const st=document.getElementById('cm-status').value;
+  c.status=st; c._origStatus=st; c._autoOff=false;
+
+  const added=rematchCampaign(c.id);     // re-matching retroactivo contra todo lo sincronizado
+  persistCustomCampaigns();
+  applyAutoDeactivation();
+  populateCampSelect();
+  if(st==='activa') document.getElementById('f-camp').value=c.id;
+  renderAll();
+  refreshDataBanner();
+  closeCampModal();
+  showPromoUploadMsg('✓ Campaña «'+name+'» guardada · '+added+' línea(s) de pedidos asignadas.','ok');
+}
+
+function deleteCustomCampaign(id){
+  const c=RAW.campaigns.find(x=>x.id===id&&x.custom);
+  if(!c) return;
+  if(!confirm('¿Eliminar la campaña «'+c.name+'»?\n\nSolo se borra la campaña manual y su configuración; los pedidos del Sheet no se tocan.')) return;
+  RAW.campaigns=RAW.campaigns.filter(x=>x.id!==id);
+  persistCustomCampaigns();
+  populateCampSelect();
+  renderAll();
+  showPromoUploadMsg('✓ Campaña eliminada.','ok');
+}
+
+/* Backup / restauración (las manuales viven en localStorage de ESTE navegador) */
+function exportCustomCampaigns(){
+  const list=RAW.campaigns.filter(c=>c.custom).map(c=>({
+    id:c.id,name:c.name,type:c.type,status:c._origStatus!==undefined?c._origStatus:c.status,
+    description:c.description,start:c.start,end:c.end,keywords:c.keywords
+  }));
+  if(!list.length){showPromoUploadMsg('✗ No hay campañas manuales para exportar.','err');return;}
+  const blob=new Blob([JSON.stringify(list,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  a.download='miportal_campanas_manuales_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();URL.revokeObjectURL(url);
+  showPromoUploadMsg('✓ Backup descargado ('+list.length+' campaña(s)).','ok');
+}
+document.getElementById('campImportInput').addEventListener('change',function(ev){
+  const f=ev.target.files[0]; ev.target.value='';
+  if(!f) return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const list=JSON.parse(e.target.result);
+      if(!Array.isArray(list)) throw new Error('El JSON debe ser una lista de campañas');
+      let n=0;
+      list.forEach(cc=>{
+        if(!cc||!cc.name||!cc.keywords) return;
+        let existing=cc.id?RAW.campaigns.find(x=>x.id===cc.id&&x.custom):null;
+        if(!existing){
+          existing={id:(cc.id&&!RAW.campaigns.some(x=>x.id===cc.id))?cc.id:slugifyCampId(cc.name),rows:[],custom:true};
+          RAW.campaigns.push(existing);
+        }
+        existing.name=cc.name;existing.type=cc.type||'Manual';existing.description=cc.description||'';
+        existing.start=cc.start||'';existing.end=cc.end||'';existing.keywords=cc.keywords;
+        existing._rules=parseKeywordRules(cc.keywords);
+        existing.status=cc.status||'activa';existing._origStatus=existing.status;existing._autoOff=false;
+        rematchCampaign(existing.id);
+        n++;
+      });
+      persistCustomCampaigns();
+      applyAutoDeactivation();
+      populateCampSelect();
+      renderAll();
+      refreshDataBanner();
+      showPromoUploadMsg('✓ '+n+' campaña(s) importadas y re-matcheadas.','ok');
+    }catch(err){
+      console.error(err);
+      showPromoUploadMsg('✗ No se pudo importar: '+err.message,'err');
+    }
+  };
+  reader.readAsText(f,'utf-8');
 });
 
 </script>

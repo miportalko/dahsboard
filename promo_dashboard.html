@@ -195,7 +195,7 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
       <div class="klbl">Ventas Totales</div>
       <div class="kval" id="k-ven">—</div>
       <div class="ksub" id="k-ven-cmp"></div>
-      <div class="kdesc">Revenue generado por la campaña</div>
+      <div class="kdesc" id="kd-ven">Revenue generado por la campaña</div>
     </div>
     <div class="kcard">
       <div class="klbl">Unidades Vendidas</div>
@@ -205,7 +205,7 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
     <div class="kcard">
       <div class="klbl">Pedidos Únicos</div>
       <div class="kval" id="k-ped">—</div>
-      <div class="kdesc">Transacciones con esta promo</div>
+      <div class="kdesc" id="kd-ped">Transacciones con esta promo</div>
     </div>
     <div class="kcard">
       <div class="klbl">Ticket Promedio</div>
@@ -213,9 +213,9 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
       <div class="kdesc">Venta promedio por pedido</div>
     </div>
     <div class="kcard">
-      <div class="klbl">SKUs Activos</div>
+      <div class="klbl" id="kl-skus">SKUs Activos</div>
       <div class="kval" id="k-skus">—</div>
-      <div class="kdesc">Variantes con ventas en el período</div>
+      <div class="kdesc" id="kd-skus">Variantes con ventas en el período</div>
     </div>
   </div>
   <div class="sec">Evolución y Canales</div>
@@ -223,17 +223,17 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
     <div class="cc"><div class="ctitle">Evolución Diaria de Ventas</div><div class="csub">Revenue en ₲ por día</div><div class="cw" style="height:210px"><canvas id="ch-daily"></canvas></div></div>
     <div class="cc"><div class="ctitle">Ventas por Canal</div><div class="csub">Revenue por UTM Medium</div><div class="cw" style="height:210px"><canvas id="ch-canal"></canvas></div></div>
   </div>
-  <div class="sec">Análisis por SKU</div>
+  <div class="sec" id="sec-analisis">Análisis por SKU</div>
   <div class="g21" style="margin-top:0">
-    <div class="cc"><div class="ctitle">Ventas por SKU</div><div class="csub">Revenue por variante de producto</div><div class="cw" style="height:230px"><canvas id="ch-sku-bar"></canvas></div></div>
-    <div class="cc"><div class="ctitle">Participación por SKU</div><div class="csub">% del total de la campaña</div><div class="cw" style="height:230px"><canvas id="ch-sku-pie"></canvas></div></div>
+    <div class="cc"><div class="ctitle" id="t-skubar">Ventas por SKU</div><div class="csub" id="s-skubar">Revenue por variante de producto</div><div class="cw" style="height:230px"><canvas id="ch-sku-bar"></canvas></div></div>
+    <div class="cc"><div class="ctitle" id="t-skupie">Participación por SKU</div><div class="csub" id="s-skupie">% del total de la campaña</div><div class="cw" style="height:230px"><canvas id="ch-sku-pie"></canvas></div></div>
   </div>
-  <div class="sec">Detalle por SKU</div>
+  <div class="sec" id="sec-detalle">Detalle por SKU</div>
   <div class="cc">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
       <div>
-        <div class="ctitle">SKUs de la Campaña</div>
-        <div class="csub">Resultados filtrados según período y canal seleccionados</div>
+        <div class="ctitle" id="t-table">SKUs de la Campaña</div>
+        <div class="csub" id="s-table">Resultados filtrados según período y canal seleccionados</div>
       </div>
       <div style="display:flex;gap:6px;">
         <button class="btn-export" onclick="exportPromoXLSX()" title="Descargar Excel">
@@ -243,7 +243,7 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
     </div>
     <div style="overflow-x:auto;margin-top:4px">
       <table class="tbl">
-        <thead><tr><th>#</th><th>Producto</th><th>Ventas (₲)</th><th>Unidades</th><th>Pedidos</th><th>% Participación</th><th></th></tr></thead>
+        <thead id="thead-skus"><tr><th>#</th><th>Producto</th><th>Ventas (₲)</th><th>Unidades</th><th>Pedidos</th><th>% Participación</th><th></th></tr></thead>
         <tbody id="tb-skus"></tbody>
       </table>
     </div>
@@ -453,8 +453,10 @@ function aggregate(rows){
 }
 
 function renderAll(){
+  if(getCampId()===ALL_ID && RAW.campaigns.length){ renderOverview(); return; }
   const camp=getCampMeta();
   if(!camp){ clearDashboard(); return; }
+  setViewLabels('single');
   const rows=filterRows();
   const prev=getPrevRows();
   const agg=aggregate(rows);
@@ -472,8 +474,196 @@ function renderAll(){
   renderInsights(agg,aggPrev,camp);
 }
 
+/* ============================================================
+   VISTA GENERAL · "TODAS LAS CAMPAÑAS"
+   - KPIs consolidados con dedup GLOBAL por (order_id | sku):
+     un pedido que matchea 2 campañas se cuenta UNA sola vez
+     en los totales (las cifras por campaña sí lo incluyen,
+     por eso la suma del ranking puede superar el total).
+   - Ranking, participación y tabla comparativa clickeables
+     (drill-down a la campaña).
+   ============================================================ */
+function computeOverviewData(){
+  const canal=getCanal();
+  const seen=new Set(), globalRows=[], keyCamps={};
+  RAW.campaigns.forEach(c=>(c.rows||[]).forEach(r=>{
+    const key=r[5]+'|'+r[1];
+    (keyCamps[key]=keyCamps[key]||new Set()).add(c.id);
+    if(!seen.has(key)){seen.add(key);globalRows.push(r);}
+  }));
+  if(!globalRows.length) return null;
+  const bounds=getDateBounds(globalRows);
+  const inScope=r=>r[0]>=bounds.from&&r[0]<=bounds.to&&(!canal||r[4]===canal);
+  const gRows=globalRows.filter(inScope);
+  const agg=aggregate(gRows);
+  // Período anterior (solo para períodos de N días)
+  let prevAgg=null;
+  const period=getPeriod();
+  if(period!=='all'&&period!=='custom'){
+    const days=parseInt(period);
+    const fromDate=new Date(bounds.from); fromDate.setDate(fromDate.getDate()-days);
+    const prevTo=new Date(bounds.from); prevTo.setDate(prevTo.getDate()-1);
+    const pFrom=dateStr(fromDate), pTo=dateStr(prevTo);
+    const pRows=globalRows.filter(r=>r[0]>=pFrom&&r[0]<=pTo&&(!canal||r[4]===canal));
+    if(pRows.length) prevAgg=aggregate(pRows);
+  }
+  // Stats por campaña (mismos filtros; acá cada campaña cuenta lo suyo)
+  const stats=RAW.campaigns.map(c=>{
+    const rows=(c.rows||[]).filter(inScope);
+    const a=aggregate(rows);
+    return {id:c.id,name:c.name,status:c.status,autoOff:!!c._autoOff,
+      ventas:a.totalVen,unidades:a.totalUn,pedidos:a.orders,
+      ticket:a.orders?Math.round(a.totalVen/a.orders):0,
+      pct:agg.totalVen?(a.totalVen/agg.totalVen*100).toFixed(1):'0.0'};
+  }).sort((a,b)=>b.ventas-a.ventas);
+  // Solapamiento dentro del período: líneas presentes en 2+ campañas
+  let overlapLines=0; const overlapOrders=new Set();
+  gRows.forEach(r=>{const k=r[5]+'|'+r[1]; if(keyCamps[k]&&keyCamps[k].size>1){overlapLines++;overlapOrders.add(r[5]);}});
+  return {gRows, agg, prevAgg, stats, bounds, keyCamps, overlapLines, overlapOrders:overlapOrders.size};
+}
+
+const VIEW_LABELS={
+  single:{
+    'sec-analisis':'Análisis por SKU','t-skubar':'Ventas por SKU','s-skubar':'Revenue por variante de producto',
+    't-skupie':'Participación por SKU','s-skupie':'% del total de la campaña',
+    'sec-detalle':'Detalle por SKU','t-table':'SKUs de la Campaña','s-table':'Resultados filtrados según período y canal seleccionados',
+    'kd-ven':'Revenue generado por la campaña','kd-ped':'Transacciones con esta promo',
+    'kl-skus':'SKUs Activos','kd-skus':'Variantes con ventas en el período'
+  },
+  all:{
+    'sec-analisis':'Análisis por Campaña','t-skubar':'Ranking por Campaña','s-skubar':'Revenue de cada campaña en el período · clic para abrir',
+    't-skupie':'Participación por Campaña','s-skupie':'% sobre el revenue promocional total',
+    'sec-detalle':'Detalle por Campaña','t-table':'Comparativa de Campañas','s-table':'Clic en una fila para abrir esa campaña · pedidos compartidos se cuentan una vez en los totales',
+    'kd-ven':'Revenue promocional consolidado · pedidos contados una sola vez','kd-ped':'Pedidos únicos entre todas las campañas, sin duplicar',
+    'kl-skus':'Campañas Activas','kd-skus':'Sobre el total de campañas configuradas'
+  }
+};
+const THEAD_SINGLE='<tr><th>#</th><th>Producto</th><th>Ventas (₲)</th><th>Unidades</th><th>Pedidos</th><th>% Participación</th><th></th></tr>';
+const THEAD_ALL='<tr><th>#</th><th>Campaña</th><th>Ventas (₲)</th><th>Unidades</th><th>Pedidos</th><th>Ticket</th><th>% Part.</th><th>Estado</th></tr>';
+let _viewMode='single';
+function setViewLabels(mode){
+  if(mode===_viewMode) { /* siempre refrescar thead por si la tabla cambió */ }
+  _viewMode=mode;
+  const L=VIEW_LABELS[mode];
+  Object.keys(L).forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=L[id];});
+  const th=document.getElementById('thead-skus');
+  if(th) th.innerHTML = mode==='all'?THEAD_ALL:THEAD_SINGLE;
+}
+
+function renderOverview(){
+  setViewLabels('all');
+  document.getElementById('h-sub').textContent='Todas las campañas';
+  const data=computeOverviewData();
+  renderCampCards(null);
+  if(!data){
+    ['k-ven','k-un','k-ped','k-tick'].forEach(id=>document.getElementById(id).textContent='—');
+    document.getElementById('k-ven-cmp').innerHTML='';
+    document.getElementById('k-skus').textContent=RAW.campaigns.filter(c=>c.status==='activa').length+' / '+RAW.campaigns.length;
+    Object.keys(charts).forEach(dc);
+    document.getElementById('tb-skus').innerHTML='<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted)">📭 Todavía no hay pedidos sincronizados</td></tr>';
+    document.getElementById('insights').innerHTML='<div class="insight"><span class="i-icon">💡</span><span>Cuando el Sheet sincronice pedidos que coincidan con las palabras clave de tus campañas, acá vas a ver el consolidado.</span></div>';
+    document.getElementById('fcount').textContent='';
+    return;
+  }
+  const {gRows,agg,prevAgg,stats,overlapLines,overlapOrders}=data;
+  renderKPIs(agg,prevAgg);
+  document.getElementById('k-skus').textContent=RAW.campaigns.filter(c=>c.status==='activa').length+' / '+RAW.campaigns.length;
+  renderDaily(agg.daily);
+  renderCanal(agg.canal);
+  renderCampRank(stats);
+  renderCampPie(stats);
+  renderCampTable(stats);
+  renderOverviewInsights(agg,prevAgg,stats,overlapLines,overlapOrders);
+  document.getElementById('fcount').textContent='→ '+fN(gRows.length)+' líneas consolidadas (sin duplicar)';
+}
+
+function renderCampRank(stats){
+  dc('sku-bar');
+  const data=stats.filter(s=>s.ventas>0);
+  const cv=document.getElementById('ch-sku-bar');
+  if(!data.length){return;}
+  charts['sku-bar']=new Chart(cv,{
+    type:'bar',
+    data:{labels:data.map(s=>sk(s.name,26)),datasets:[{label:'Ventas',data:data.map(s=>s.ventas),backgroundColor:data.map((s,i)=>COLORS[i%COLORS.length]),borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      onClick:(e,els)=>{if(els.length)selectCamp(data[els[0].index].id);},
+      onHover:(e,els)=>{e.native.target.style.cursor=els.length?'pointer':'default';},
+      plugins:{legend:{display:false},tooltip:{callbacks:{title:ctx=>data[ctx[0].dataIndex].name,label:ctx=>' '+fG(ctx.parsed.x)+' ('+data[ctx.dataIndex].pct+'% del total)'}}},
+      scales:{x:{grid:{color:'#f0f0f0'},ticks:{font:{size:9},callback:v=>fG(v)}},y:{grid:{display:false},ticks:{font:{size:9}}}}}
+  });
+}
+
+function renderCampPie(stats){
+  dc('sku-pie');
+  const data=stats.filter(s=>s.ventas>0);
+  if(!data.length) return;
+  charts['sku-pie']=new Chart(document.getElementById('ch-sku-pie'),{
+    type:'doughnut',
+    data:{labels:data.map(s=>s.name),datasets:[{data:data.map(s=>s.ventas),backgroundColor:COLORS,borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'55%',
+      onClick:(e,els)=>{if(els.length)selectCamp(data[els[0].index].id);},
+      onHover:(e,els)=>{e.native.target.style.cursor=els.length?'pointer':'default';},
+      plugins:{
+        legend:{position:'bottom',labels:{font:{size:9},boxWidth:9,padding:6,generateLabels:chart=>chart.data.labels.map((label,i)=>({text:sk(label,22),fillStyle:COLORS[i%COLORS.length],strokeStyle:'#fff',lineWidth:1,hidden:false,index:i}))}},
+        tooltip:{callbacks:{title:ctx=>data[ctx[0].dataIndex].name,label:ctx=>' '+fG(ctx.parsed)+' ('+data[ctx.dataIndex].pct+'% del total)'}}
+      }}
+  });
+}
+
+function statusChip(s){
+  if(s.status==='activa') return '<span style="font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:#e8f5e9;color:#2e7d32">activa</span>';
+  if(s.status==='desactivado') return '<span style="font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:#ffebee;color:#c62828">desact.'+(s.autoOff?' auto':'')+'</span>';
+  return '<span style="font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:#eee;color:#999">'+s.status+'</span>';
+}
+function renderCampTable(stats){
+  const tb=document.getElementById('tb-skus');
+  if(!stats.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--muted)">📭 Sin campañas</td></tr>';return;}
+  tb.innerHTML=stats.map((s,i)=>{
+    const pct=parseFloat(s.pct)||0;
+    return '<tr style="cursor:pointer" onclick="selectCamp(\''+s.id+'\')" title="Abrir '+s.name.replace(/"/g,'&quot;')+'">'+
+      '<td style="color:var(--muted);font-size:11px">'+(i+1)+'</td>'+
+      '<td><strong>'+s.name+'</strong></td>'+
+      '<td><strong>'+fG(s.ventas)+'</strong></td>'+
+      '<td>'+fN(s.unidades)+'</td>'+
+      '<td>'+fN(s.pedidos)+'</td>'+
+      '<td>'+fG(s.ticket)+'</td>'+
+      '<td><div style="display:flex;align-items:center;gap:8px"><span style="font-weight:700;font-size:12px;color:var(--red);min-width:36px">'+pct+'%</span><div class="pbar" style="width:70px"><div class="pfill" style="width:'+Math.min(pct,100)+'%;background:'+COLORS[i%COLORS.length]+'"></div></div></div></td>'+
+      '<td>'+statusChip(s)+'</td>'+
+    '</tr>';
+  }).join('');
+}
+
+function renderOverviewInsights(agg,prev,stats,overlapLines,overlapOrders){
+  const ins=[];
+  const withSales=stats.filter(s=>s.ventas>0);
+  if(withSales.length){
+    const top=withSales[0];
+    ins.push('<div class="insight"><span class="i-icon">🏆</span><span><strong>'+top.name+'</strong> lidera el período con <strong>'+fG(top.ventas)+'</strong> ('+top.pct+'% del revenue promocional).</span></div>');
+  }
+  if(prev&&prev.totalVen>0){
+    const g=((agg.totalVen-prev.totalVen)/prev.totalVen*100).toFixed(1);
+    const up=parseFloat(g)>=0;
+    ins.push('<div class="insight" style="border-left-color:'+(up?'var(--green)':'var(--red)')+'"><span class="i-icon">'+(up?'📈':'📉')+'</span><span>El revenue promocional <strong>'+(up?'creció':'cayó')+' un '+Math.abs(g)+'%</strong> vs el período anterior ('+fG(prev.totalVen)+').</span></div>');
+  }
+  if(agg.canal.length){
+    const top=agg.canal[0];
+    const pct=agg.totalVen?(top.ventas/agg.totalVen*100).toFixed(1):0;
+    ins.push('<div class="insight" style="border-left-color:var(--cyan)"><span class="i-icon">📣</span><span>El canal <strong>'+(MED[top.UtmMedium]||top.UtmMedium)+'</strong> lidera con <strong>'+fG(top.ventas)+'</strong> ('+pct+'% del total).</span></div>');
+  }
+  if(overlapLines>0){
+    ins.push('<div class="insight" style="border-left-color:var(--orange)"><span class="i-icon">⚠️</span><span><strong>'+fN(overlapOrders)+' pedido(s)</strong> ('+fN(overlapLines)+' líneas) matchean con <strong>2 o más campañas</strong> a la vez. En los KPIs de arriba se cuentan una sola vez, pero la suma del ranking puede superar el total. Revisá las palabras clave si el solapamiento no es intencional.</span></div>');
+  }
+  if(withSales.length>1){
+    const top2=(parseFloat(withSales[0].pct)+parseFloat(withSales[1].pct)).toFixed(1);
+    ins.push('<div class="insight" style="border-left-color:var(--yellow)"><span class="i-icon">📦</span><span><strong>'+withSales.length+' campañas</strong> registran ventas en el período. Las 2 principales concentran el <strong>'+top2+'%</strong> del revenue.</span></div>');
+  }
+  if(!ins.length) ins.push('<div class="insight"><span class="i-icon">💡</span><span>Sin datos para el período seleccionado. Ampliá el rango de fechas.</span></div>');
+  document.getElementById('insights').innerHTML=ins.join('');
+}
+
 /* Estado sin campañas: tarjeta vacía + KPIs/gráficos en blanco */
 function clearDashboard(){
+  setViewLabels('single');
   renderCampCards(null);
   document.getElementById('h-sub').textContent='Sin campañas configuradas';
   document.getElementById('fcount').textContent='';
@@ -811,7 +1001,33 @@ function renderInsights(agg,prev,camp){
   document.getElementById('insights').innerHTML=ins.join('');
 }
 
+function exportOverviewXLSX(){
+  const data=computeOverviewData();
+  if(!data){showPromoUploadMsg('✗ No hay datos para exportar todavía.','err');return;}
+  const {gRows, stats, keyCamps}=data;
+  const nameById={}; RAW.campaigns.forEach(c=>nameById[c.id]=c.name);
+  const wb=XLSX.utils.book_new();
+  const compRows=stats.map((s,i)=>({
+    '#':i+1,'Campaña':s.name,'Revenue (₲)':s.ventas,'Unidades':s.unidades,'Pedidos':s.pedidos,
+    'Ticket (₲)':s.ticket,'% Participación':parseFloat(s.pct),'Estado':s.status+(s.autoOff?' (auto)':'')
+  }));
+  const ws1=XLSX.utils.json_to_sheet(compRows);
+  ws1['!cols']=Object.keys(compRows[0]||{'a':1}).map(h=>({wch:Math.max(h.length,14)}));
+  XLSX.utils.book_append_sheet(wb,ws1,'Comparativa Campañas');
+  const rawRows=gRows.map(r=>({
+    'Fecha':r[0],'Producto':r[1],'Cantidad':r[2],'Revenue (₲)':r[3],'Canal / UTM':r[4],'Order ID':r[5],
+    'Campañas':Array.from(keyCamps[r[5]+'|'+r[1]]||[]).map(id=>nameById[id]||id).join(' + ')
+  }));
+  if(rawRows.length){
+    const ws2=XLSX.utils.json_to_sheet(rawRows);
+    ws2['!cols']=Object.keys(rawRows[0]).map(h=>({wch:Math.max(h.length,14)}));
+    XLSX.utils.book_append_sheet(wb,ws2,'Pedidos Consolidados');
+  }
+  XLSX.writeFile(wb,'promo_todas_las_campanas_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
 function exportCSV(){
+  if(getCampId()===ALL_ID){ exportOverviewXLSX(); return; }
   const rows=filterRows();
   const camp=getCampMeta();
   const data=rows.map(r=>({
@@ -841,6 +1057,7 @@ document.getElementById('f-period').addEventListener('change',function(){
   const el=document.getElementById(id);
   if(el) el.addEventListener('change',renderAll);
 });
+const ALL_ID='__all__';
 function populateCampSelect(){
   const sel=document.getElementById('f-camp'); if(!sel) return;
   const cur=sel.value;
@@ -848,14 +1065,14 @@ function populateCampSelect(){
     sel.innerHTML='<option value="" disabled selected>— Sin campañas: creá una con ＋ —</option>';
     return;
   }
-  sel.innerHTML=RAW.campaigns.map(function(c){
-    const dis=!(c.status==='activa'||c.status==='desactivado');
-    const lbl=c.name+(c.status!=='activa'?' ('+c.status+')':'');
-    return '<option value="'+c.id+'"'+(dis?' disabled':'')+'>'+lbl+'</option>';
-  }).join('');
-  const active=RAW.campaigns.filter(function(c){return c.status==='activa';}).map(function(c){return c.id;});
-  if(active.indexOf(cur)>=0) sel.value=cur;
-  else if(active.length) sel.value=active[0];
+  sel.innerHTML='<option value="'+ALL_ID+'">📊 Todas las campañas</option>'+
+    RAW.campaigns.map(function(c){
+      const dis=!(c.status==='activa'||c.status==='desactivado');
+      const lbl=c.name+(c.status!=='activa'?' ('+c.status+')':'');
+      return '<option value="'+c.id+'"'+(dis?' disabled':'')+'>'+lbl+'</option>';
+    }).join('');
+  const valid=[ALL_ID].concat(RAW.campaigns.filter(function(c){return c.status==='activa'||c.status==='desactivado';}).map(function(c){return c.id;}));
+  sel.value = valid.indexOf(cur)>=0 ? cur : ALL_ID;
 }
 window.addEventListener('DOMContentLoaded',function(){loadCustomCampaigns();populateCampSelect();refreshDataBanner();showPromoUploadMsg('⏳ Cargando datos del Sheet…','ok');autoSyncPromo('init');});
 
@@ -925,6 +1142,7 @@ function exportPromoCSV(){
   a.click(); URL.revokeObjectURL(url);
 }
 function exportPromoXLSX(){
+  if(getCampId()===ALL_ID){ exportOverviewXLSX(); return; }
   const { skuRows, rawRows, campName } = getPromoExportRows();
   if(!skuRows || !skuRows.length) return;
   const wb = XLSX.utils.book_new();

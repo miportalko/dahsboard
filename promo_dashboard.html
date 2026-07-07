@@ -108,8 +108,6 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
 .sec .sec-actions{display:flex;gap:6px;align-items:center;margin-left:8px}
 .btn-newcamp{display:inline-flex;align-items:center;gap:5px;background:var(--red);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:.3px;transition:opacity .15s}
 .btn-newcamp:hover{opacity:.85}
-.sec-link{font-size:9px;font-weight:700;color:var(--muted);cursor:pointer;text-transform:lowercase;letter-spacing:.5px;background:none;border:none;font-family:inherit;padding:2px 4px}
-.sec-link:hover{color:var(--red);text-decoration:underline}
 .camp-tools{float:right;display:flex;gap:4px;margin-left:6px}
 .camp-tool-btn{border:1px solid var(--border);background:#fff;border-radius:5px;width:22px;height:22px;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s;padding:0}
 .camp-tool-btn:hover{border-color:var(--red);color:var(--red);background:#fff5f5}
@@ -187,10 +185,7 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
 <div class="main">
   <div class="sec">Campañas Activas
     <span class="sec-actions">
-      <button class="btn-newcamp" onclick="openCampModal()" title="Crear una campaña manual: se detecta por palabras clave en el nombre del SKU">＋ Nueva campaña</button>
-      <button class="sec-link" onclick="exportCustomCampaigns()" title="Descargar backup JSON de tus campañas manuales">exportar</button>
-      <button class="sec-link" onclick="document.getElementById('campImportInput').click()" title="Restaurar campañas manuales desde un backup JSON">importar</button>
-      <input type="file" id="campImportInput" accept=".json" style="display:none">
+      <button class="btn-newcamp" onclick="openCampModal()" title="Crear una campaña: se detecta por palabras clave en el nombre del SKU">＋ Nueva campaña</button>
     </span>
   </div>
   <div class="camp-grid" id="camp-cards"></div>
@@ -297,10 +292,6 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
         <label>Descripción</label>
         <input type="text" id="cm-desc" placeholder="Qué incluye la promo" maxlength="140">
       </div>
-      <div class="mf-row">
-        <div class="mf"><label>Fecha inicio *</label><input type="date" id="cm-start"></div>
-        <div class="mf"><label>Fecha fin *</label><input type="date" id="cm-end"></div>
-      </div>
       <div class="mf">
         <label>Palabras clave de SKU *</label>
         <textarea id="cm-keywords" placeholder="Una regla por línea. Ej:&#10;Vaso Navidad&#10;Pack Coca-Cola &amp; Gorro Navideño" oninput="updateKeywordPreview()"></textarea>
@@ -361,7 +352,8 @@ function loadCustomCampaigns(){
     if(!cc || !cc.id || RAW.campaigns.some(c=>c.id===cc.id)) return;
     RAW.campaigns.push({
       id:cc.id, name:cc.name||cc.id, type:cc.type||'Manual', status:cc.status||'activa',
-      description:cc.description||'', start:cc.start||'', end:cc.end||'',
+      description:cc.description||'',
+      created:cc.created||cc.start||new Date().toISOString().slice(0,10),
       rows:[], custom:true, keywords:cc.keywords||'', _rules:parseKeywordRules(cc.keywords)
     });
   });
@@ -369,7 +361,7 @@ function loadCustomCampaigns(){
 function persistCustomCampaigns(){
   const list=RAW.campaigns.filter(c=>c.custom).map(c=>({
     id:c.id, name:c.name, type:c.type, status:c._origStatus!==undefined?c._origStatus:c.status,
-    description:c.description, start:c.start, end:c.end, keywords:c.keywords
+    description:c.description, created:c.created, keywords:c.keywords
   }));
   try{ localStorage.setItem(LS_CUSTOM, JSON.stringify(list)); }
   catch(e){ showPromoUploadMsg('✗ No se pudo guardar en el navegador: '+e.message,'err'); }
@@ -467,7 +459,6 @@ function renderAll(){
   const prev=getPrevRows();
   const agg=aggregate(rows);
   const aggPrev=prev.length?aggregate(prev):null;
-  const bounds=rows.length?getDateBounds(camp.rows):{from:camp.start,to:camp.end};
   document.getElementById('h-sub').textContent=camp.name;
 
   document.getElementById('fcount').textContent=rows.length!==camp.rows.length?'→ '+fN(rows.length)+' líneas filtradas':'';
@@ -521,10 +512,11 @@ function applyAutoDeactivation(){
   RAW.campaigns.forEach(c=>{
     if(c._origStatus === undefined) c._origStatus = c.status; // estado curado original
     if(c._origStatus !== 'activa') return;                    // solo se auditan las activas
-    // Último movimiento real: fecha máxima de sus pedidos; si nunca vendió, su fecha de inicio
+    // Último movimiento real: fecha máxima de sus pedidos; si nunca vendió, su fecha de creación
     let last = null;
     (c.rows||[]).forEach(r=>{ const d=r[0]; if(d && (!last || d>last)) last=d; });
-    if(!last) last = c.start;
+    if(!last) last = c.created;
+    if(!last) return; // sin ventas ni fecha de referencia: no juzgar
     const days = Math.floor((_dateUTC(ref) - _dateUTC(last)) / 86400000);
     if(days > INACTIVITY_DAYS){
       c.status = 'desactivado';
@@ -540,25 +532,19 @@ function applyAutoDeactivation(){
   });
 }
 
-/* Fechas dinámicas por campaña.
-   - start: fecha oficial curada (c.start); si hubo ventas reales antes, se extiende hacia atrás.
-   - end  : para campañas ACTIVAS, = último pedido real cargado del Sheet (se refresca solo).
-            Las desactivadas y el estado pre-carga conservan su fecha fija (c.end). */
+/* Fechas 100% derivadas de los datos:
+   - start: primer pedido real cargado del Sheet.
+   - end  : último pedido real (para activas se refresca en cada sync).
+   - Sin pedidos aún: no hay rango que mostrar. */
 function getCampDisplayDates(c){
-  let start=c.start, end=c.end, live=false;
-  if(c.rows && c.rows.length){
-    let rmin=null, rmax=null;
-    for(const r of c.rows){
-      const d=r[0]; if(!d) continue;
-      if(!rmin||d<rmin) rmin=d;
-      if(!rmax||d>rmax) rmax=d;
-    }
-    if(c.status==='activa' && rmax){
-      end=rmax; live=true;
-      if(rmin && rmin<start) start=rmin;
-    }
+  if(!c.rows || !c.rows.length) return {start:null, end:null, live:false};
+  let rmin=null, rmax=null;
+  for(const r of c.rows){
+    const d=r[0]; if(!d) continue;
+    if(!rmin||d<rmin) rmin=d;
+    if(!rmax||d>rmax) rmax=d;
   }
-  return {start, end, live};
+  return {start:rmin, end:rmax, live:c.status==='activa'};
 }
 
 function renderCampCards(agg){
@@ -593,7 +579,7 @@ function renderCampCards(agg){
         '>'+c.status+(c._autoOff?' · '+c._daysIdle+'d sin mov.':'')+'</span>'+
       '<div class="camp-name">'+c.name+'</div>'+
 
-      (function(){var dd=getCampDisplayDates(c);return '<div class="camp-dates" title="'+(dd.live?'Fin actualizado en vivo desde el Sheet (último pedido real)':'Fechas oficiales de la campaña')+'">📅 '+dd.start+' → '+dd.end+(dd.live?' <span style="color:#1E9E5A" title="en vivo">•</span>':'')+'</div>';})()+
+      (function(){var dd=getCampDisplayDates(c);return '<div class="camp-dates" title="'+(dd.start?'Rango real de pedidos según el Sheet (se actualiza en vivo)':'Aún no se detectaron pedidos con las palabras clave de esta campaña')+'">📅 '+(dd.start?dd.start+' → '+dd.end+(dd.live?' <span style="color:#1E9E5A" title="en vivo">•</span>':''):'sin pedidos todavía')+'</div>';})()+
       '<div style="font-size:10px;color:var(--muted);margin-bottom:10px" title="'+c.description+'">'+c.description+'</div>'+
       '<div class="camp-kpi">'+
         '<div><div class="ck-v">'+fG(v)+'</div><div class="ck-l">'+(isActive?'Período sel.':'Total')+'</div></div>'+
@@ -1216,8 +1202,6 @@ function openCampModal(editId){
   document.getElementById('cm-type').value=c?c.type:'';
   document.getElementById('cm-status').value=c?(c._origStatus!==undefined?c._origStatus:c.status):'activa';
   document.getElementById('cm-desc').value=c?c.description:'';
-  document.getElementById('cm-start').value=c?c.start:new Date().toISOString().slice(0,10);
-  document.getElementById('cm-end').value=c?c.end:'';
   document.getElementById('cm-keywords').value=c?c.keywords:'';
   updateKeywordPreview();
   m.classList.add('open');
@@ -1248,12 +1232,8 @@ function updateKeywordPreview(){
 
 function saveCampaignForm(){
   const name=document.getElementById('cm-name').value.trim();
-  const start=document.getElementById('cm-start').value;
-  const end=document.getElementById('cm-end').value;
   const keywords=document.getElementById('cm-keywords').value.trim();
   if(!name){showPromoUploadMsg('✗ La campaña necesita un nombre.','err');return;}
-  if(!start||!end){showPromoUploadMsg('✗ Completá fecha de inicio y fin.','err');return;}
-  if(end<start){showPromoUploadMsg('✗ La fecha de fin no puede ser anterior al inicio.','err');return;}
   if(!parseKeywordRules(keywords).length){showPromoUploadMsg('✗ Agregá al menos una palabra clave de SKU.','err');return;}
 
   const editId=document.getElementById('cm-id').value;
@@ -1262,13 +1242,12 @@ function saveCampaignForm(){
     c=RAW.campaigns.find(x=>x.id===editId&&x.custom);
     if(!c){showPromoUploadMsg('✗ No se encontró la campaña a editar.','err');return;}
   } else {
-    c={id:slugifyCampId(name), rows:[], custom:true};
+    c={id:slugifyCampId(name), rows:[], custom:true, created:new Date().toISOString().slice(0,10)};
     RAW.campaigns.push(c);
   }
   c.name=name;
   c.type=document.getElementById('cm-type').value.trim()||'Manual';
   c.description=document.getElementById('cm-desc').value.trim();
-  c.start=start; c.end=end;
   c.keywords=keywords;
   c._rules=parseKeywordRules(keywords);
   const st=document.getElementById('cm-status').value;
@@ -1295,57 +1274,6 @@ function deleteCustomCampaign(id){
   renderAll();
   showPromoUploadMsg('✓ Campaña eliminada.','ok');
 }
-
-/* Backup / restauración (las manuales viven en localStorage de ESTE navegador) */
-function exportCustomCampaigns(){
-  const list=RAW.campaigns.filter(c=>c.custom).map(c=>({
-    id:c.id,name:c.name,type:c.type,status:c._origStatus!==undefined?c._origStatus:c.status,
-    description:c.description,start:c.start,end:c.end,keywords:c.keywords
-  }));
-  if(!list.length){showPromoUploadMsg('✗ No hay campañas manuales para exportar.','err');return;}
-  const blob=new Blob([JSON.stringify(list,null,2)],{type:'application/json'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a');a.href=url;
-  a.download='miportal_campanas_manuales_'+new Date().toISOString().slice(0,10)+'.json';
-  a.click();URL.revokeObjectURL(url);
-  showPromoUploadMsg('✓ Backup descargado ('+list.length+' campaña(s)).','ok');
-}
-document.getElementById('campImportInput').addEventListener('change',function(ev){
-  const f=ev.target.files[0]; ev.target.value='';
-  if(!f) return;
-  const reader=new FileReader();
-  reader.onload=function(e){
-    try{
-      const list=JSON.parse(e.target.result);
-      if(!Array.isArray(list)) throw new Error('El JSON debe ser una lista de campañas');
-      let n=0;
-      list.forEach(cc=>{
-        if(!cc||!cc.name||!cc.keywords) return;
-        let existing=cc.id?RAW.campaigns.find(x=>x.id===cc.id&&x.custom):null;
-        if(!existing){
-          existing={id:(cc.id&&!RAW.campaigns.some(x=>x.id===cc.id))?cc.id:slugifyCampId(cc.name),rows:[],custom:true};
-          RAW.campaigns.push(existing);
-        }
-        existing.name=cc.name;existing.type=cc.type||'Manual';existing.description=cc.description||'';
-        existing.start=cc.start||'';existing.end=cc.end||'';existing.keywords=cc.keywords;
-        existing._rules=parseKeywordRules(cc.keywords);
-        existing.status=cc.status||'activa';existing._origStatus=existing.status;existing._autoOff=false;
-        rematchCampaign(existing.id);
-        n++;
-      });
-      persistCustomCampaigns();
-      applyAutoDeactivation();
-      populateCampSelect();
-      renderAll();
-      refreshDataBanner();
-      showPromoUploadMsg('✓ '+n+' campaña(s) importadas y re-matcheadas.','ok');
-    }catch(err){
-      console.error(err);
-      showPromoUploadMsg('✗ No se pudo importar: '+err.message,'err');
-    }
-  };
-  reader.readAsText(f,'utf-8');
-});
 
 </script>
 </body>

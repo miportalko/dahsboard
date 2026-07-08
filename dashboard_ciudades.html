@@ -49,6 +49,14 @@
     background:#fff;cursor:pointer;transition:.15s}
   .chip:hover{border-color:var(--red);color:var(--red)}
   .chip.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .chip-year.year-on{background:var(--red);color:#fff;border-color:var(--red)}
+  .chip-year.year-on:hover{color:#fff}
+  .ysep{width:1px;height:20px;background:var(--line);margin:0 4px;align-self:center}
+  .mini-kpis{display:flex;gap:24px;flex-wrap:wrap;margin:2px 0 12px}
+  .mk .lab{font-size:11px;color:var(--muted);font-weight:600}
+  .mk .val{font-size:17px;font-weight:800;letter-spacing:-.3px}
+  .mk .delta{font-size:11px;font-weight:700}
+  .delta.up{color:#1E9E5A}.delta.dn{color:#D8342E}
   .reset{margin-left:auto;font-size:12px;font-weight:700;color:var(--red);background:none;border:none;
     cursor:pointer;padding:9px 4px;text-decoration:underline}
 
@@ -136,6 +144,9 @@
     <div class="fg">
       <label>Rango de fechas</label>
       <div class="presets" id="presets">
+        <button class="chip chip-year" data-y="2025">2025</button>
+        <button class="chip chip-year year-on" data-y="2026">2026</button>
+        <span class="ysep"></span>
         <button class="chip" data-p="30">30 días</button>
         <button class="chip" data-p="90">90 días</button>
         <button class="chip" data-p="month">Este mes</button>
@@ -217,6 +228,28 @@
         </div>
       </div>
       <div class="cwrap"><canvas id="timeChart" height="320"></canvas></div>
+    </div>
+  </div>
+
+  <!-- COMPARATIVO Y PROYECCION -->
+  <div class="grid g2">
+    <div class="panel">
+      <div class="ph"><div><h2><span class="dot"></span>Comparativo 2026 vs 2025</h2></div>
+        <div class="exp">
+          <button class="exp-btn" data-exp="comparativo" data-fmt="csv">⬇ CSV</button>
+          <button class="exp-btn" data-exp="comparativo" data-fmt="xlsx">⬇ Excel</button>
+        </div></div>
+      <div class="mini-kpis" id="yoyKpis"></div>
+      <div class="cwrap"><canvas id="yoyChart" height="280"></canvas></div>
+    </div>
+    <div class="panel">
+      <div class="ph"><div><h2><span class="dot"></span>Proyección de cierre 2026</h2></div>
+        <div class="exp">
+          <button class="exp-btn" data-exp="proyeccion" data-fmt="csv">⬇ CSV</button>
+          <button class="exp-btn" data-exp="proyeccion" data-fmt="xlsx">⬇ Excel</button>
+        </div></div>
+      <div class="mini-kpis" id="projKpis"></div>
+      <div class="cwrap"><canvas id="projChart" height="280"></canvas></div>
     </div>
   </div>
 
@@ -485,14 +518,18 @@ function exportXLSX(d){
 document.addEventListener('click',e=>{
   const b=e.target.closest('.exp-btn'); if(!b)return;
   const kind=b.dataset.exp;
-  const d = kind==='evolucion'? expTime() : expData(kind);
+  const d = kind==='evolucion'? expTime()
+          : kind==='comparativo'? expYoY()
+          : kind==='proyeccion'? expProj()
+          : expData(kind);
   if(b.dataset.fmt==='xlsx') exportXLSX(d); else exportCSV(d);
 });
 
 // ===== Events =====
 document.getElementById('presets').addEventListener('click',e=>{
   const b=e.target.closest('.chip'); if(!b)return;
-  document.querySelectorAll('#presets .chip').forEach(c=>c.classList.remove('active'));
+  if(b.dataset.y){ setYear(b.dataset.y); return; }   // chips de año → cambio de fuente
+  document.querySelectorAll('#presets .chip:not(.chip-year)').forEach(c=>c.classList.remove('active'));
   b.classList.add('active'); const p=b.dataset.p;
   if(p==='all'){dFrom.value=DATA.date_min;dTo.value=DATA.date_max;}
   else if(p==='month'){const d=new Date(DMAX);const f=new Date(d.getFullYear(),d.getMonth(),1);
@@ -612,10 +649,21 @@ function showUploadMsg(msg, kind){
    (parseVtexRows + buildCiudadesDelta). No reemplaza la base
    embebida: agrega solo los días nuevos (delta por fecha).
    ============================================================ */
-const GSHEET = {
-  id:  '1oDuPtSdspEqvoo_0RDWg2eku2zrejNhrp711oqBgUp8',
-  gid: '1742393063'   // pestaña nueva (verificar nombre en el Sheet)
+/* Una fuente por año. La config 2026 queda exactamente como estaba (no se toca).
+   Para 2025: pegar el ID del Google Sheet de datos VTEX 2025 en `id`
+   (y ajustar `gid` si la pestaña no es la primera; la primera pestaña siempre es gid '0'). */
+const GSHEETS = {
+  '2026': {
+    id:  '1oDuPtSdspEqvoo_0RDWg2eku2zrejNhrp711oqBgUp8',   // Fuente General VTEX (2026) — NO MODIFICAR
+    gid: '1742393063'
+  },
+  '2025': {
+    id:  '1PfSeehY2EFMVU3VZfG0ICIHT3GZNnjIDlZbkbKn5Bxo',   // Fuente VTEX General 2025
+    gid: '1013977220'
+  }
 };
+let YEAR = '2026';                       // año activo al abrir
+function GSHEET(){ return GSHEETS[YEAR]; }
 
 /* --- Normalización precisa de valores gviz --- */
 // Fecha gviz "Date(YYYY,M,D[,h,m,s])" (mes 0-indexado) -> "YYYY-MM-DD[ HH:MM:SS]" ISO exacto,
@@ -636,9 +684,14 @@ function normCreationDate(s){
   return s;
 }
 
-async function gvizFetchRows(){
-  const url = 'https://docs.google.com/spreadsheets/d/'+GSHEET.id+
-              '/gviz/tq?gid='+GSHEET.gid+'&tqx=out:json&headers=1&_='+Date.now();
+async function gvizFetchRows(year){
+  const y = year || YEAR;
+  const cfg = GSHEETS[y];
+  if(!cfg || !cfg.id || cfg.id.indexOf('PEGAR_AQUI')===0){
+    throw new Error('Falta configurar el ID del Sheet '+y+' (editar GSHEETS en el código)');
+  }
+  const url = 'https://docs.google.com/spreadsheets/d/'+cfg.id+
+              '/gviz/tq?gid='+cfg.gid+'&tqx=out:json&headers=1&_='+Date.now();
   const res = await fetch(url, {cache:'no-store'});
   if(!res.ok) throw new Error('HTTP '+res.status);
   const txt = await res.text();
@@ -690,14 +743,188 @@ async function loadFromSheet(){
       state.from=minD; state.to=maxD;
     }
     render();
-    showUploadMsg('✓ Sheet sincronizado: '+DATA.orders.length+' pedidos · '+DATA.n_clients+' clientes · '+(minD||'?')+' a '+(maxD||'?')+'.','ok');
+    YEARLY[YEAR] = {orders:newOrders, minD:(smin||minD), maxD:(smax||maxD)};
+    renderYoYProj();   // comparativo y proyección (usa ambas fuentes, no bloquea)
+    showUploadMsg('✓ Sheet '+YEAR+' sincronizado: '+DATA.orders.length+' pedidos · '+DATA.n_clients+' clientes · '+(minD||'?')+' a '+(maxD||'?')+'.','ok');
+    return true;
   }catch(err){
     console.error(err);
-    showUploadMsg('✗ No se pudo leer el Sheet: '+err.message+'  (verificá que esté compartido como "Cualquiera con el enlace · Lector")','err');
+    showUploadMsg('✗ No se pudo leer el Sheet '+YEAR+': '+err.message+'  (verificá que esté compartido como "Cualquiera con el enlace · Lector")','err');
+    return false;
   }
 }
 
 (function injectSheetBtn(){ /* botón manual eliminado · la sincronización ahora es automática */ })();
+
+/* ============================================================
+   COMPARATIVO 2026 vs 2025 + PROYECCIÓN DE CIERRE 2026
+   Ambos paneles leen las DOS fuentes anuales (independiente del
+   año activo en el selector y de los filtros del dashboard).
+   Proyección: estacionalidad mensual 2025 ajustada por el ritmo
+   real 2026 (ratio de meses ya transcurridos).
+   ============================================================ */
+const YEARLY = {};   // cache por año: {orders, minD, maxD}
+const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+let yoyChart, projChart;
+
+async function ensureYearCache(year){
+  if(YEARLY[year]) return YEARLY[year];
+  const rows = await gvizFetchRows(year);
+  rows.sort((a,b)=> String(a['Creation Date']||'').localeCompare(String(b['Creation Date']||'')));
+  const {newOrders} = buildCiudadesDelta(parseVtexRows(rows), '', 0);
+  let minD=null, maxD=null;
+  newOrders.forEach(o=>{ if(!minD||o.d<minD)minD=o.d; if(!maxD||o.d>maxD)maxD=o.d; });
+  YEARLY[year] = {orders:newOrders, minD, maxD};
+  return YEARLY[year];
+}
+
+function monthlySales(orders){ const m=new Array(12).fill(0); orders.forEach(o=>{ m[+o.d.slice(5,7)-1]+=o.v; }); return m; }
+function periodStats(orders, upTo){
+  let sales=0, n=0; const cl=new Set();
+  orders.forEach(o=>{ if(o.d>upTo) return; sales+=o.v; n++; cl.add(o.u); });
+  return {sales, n, ticket:n?sales/n:0, clients:cl.size};
+}
+const fmtPct1 = x => (x>=0?'+':'')+x.toFixed(1).replace('.',',')+'%';
+function deltaHTML(v26,v25){
+  if(!v25) return '';
+  const d=(v26/v25-1)*100;
+  return `<div class="delta ${d>=0?'up':'dn'}">${fmtPct1(d)} vs 2025</div>`;
+}
+
+/* --- Cálculo de proyección --- */
+function computeProjection(y25, y26){
+  const m25=monthlySales(y25.orders), m26=monthlySales(y26.orders);
+  const dt=parseD(y26.maxD), nx=new Date(dt); nx.setDate(nx.getDate()+1);
+  const lastM=dt.getMonth();                        // 0-11, mes del último dato 2026
+  const partial = nx.getMonth()===dt.getMonth();    // true si el último mes está incompleto
+  const lastComplete = partial ? lastM-1 : lastM;   // último mes 2026 completo
+  // ritmo 2026 vs 2025 sobre meses completos comparables
+  let s26=0, s25=0;
+  for(let m=0;m<=lastComplete;m++){ if(m25[m]>0){ s26+=m26[m]; s25+=m25[m]; } }
+  const ratio = s25>0 ? s26/s25 : 1;
+  // resto del mes parcial: ventas 2025 de ese mes desde el día siguiente en adelante
+  const real=new Array(12).fill(0), proy=new Array(12).fill(0);
+  for(let m=0;m<12;m++){
+    if(m<=lastComplete){ real[m]=m26[m]; }
+    else if(m===lastM && partial){
+      real[m]=m26[m];
+      const dia=dt.getDate();
+      let rest25=0;
+      y25.orders.forEach(o=>{ if(+o.d.slice(5,7)-1===m && +o.d.slice(8,10)>dia) rest25+=o.v; });
+      proy[m]=Math.round(rest25*ratio);
+    }
+    else{ proy[m]=Math.round(m25[m]*ratio); }
+  }
+  const total25=m25.reduce((a,b)=>a+b,0);
+  const cierre=real.reduce((a,b)=>a+b,0)+proy.reduce((a,b)=>a+b,0);
+  return {m25, m26, real, proy, ratio, cierre, total25, lastM, partial};
+}
+
+/* --- Render de los dos paneles --- */
+function renderYoY(y25, y26){
+  const m25=monthlySales(y25.orders), m26=monthlySales(y26.orders);
+  const upTo26=y26.maxD, upTo25='2025'+upTo26.slice(4);
+  const a=periodStats(y26.orders, upTo26), b=periodStats(y25.orders, upTo25);
+  document.getElementById('yoyKpis').innerHTML=`
+    <div class="mk"><div class="lab">Ventas al ${fmtDate(upTo26)}</div><div class="val">${fmtShort(a.sales)}</div>${deltaHTML(a.sales,b.sales)}</div>
+    <div class="mk"><div class="lab">Pedidos</div><div class="val">${a.n.toLocaleString('es-PY')}</div>${deltaHTML(a.n,b.n)}</div>
+    <div class="mk"><div class="lab">Ticket promedio</div><div class="val">${fmtG(a.ticket)}</div>${deltaHTML(a.ticket,b.ticket)}</div>
+    <div class="mk"><div class="lab">Clientes únicos</div><div class="val">${a.clients.toLocaleString('es-PY')}</div>${deltaHTML(a.clients,b.clients)}</div>`;
+  const ctx=document.getElementById('yoyChart');
+  const cfg={type:'bar',data:{labels:MESES,datasets:[
+      {label:'2025',data:m25.map(Math.round),backgroundColor:'#B0BEC5',borderRadius:4},
+      {label:'2026',data:m26.map(v=>Math.round(v)||null),backgroundColor:'#E31837',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12,usePointStyle:true}},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmtG(c.raw||0),
+          footer:items=>{const v25=m25[items[0].dataIndex],v26=m26[items[0].dataIndex];
+            return (v25>0&&v26>0)?'Variación: '+fmtPct1((v26/v25-1)*100):'';}}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10}}},
+              y:{grid:{color:'#F0F0F0'},ticks:{callback:v=>fmtShort(v),font:{size:11}}}}}};
+  if(yoyChart){yoyChart.data=cfg.data;yoyChart.update();}else yoyChart=new Chart(ctx,cfg);
+}
+
+function renderProj(y25, y26){
+  const P=computeProjection(y25,y26);
+  window._PROJ=P;   // para exportación
+  document.getElementById('projKpis').innerHTML=`
+    <div class="mk"><div class="lab">Cierre proyectado 2026</div><div class="val">${fmtShort(P.cierre)}</div>${deltaHTML(P.cierre,P.total25)}</div>
+    <div class="mk"><div class="lab">Ritmo actual vs 2025</div><div class="val">${fmtPct1((P.ratio-1)*100)}</div></div>
+    <div class="mk"><div class="lab">Cierre 2025</div><div class="val">${fmtShort(P.total25)}</div></div>`;
+  const ctx=document.getElementById('projChart');
+  const cfg={data:{labels:MESES,datasets:[
+      {type:'bar',label:'Real 2026',data:P.real.map(Math.round),backgroundColor:'#E31837',borderRadius:4,stack:'s'},
+      {type:'bar',label:'Proyección',data:P.proy,backgroundColor:'#FBC0BA',borderRadius:4,stack:'s'},
+      {type:'line',label:'2025',data:P.m25.map(Math.round),borderColor:'#8A939B',borderWidth:1.5,
+        borderDash:[5,4],pointRadius:0,pointHoverRadius:4,tension:.3,fill:false}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12,usePointStyle:true}},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmtG(c.raw||0),
+          footer:items=>{const i=items[0].dataIndex,t=P.real[i]+P.proy[i];
+            return P.proy[i]>0?'Total estimado: '+fmtG(t):'';}}}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},
+              y:{stacked:true,grid:{color:'#F0F0F0'},ticks:{callback:v=>fmtShort(v),font:{size:11}}}}}};
+  if(projChart){projChart.data=cfg.data;projChart.update();}else projChart=new Chart(ctx,cfg);
+}
+
+async function renderYoYProj(){
+  try{
+    const [y25, y26] = await Promise.all([ensureYearCache('2025'), ensureYearCache('2026')]);
+    renderYoY(y25, y26);
+    renderProj(y25, y26);
+  }catch(err){
+    console.error(err);
+    const msg='<div class="mk"><div class="lab" style="color:#D8342E">No se pudo cargar el otro año: '+err.message+'</div></div>';
+    document.getElementById('yoyKpis').innerHTML=msg;
+    document.getElementById('projKpis').innerHTML=msg;
+  }
+}
+
+/* --- Exportación de los nuevos paneles --- */
+function expYoY(){
+  const y25=YEARLY['2025'], y26=YEARLY['2026'];
+  if(!y25||!y26) return {name:'Comparativo 2026 vs 2025',header:['Aviso'],rows:[['Datos aún no cargados']]};
+  const m25=monthlySales(y25.orders), m26=monthlySales(y26.orders);
+  return {name:'Comparativo 2026 vs 2025',
+    header:['Mes','Ventas 2025 (Gs)','Ventas 2026 (Gs)','Variación (%)'],
+    rows:MESES.map((m,i)=>[m,Math.round(m25[i]),Math.round(m26[i]),
+      (m25[i]>0&&m26[i]>0)? +((m26[i]/m25[i]-1)*100).toFixed(1) : ''])};
+}
+function expProj(){
+  const P=window._PROJ;
+  if(!P) return {name:'Proyección 2026',header:['Aviso'],rows:[['Datos aún no cargados']]};
+  return {name:'Proyección 2026',
+    header:['Mes','Real 2026 (Gs)','Proyección (Gs)','Total estimado (Gs)','Referencia 2025 (Gs)'],
+    rows:MESES.map((m,i)=>[m,Math.round(P.real[i]),P.proy[i],Math.round(P.real[i])+P.proy[i],Math.round(P.m25[i])])};
+}
+
+/* ============================================================
+   SELECTOR DE AÑO (2025 / 2026)
+   Disponible en el header y como chips en el filtro de fechas.
+   Cambia la fuente activa y reconstruye todo el dashboard
+   desde el Sheet del año elegido. Cada año lee SOLO su Sheet:
+   cambiar de año nunca escribe ni modifica el otro archivo.
+   ============================================================ */
+function syncYearUI(){
+  document.querySelectorAll('#presets .chip-year').forEach(x=>x.classList.toggle('year-on', x.dataset.y===YEAR));
+}
+async function setYear(y){
+  if(y === YEAR) return;
+  const prev = YEAR;
+  YEAR = y;
+  syncYearUI();
+  const ok = await autoSync('year');
+  if(!ok){
+    // si el año nuevo falla (p. ej. ID sin configurar o Sheet no compartido), volver al anterior
+    YEAR = prev;
+    syncYearUI();
+    await autoSync('rollback');
+  } else {
+    // el año nuevo carga con su rango completo → preset "Todo"
+    document.querySelectorAll('#presets .chip:not(.chip-year)').forEach(c=>c.classList.remove('active'));
+    const all = document.querySelector('#presets [data-p=all]'); if(all) all.classList.add('active');
+  }
+}
 
 
 /* ============================================================
@@ -713,8 +940,9 @@ async function autoSync(reason){
   const dot = document.getElementById('syncDot');
   if(dot) dot.classList.add('busy');
   try{
-    await loadFromSheet();
+    const ok = await loadFromSheet();
     _lastSync = Date.now();
+    return ok;
   } finally {
     if(dot) dot.classList.remove('busy');
   }

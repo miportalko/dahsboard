@@ -82,7 +82,7 @@
   .filter-label { font-size:11px; font-weight:700; text-transform:uppercase;
     letter-spacing:.8px; color:var(--muted); white-space:nowrap; flex-shrink:0; }
   .filter-divider { width:1px; height:20px; background:var(--border); flex-shrink:0; }
-  .period-pills { display:flex; gap:5px; align-items:center; }
+  .period-pills { display:flex; gap:5px; align-items:center; flex-wrap:wrap; }
   .ppill {
     padding:5px 12px; border-radius:20px; border:1px solid var(--border);
     background:var(--white); font-family:var(--font); font-size:12px;
@@ -90,6 +90,19 @@
   }
   .ppill:hover { border-color:var(--red); color:var(--red); }
   .ppill.active { background:var(--red); border-color:var(--red); color:white; box-shadow:0 2px 8px rgba(232,36,27,.25); }
+  .ypill {
+    padding:5px 12px; border-radius:20px; border:1px solid var(--border);
+    background:var(--white); font-family:var(--font); font-size:12px; font-weight:700;
+    cursor:pointer; transition:all .15s;
+  }
+  .ypill:hover { border-color:var(--black); }
+  .ypill.active { background:var(--black); border-color:var(--black); color:white; }
+  .ysep { width:1px; height:20px; background:var(--border); margin:0 4px; }
+  .mini-kpis { display:flex; gap:26px; flex-wrap:wrap; margin:0 0 14px; }
+  .mini-kpis .mk .lab { font-size:11px; color:var(--muted); font-weight:600; }
+  .mini-kpis .mk .val { font-size:18px; font-weight:800; color:var(--black); letter-spacing:-.3px; }
+  .mini-kpis .mk .delta { font-size:11px; font-weight:700; }
+  .delta.up { color:#1E9E5A; } .delta.dn { color:#D8342E; }
   .date-range { display:flex; align-items:center; gap:6px; flex-shrink:0; }
   .date-input {
     font-family:var(--font); font-size:12px; font-weight:500; color:var(--text);
@@ -366,6 +379,7 @@
     <button class="tab" onclick="showTab('cohorte',this)">🔄 Cohorte</button>
     <button class="tab" onclick="showTab('productos',this)">🧴 Productos</button>
     <button class="tab" onclick="showTab('segmentos',this)">👥 Segmentos</button>
+    <button class="tab" onclick="showTab('comparativo',this)">📈 Comparativo</button>
   </div>
 
   <!-- S1: RESUMEN -->
@@ -670,6 +684,25 @@
       </div>
     </div>
   </div>
+  <!-- ══════ SECCIÓN 6 · COMPARATIVO Y PROYECCIÓN ══════ -->
+  <div class="section" id="sec-comparativo">
+    <div class="sec-title">Comparativo 2026 vs 2025 · retornables</div>
+    <div class="mini-kpis" id="yoyKpis"></div>
+    <div class="row cols-1" style="grid-template-columns:1fr">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Revenue Retornables Mensual · 2026 vs 2025 (Gs.)</div>
+        <div class="chart-wrap h280"><canvas id="c_yoyRet"></canvas></div>
+      </div>
+    </div>
+    <div class="sec-title" style="margin-top:20px">Proyección de cierre 2026 · revenue retornables</div>
+    <div class="mini-kpis" id="projKpis"></div>
+    <div class="row" style="grid-template-columns:1fr">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Real 2026 + Proyección vs referencia 2025 (Gs.)</div>
+        <div class="chart-wrap h280"><canvas id="c_projRet"></canvas></div>
+      </div>
+    </div>
+  </div>
 
 </div><!-- /container -->
 
@@ -677,9 +710,20 @@
 // ═══════════════════════════════════════════════════
 // CONFIG — Fuente de datos: Google Sheet en vivo (gviz)
 // Hoja: export crudo VTEX a nivel SKU (una fila por SKU/orden)
+// Una fuente por año; la config 2026 queda exactamente como estaba.
 // ═══════════════════════════════════════════════════
-const SHEET_ID  = '1oDuPtSdspEqvoo_0RDWg2eku2zrejNhrp711oqBgUp8';
-const SHEET_GID = '1442594514';
+const SHEETS_BY_YEAR = {
+  '2026': {
+    id:  '1oDuPtSdspEqvoo_0RDWg2eku2zrejNhrp711oqBgUp8',   // Fuente General VTEX (2026) — NO MODIFICAR
+    gid: '1442594514'
+  },
+  '2025': {
+    id:  '1PfSeehY2EFMVU3VZfG0ICIHT3GZNnjIDlZbkbKn5Bxo',   // Fuente VTEX General 2025
+    gid: '1013977220'
+  }
+};
+let YEAR = '2026';                                // año activo al abrir
+function sheetCfg(){ return SHEETS_BY_YEAR[YEAR]; }
 const VALID_STATUS = ['faturado', 'pronto para o manuseio'];
 
 // D se reconstruye por completo en cada carga a partir del Sheet
@@ -764,8 +808,9 @@ function monthLabelOf(key) {
   return MES_ABR[+m-1] + ' ' + y.slice(2);
 }
 
-async function fetchSheetRows() {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}&headers=1&cb=${Date.now()}`;
+async function fetchSheetRows(year) {
+  const cfg = SHEETS_BY_YEAR[year || YEAR];
+  const url = `https://docs.google.com/spreadsheets/d/${cfg.id}/gviz/tq?tqx=out:json&gid=${cfg.gid}&headers=1&cb=${Date.now()}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('HTTP ' + res.status + ' al leer el Sheet');
   const text = await res.text();
@@ -1022,7 +1067,10 @@ function monthIdxForDate(dateStr) {
 function renderPeriodPills() {
   const box = document.getElementById('periodPills');
   const monthKeys = Array.from(MONTH_INDEX.keys());
-  let html = `<button class="ppill active" onclick="setPeriod('all',this)">Todo</button>`;
+  let html = `<button class="ypill${YEAR==='2025'?' active':''}" onclick="setYear('2025')">2025</button>`
+           + `<button class="ypill${YEAR==='2026'?' active':''}" onclick="setYear('2026')">2026</button>`
+           + `<span class="ysep"></span>`
+           + `<button class="ppill active" onclick="setPeriod('all',this)">Todo</button>`;
   monthKeys.forEach((k,i) => {
     html += `<button class="ppill" onclick="setPeriod('m${i}',this)">${D.months[i]}</button>`;
   });
@@ -1041,11 +1089,11 @@ function setDateBounds() {
 
 function updateSourceChip() {
   const chip = document.getElementById('sourceChip');
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?gid=${SHEET_GID}`;
+  const url = `https://docs.google.com/spreadsheets/d/${sheetCfg().id}/edit?gid=${sheetCfg().gid}`;
   const fmtFull = d => String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
   const fmtHM = d => String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
   chip.href = url;
-  chip.textContent = `📄 Google Sheet · datos al ${fmtFull(LAST_ORDER_DATE)} · cargado ${fmtFull(LOADED_AT)} ${fmtHM(LOADED_AT)}`;
+  chip.textContent = `📄 Google Sheet ${YEAR} · datos al ${fmtFull(LAST_ORDER_DATE)} · cargado ${fmtFull(LOADED_AT)} ${fmtHM(LOADED_AT)}`;
   const liveChip = document.getElementById('liveChip');
   document.getElementById('liveChipText').textContent = 'Datos en vivo';
   liveChip.title = 'Última actualización: ' + fmtFull(LOADED_AT) + ' ' + fmtHM(LOADED_AT);
@@ -1791,7 +1839,22 @@ function exportExcel() {
   wsSeg['!cols'] = [{wch:16},{wch:12},{wch:12},{wch:22}];
   XLSX.utils.book_append_sheet(wb, wsSeg, 'Segmentos');
 
-  // Hoja 5 — Info del reporte
+  // Hoja 5 — Comparativo 2026 vs 2025 + proyección (año completo, independiente del filtro)
+  if (YEARLY['2025'] && YEARLY['2026'] && window._RETPROJ) {
+    const y25 = YEARLY['2025'], y26 = YEARLY['2026'], P = window._RETPROJ;
+    const cmpRows = [['Mes','Revenue Ret. 2025 (Gs.)','Revenue Ret. 2026 (Gs.)','Variación (%)','Proyección 2026 (Gs.)','Total estimado 2026 (Gs.)']];
+    MES_ABR.forEach((mn,i) => cmpRows.push([
+      mn, Math.round(y25.mRev[i]), Math.round(y26.mRev[i]),
+      (y25.mRev[i] > 0 && y26.mRev[i] > 0) ? +((y26.mRev[i]/y25.mRev[i]-1)*100).toFixed(1) : '',
+      P.proy[i], Math.round(P.real[i]) + P.proy[i]
+    ]));
+    cmpRows.push(['Cierre proyectado 2026', '', '', '', '', Math.round(P.cierre)]);
+    const wsCmp = XLSX.utils.aoa_to_sheet(cmpRows);
+    wsCmp['!cols'] = cmpRows[0].map(() => ({wch:20}));
+    XLSX.utils.book_append_sheet(wb, wsCmp, 'Comparativo y proyección');
+  }
+
+  // Hoja 6 — Info del reporte
   const infoRows = [
     ['Reporte', 'Dashboard Retornables · Mi Portal Coca-Cola'],
     ['Período exportado', m.periodLabel],
@@ -1799,7 +1862,7 @@ function exportExcel() {
     ['Revenue retornables (período, Gs.)', Math.round(m.retRevTotal)],
     ['Clientes únicos retornables (período)', m.uniqueRetClients],
     ['Clientes nuevos en ret. (1ª compra en período)', m.newClients],
-    ['Fuente', `https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit?gid=${SHEET_GID}`],
+    ['Fuente (datos ' + YEAR + ')', `https://docs.google.com/spreadsheets/d/${sheetCfg().id}/edit?gid=${sheetCfg().gid}`],
     ['Datos al', fmtFull(LAST_ORDER_DATE)],
     ['Generado', fmtFull(new Date())],
   ];
@@ -1818,7 +1881,8 @@ window.addEventListener('DOMContentLoaded', () => { init(); });
 
 async function init() {
   showOverlay('loading');
-  // Reset por si es un reintento
+  // Reset por si es un reintento o cambio de año: destruir instancias previas de Chart.js
+  Object.values(charts).forEach(c => { try { c.destroy(); } catch(e){} });
   charts = {};
   document.getElementById('t_topSku').innerHTML = '';
   document.getElementById('btnExportExcel').disabled = true;
@@ -1835,9 +1899,171 @@ async function init() {
     updateSourceChip();
     document.getElementById('btnExportExcel').disabled = false;
     hideOverlay();
+    YEARLY[YEAR] = buildYearlyAgg(lines);   // cache del año activo (siempre fresco)
+    renderYoYProj();                        // comparativo y proyección (no bloquea)
+    return true;
   } catch (err) {
     console.error(err);
     showOverlay('error', err.message || String(err));
+    return false;
+  }
+}
+
+/* ═══════════════════════════════════
+   COMPARATIVO 2026 vs 2025 + PROYECCIÓN · RETORNABLES
+   Independiente del año activo y del filtro de período:
+   siempre lee las DOS fuentes anuales completas.
+   Proyección: estacionalidad mensual 2025 ajustada por el
+   ritmo real 2026 (ratio de meses ya completos).
+   ═══════════════════════════════════ */
+const YEARLY = {};   // year -> {mRev, mOrd, mUnits, retOrders, maxD}
+let yoyRetChart = null, projRetChart = null;
+
+function buildYearlyAgg(lines) {
+  const valid = lines.filter(l => VALID_STATUS.includes(l.status));
+  const map = new Map();
+  valid.forEach(l => {
+    let o = map.get(l.order);
+    if (!o) { o = { order:l.order, date:l.date, doc:l.doc, email:l.email, retRev:0, retUnits:0, hasRet:false }; map.set(l.order, o); }
+    if (l.date < o.date) o.date = l.date;
+    if (isRetornable(l.skuName)) { o.hasRet = true; o.retRev += l.skuTotal; o.retUnits += l.qty; }
+  });
+  const mRev = Array(12).fill(0), mOrd = Array(12).fill(0), mUnits = Array(12).fill(0);
+  const retOrders = []; let maxD = null;
+  map.forEach(o => {
+    if (!maxD || o.date > maxD) maxD = o.date;
+    if (!o.hasRet) return;
+    const m = o.date.getMonth();
+    mRev[m] += o.retRev; mOrd[m]++; mUnits[m] += o.retUnits;
+    retOrders.push({ d:o.date, retRev:o.retRev, retUnits:o.retUnits, ck:clientKeyOf(o) });
+  });
+  return { mRev, mOrd, mUnits, retOrders, maxD };
+}
+
+async function ensureYearAgg(year) {
+  if (YEARLY[year]) return YEARLY[year];
+  const lines = await fetchSheetRows(year);
+  YEARLY[year] = buildYearlyAgg(lines);
+  return YEARLY[year];
+}
+
+function statsUpTo(agg, cutoff) {
+  let rev = 0, n = 0, units = 0; const cl = new Set();
+  agg.retOrders.forEach(o => {
+    if (o.d > cutoff) return;
+    rev += o.retRev; n++; units += o.retUnits; cl.add(o.ck);
+  });
+  return { rev, n, units, clients: cl.size };
+}
+const fmtPct1 = x => (x >= 0 ? '+' : '') + x.toFixed(1).replace('.', ',') + '%';
+function deltaHTML(v26, v25) {
+  if (!v25) return '';
+  const d = (v26 / v25 - 1) * 100;
+  return `<div class="delta ${d >= 0 ? 'up' : 'dn'}">${fmtPct1(d)} vs 2025</div>`;
+}
+const fmtFullD = d => String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
+
+function computeRetProjection(y25, y26) {
+  const dt = y26.maxD, nx = new Date(dt); nx.setDate(nx.getDate() + 1);
+  const lastM = dt.getMonth();
+  const partial = nx.getMonth() === dt.getMonth();
+  const lastComplete = partial ? lastM - 1 : lastM;
+  let s26 = 0, s25 = 0;
+  for (let m = 0; m <= lastComplete; m++) { if (y25.mRev[m] > 0) { s26 += y26.mRev[m]; s25 += y25.mRev[m]; } }
+  const ratio = s25 > 0 ? s26 / s25 : 1;
+  const real = Array(12).fill(0), proy = Array(12).fill(0);
+  for (let m = 0; m < 12; m++) {
+    if (m <= lastComplete) { real[m] = y26.mRev[m]; }
+    else if (m === lastM && partial) {
+      real[m] = y26.mRev[m];
+      const dia = dt.getDate(); let rest25 = 0;
+      y25.retOrders.forEach(o => { if (o.d.getMonth() === m && o.d.getDate() > dia) rest25 += o.retRev; });
+      proy[m] = Math.round(rest25 * ratio);
+    }
+    else { proy[m] = Math.round(y25.mRev[m] * ratio); }
+  }
+  const total25 = y25.mRev.reduce((a, b) => a + b, 0);
+  const cierre = real.reduce((a, b) => a + b, 0) + proy.reduce((a, b) => a + b, 0);
+  return { real, proy, ratio, cierre, total25 };
+}
+
+function renderRetYoY(y25, y26) {
+  const cutoff26 = y26.maxD;
+  const cutoff25 = new Date(2025, cutoff26.getMonth(), cutoff26.getDate(), 23, 59, 59);
+  const a = statsUpTo(y26, cutoff26), b = statsUpTo(y25, cutoff25);
+  document.getElementById('yoyKpis').innerHTML = `
+    <div class="mk"><div class="lab">Revenue ret. al ${fmtFullD(cutoff26)}</div><div class="val">Gs. ${FMT(a.rev)}</div>${deltaHTML(a.rev, b.rev)}</div>
+    <div class="mk"><div class="lab">Órdenes ret.</div><div class="val">${NUM(a.n)}</div>${deltaHTML(a.n, b.n)}</div>
+    <div class="mk"><div class="lab">Unidades ret.</div><div class="val">${NUM(a.units)}</div>${deltaHTML(a.units, b.units)}</div>
+    <div class="mk"><div class="lab">Clientes ret. únicos</div><div class="val">${NUM(a.clients)}</div>${deltaHTML(a.clients, b.clients)}</div>`;
+  const data = { labels: MES_ABR, datasets: [
+    { label:'2025', data:y25.mRev.map(Math.round), backgroundColor:'#B0BEC5', borderRadius:5 },
+    { label:'2026', data:y26.mRev.map(v => Math.round(v) || null), backgroundColor:RED, borderRadius:5 }]};
+  const opts = { responsive:true, maintainAspectRatio:false,
+    plugins:{ legend:{ position:'top', labels:{ boxWidth:12, usePointStyle:true } },
+      tooltip:{ callbacks:{ label:c => ' ' + c.dataset.label + ': Gs. ' + (c.raw||0).toLocaleString('es-PY'),
+        footer:items => { const v25=y25.mRev[items[0].dataIndex], v26=y26.mRev[items[0].dataIndex];
+          return (v25>0 && v26>0) ? 'Variación: ' + fmtPct1((v26/v25-1)*100) : ''; } } } },
+    scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,0.03)' }, ticks:{ callback:v => FMT(v) } } } };
+  if (yoyRetChart) { yoyRetChart.data = data; yoyRetChart.update(); }
+  else yoyRetChart = new Chart('c_yoyRet', { type:'bar', data, options:opts });
+}
+
+function renderRetProj(y25, y26) {
+  const P = computeRetProjection(y25, y26);
+  window._RETPROJ = P;
+  document.getElementById('projKpis').innerHTML = `
+    <div class="mk"><div class="lab">Cierre proyectado 2026</div><div class="val">Gs. ${FMT(P.cierre)}</div>${deltaHTML(P.cierre, P.total25)}</div>
+    <div class="mk"><div class="lab">Ritmo actual vs 2025</div><div class="val">${fmtPct1((P.ratio-1)*100)}</div></div>
+    <div class="mk"><div class="lab">Cierre 2025</div><div class="val">Gs. ${FMT(P.total25)}</div></div>`;
+  const data = { labels: MES_ABR, datasets: [
+    { type:'bar', label:'Real 2026', data:P.real.map(Math.round), backgroundColor:RED, borderRadius:5, stack:'s' },
+    { type:'bar', label:'Proyección', data:P.proy, backgroundColor:'#FBC0BA', borderRadius:5, stack:'s' },
+    { type:'line', label:'2025', data:y25.mRev.map(Math.round), borderColor:'#8A939B', borderWidth:1.5,
+      borderDash:[5,4], pointRadius:0, pointHoverRadius:4, tension:.3, fill:false }]};
+  const opts = { responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+    plugins:{ legend:{ position:'top', labels:{ boxWidth:12, usePointStyle:true } },
+      tooltip:{ callbacks:{ label:c => ' ' + c.dataset.label + ': Gs. ' + (c.raw||0).toLocaleString('es-PY'),
+        footer:items => { const i = items[0].dataIndex, t = P.real[i] + P.proy[i];
+          return P.proy[i] > 0 ? 'Total estimado: Gs. ' + Math.round(t).toLocaleString('es-PY') : ''; } } } },
+    scales:{ x:{ stacked:true, grid:{ display:false } },
+             y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.03)' }, ticks:{ callback:v => FMT(v) } } } };
+  if (projRetChart) { projRetChart.data = data; projRetChart.update(); }
+  else projRetChart = new Chart('c_projRet', { type:'bar', data, options:opts });
+}
+
+async function renderYoYProj() {
+  try {
+    const [y25, y26] = await Promise.all([ensureYearAgg('2025'), ensureYearAgg('2026')]);
+    renderRetYoY(y25, y26);
+    renderRetProj(y25, y26);
+  } catch (err) {
+    console.error(err);
+    const msg = '<div class="mk"><div class="lab" style="color:#D8342E">No se pudo cargar el otro año: ' + (err.message || err) + '</div></div>';
+    document.getElementById('yoyKpis').innerHTML = msg;
+    document.getElementById('projKpis').innerHTML = msg;
+  }
+}
+
+/* ═══════════════════════════════════
+   SELECTOR DE AÑO (2025 / 2026)
+   Cambia la fuente activa y reconstruye todo el dashboard desde
+   el Sheet del año elegido. Cada año lee SOLO su Sheet: cambiar
+   de año nunca escribe ni modifica el otro archivo.
+   ═══════════════════════════════════ */
+async function setYear(y) {
+  if (y === YEAR) return;
+  const prev = YEAR;
+  YEAR = y;
+  const ok = await init();
+  if (!ok) {
+    // si el año nuevo falla (Sheet no compartido, columnas faltantes…): mostrar el
+    // error unos segundos y volver automáticamente al año anterior
+    document.getElementById('ovSub').textContent =
+      'No se pudo leer la fuente ' + y + '. Volviendo a ' + prev + '…';
+    await new Promise(r => setTimeout(r, 3500));
+    YEAR = prev;
+    await init();
   }
 }
 </script>

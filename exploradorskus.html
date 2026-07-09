@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mi Portal · Explorador de SKUs</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#F2F2F2; --ink:#1A1A1A; --muted:#6B6B6B; --card:#FFFFFF;
+  --dark:#0D0D0D; --amber:#FFB300; --red:#E61A27; --green:#00A651;
+  --blue:#0D6EFD; --purple:#7B2FBE; --border:#E3E3E3;
+  --shadow:0 2px 10px rgba(0,0,0,.06);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+
+/* ---------- Header ---------- */
+header{background:var(--dark);color:#fff;padding:18px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+header .brand{display:flex;align-items:center;gap:14px}
+header .logo{background:var(--red);color:#fff;font-weight:900;font-size:15px;padding:8px 14px;border-radius:8px;letter-spacing:.5px}
+header h1{font-size:19px;font-weight:800;letter-spacing:-.2px}
+header .sub{font-size:12px;color:#9a9a9a;margin-top:2px}
+.rainbow{height:4px;background:linear-gradient(90deg,#E61A27 0%,#FF7A00 18%,#FFB300 36%,#00A651 55%,#0D6EFD 76%,#7B2FBE 100%)}
+.hstatus{font-size:12px;color:#bdbdbd;display:flex;gap:16px;align-items:center}
+.hstatus b{color:var(--amber);font-weight:700}
+.dict-btn{background:transparent;border:1px solid #3a3a3a;color:#ddd;font-size:12px;padding:7px 14px;border-radius:20px;cursor:pointer;font-family:inherit;transition:.2s}
+.dict-btn:hover{border-color:var(--amber);color:var(--amber)}
+.dict-btn:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+
+main{max-width:1280px;margin:0 auto;padding:26px 24px 60px}
+
+/* ---------- Loader / error ---------- */
+#stateBox{text-align:center;padding:70px 20px;color:var(--muted)}
+.spinner{width:42px;height:42px;border:4px solid #ddd;border-top-color:var(--red);border-radius:50%;margin:0 auto 18px;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.errbox{background:#fff;border-left:4px solid var(--red);padding:20px 24px;border-radius:10px;max-width:640px;margin:0 auto;text-align:left;box-shadow:var(--shadow)}
+.errbox h3{color:var(--red);margin-bottom:8px;font-size:16px}
+.errbox p{font-size:13.5px;line-height:1.6;color:#444}
+.errbox code{background:#f4f4f4;padding:2px 6px;border-radius:4px;font-size:12px}
+
+/* ---------- Buscador ---------- */
+.search-wrap{position:relative;max-width:760px;margin:0 auto 8px}
+.search-box{display:flex;align-items:center;background:#fff;border:2px solid var(--border);border-radius:14px;padding:4px 18px;box-shadow:var(--shadow);transition:border-color .2s}
+.search-box:focus-within{border-color:var(--amber)}
+.search-box svg{flex:none;opacity:.45}
+#searchInput{flex:1;border:none;outline:none;font-family:inherit;font-size:16.5px;padding:14px 12px;background:transparent;color:var(--ink)}
+#searchInput::placeholder{color:#a9a9a9}
+.search-hint{text-align:center;font-size:12px;color:var(--muted);margin-top:9px}
+.suggestions{position:absolute;top:calc(100% + 8px);left:0;right:0;background:#fff;border-radius:14px;box-shadow:0 12px 34px rgba(0,0,0,.16);z-index:60;max-height:420px;overflow-y:auto;display:none}
+.suggestions.open{display:block}
+.sug{display:flex;align-items:center;gap:14px;padding:12px 18px;cursor:pointer;border-bottom:1px solid #f2f2f2}
+.sug:last-child{border-bottom:none}
+.sug:hover,.sug.active{background:#FFF7E0}
+.sug .sku-chip{flex:none;background:var(--dark);color:var(--amber);font-weight:800;font-size:12px;padding:5px 10px;border-radius:7px;font-variant-numeric:tabular-nums}
+.sug .s-name{font-size:14px;font-weight:600}
+.sug .s-meta{font-size:11.5px;color:var(--muted);margin-top:2px}
+.sug mark{background:#FFE08A;border-radius:2px;padding:0 1px}
+.sug-empty{padding:18px;text-align:center;font-size:13.5px;color:var(--muted)}
+
+/* ---------- Producto seleccionado ---------- */
+#dash{display:none}
+.prod-head{background:var(--dark);color:#fff;border-radius:16px;padding:24px 28px;margin:26px 0 20px;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;position:relative;overflow:hidden}
+.prod-head::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#E61A27,#FF7A00,#FFB300,#00A651,#0D6EFD,#7B2FBE)}
+.prod-head .p-sku{font-size:12px;color:var(--amber);font-weight:800;letter-spacing:1.5px;text-transform:uppercase}
+.prod-head h2{font-size:24px;font-weight:800;margin-top:5px;letter-spacing:-.3px}
+.chips{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.chip{font-size:11.5px;font-weight:600;padding:5px 12px;border-radius:20px;background:#232323;color:#ddd;border:1px solid #383838}
+.chip b{color:var(--amber);font-weight:700}
+.share-hint{font-size:11.5px;color:#8f8f8f;text-align:right;line-height:1.55}
+
+/* ---------- KPIs ---------- */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:22px}
+.kpi{background:var(--dark);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
+.kpi .k-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#9a9a9a}
+.kpi .k-value{font-size:26px;font-weight:800;color:var(--amber);margin-top:8px;font-variant-numeric:tabular-nums;letter-spacing:-.5px;line-height:1.15}
+.kpi .k-foot{font-size:11.5px;color:#7d7d7d;margin-top:6px}
+
+/* ---------- Módulos ---------- */
+.mod-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px}
+.mod{background:var(--card);border-radius:14px;padding:20px 22px;box-shadow:var(--shadow)}
+.mod.wide{grid-column:1/-1}
+.mod h3{font-size:13px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--ink);margin-bottom:4px}
+.mod .m-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+.chart-box{position:relative;height:270px}
+.mod table{width:100%;border-collapse:collapse;font-size:12.5px}
+.mod th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);padding:8px 10px;border-bottom:2px solid var(--border);white-space:nowrap}
+.mod td{padding:9px 10px;border-bottom:1px solid #f0f0f0;white-space:nowrap}
+.mod tr:hover td{background:#FAFAF5}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.rank-row{display:flex;align-items:center;gap:12px;padding:8px 0}
+.rank-row .r-name{flex:1;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-row .r-bar{flex:2;height:9px;background:#efefef;border-radius:5px;overflow:hidden}
+.rank-row .r-fill{height:100%;background:linear-gradient(90deg,var(--amber),#FF7A00);border-radius:5px}
+.rank-row .r-val{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;min-width:82px;text-align:right}
+
+/* ---------- Módulos deshabilitados ---------- */
+.hidden-note{margin-top:22px;background:#fff;border:1px dashed #cfcfcf;border-radius:12px;padding:14px 20px;font-size:12.5px;color:var(--muted)}
+.hidden-note b{color:var(--ink)}
+.hidden-note span.tag{display:inline-block;background:#f1f1f1;border-radius:5px;padding:2px 8px;margin:3px 4px 0 0;font-size:11.5px}
+
+/* ---------- Diccionario de datos ---------- */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto}
+.overlay.open{display:flex}
+.dict-panel{background:#fff;border-radius:16px;max-width:980px;width:100%;padding:26px 30px;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.dict-panel h2{font-size:19px;font-weight:800;margin-bottom:4px}
+.dict-panel .d-sub{font-size:12.5px;color:var(--muted);margin-bottom:18px}
+.dict-panel table{width:100%;border-collapse:collapse;font-size:12.5px}
+.dict-panel th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);padding:8px 10px;border-bottom:2px solid var(--border)}
+.dict-panel td{padding:8px 10px;border-bottom:1px solid #f0f0f0;vertical-align:top}
+.role-tag{display:inline-block;background:#0D0D0D;color:var(--amber);font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:5px;letter-spacing:.4px}
+.type-tag{display:inline-block;background:#eee;color:#555;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:5px}
+.close-x{float:right;background:none;border:none;font-size:22px;cursor:pointer;color:#888;line-height:1}
+.close-x:hover{color:var(--red)}
+.d-caps{margin-top:18px;font-size:12.5px;line-height:1.7}
+.d-caps .ok{color:var(--green);font-weight:700}
+.d-caps .no{color:#b0b0b0}
+
+footer{text-align:center;font-size:11.5px;color:#a5a5a5;padding:26px}
+
+@media(max-width:640px){
+  header{padding:14px 16px}
+  main{padding:18px 14px 50px}
+  .prod-head{padding:18px 18px}
+  .prod-head h2{font-size:19px}
+  .kpi .k-value{font-size:21px}
+  .mod-grid{grid-template-columns:1fr}
+  .hstatus{display:none}
+}
+@media(prefers-reduced-motion:reduce){.spinner{animation-duration:2s}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="logo">Mi Portal</div>
+    <div>
+      <h1>Explorador de SKUs</h1>
+      <div class="sub">Toda la aplicación gira alrededor del SKU seleccionado</div>
+    </div>
+  </div>
+  <div class="hstatus">
+    <span id="hRows">—</span>
+    <span id="hSkus">—</span>
+    <button class="dict-btn" id="btnDict" type="button">📖 Diccionario de datos</button>
+    <a href="index.html" class="dict-btn" style="text-decoration:none">← Volver al hub</a>
+  </div>
+</header>
+<div class="rainbow"></div>
+
+<main>
+  <div id="stateBox">
+    <div class="spinner"></div>
+    <p>Conectando con Google Sheets y analizando la estructura de la base…</p>
+  </div>
+
+  <div id="app" style="display:none">
+    <div class="search-wrap">
+      <div class="search-box">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="searchInput" type="text" autocomplete="off" spellcheck="false"
+          placeholder="Buscá por SKU, nombre, marca o categoría…" aria-label="Buscar producto">
+      </div>
+      <div class="suggestions" id="sugBox" role="listbox"></div>
+      <div class="search-hint" id="searchHint"></div>
+    </div>
+
+    <div id="dash">
+      <div class="prod-head">
+        <div>
+          <div class="p-sku" id="pSku"></div>
+          <h2 id="pName"></h2>
+          <div class="chips" id="pChips"></div>
+        </div>
+        <div class="share-hint" id="pRange"></div>
+      </div>
+
+      <div class="kpi-grid" id="kpiGrid"></div>
+      <div class="mod-grid" id="modGrid"></div>
+      <div class="hidden-note" id="hiddenNote" style="display:none"></div>
+    </div>
+  </div>
+</main>
+
+<div class="overlay" id="dictOverlay">
+  <div class="dict-panel">
+    <button class="close-x" id="btnCloseDict" aria-label="Cerrar">×</button>
+    <h2>📖 Diccionario de datos</h2>
+    <div class="d-sub" id="dictSub"></div>
+    <div style="overflow-x:auto"><table id="dictTable"></table></div>
+    <div class="d-caps" id="dictCaps"></div>
+  </div>
+</div>
+
+<footer>Mi Portal · Coca-Cola Paraguay — Explorador de SKUs · Fuente única: Google Sheets (gviz/tq)</footer>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN — única fuente de datos
+============================================================ */
+const SHEET_ID = '1oDuPtSdspEqvoo_0RDWg2eku2zrejNhrp711oqBgUp8';
+const GID = '225563298';
+const GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${GID}&tqx=out:json`;
+
+/* ============================================================
+   ESTADO GLOBAL (caché en memoria + índices)
+============================================================ */
+let COLS = [];          // diccionario de datos: [{i,label,gvizType,type,role,fill,uniq,samples}]
+let ROWS = [];          // matriz de valores crudos
+let ROLES = {};         // rol semántico → índice de columna
+let SKU_INDEX = new Map();   // clave SKU → {sku,name,brand,category,rows:[i...]}
+let SEARCH_LIST = [];        // lista plana para el buscador (con haystack normalizado)
+let METRIC_CACHE = new Map();// caché de métricas ya calculadas por SKU
+let CHARTS = [];
+let activeSug = -1;
+
+/* ============================================================
+   UTILIDADES
+============================================================ */
+const norm = s => String(s ?? '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const normKey = s => norm(s).replace(/[^a-z0-9]/g,'');
+const fmtInt = n => new Intl.NumberFormat('es-PY').format(Math.round(n));
+const fmtGs  = n => 'Gs. ' + new Intl.NumberFormat('es-PY',{maximumFractionDigits:0}).format(Math.round(n));
+const fmtPct = n => new Intl.NumberFormat('es-PY',{maximumFractionDigits:1}).format(n) + '%';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+
+function parseNum(v){
+  if (v == null || v === '') return null;
+  if (typeof v === 'number') return isFinite(v) ? v : null;
+  let s = String(v).trim().replace(/[^\d.,\-]/g,'');
+  if (!s) return null;
+  // Formato es-PY/latam: 1.234.567,89 → detectar separador decimal
+  const lastComma = s.lastIndexOf(','), lastDot = s.lastIndexOf('.');
+  if (lastComma > lastDot) s = s.replace(/\./g,'').replace(',','.');
+  else s = s.replace(/,/g,'');
+  const n = parseFloat(s);
+  return isFinite(n) ? n : null;
+}
+
+function parseDate(v){
+  if (v == null || v === '') return null;
+  if (v instanceof Date) return isNaN(v) ? null : v;
+  const s = String(v).trim();
+  // gviz serializa fechas como "Date(2025,0,15)" o "Date(2025,0,15,10,30,0)"
+  let m = s.match(/^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+)(?:,(\d+))?)?\)$/);
+  if (m) return new Date(+m[1], +m[2], +m[3], +(m[4]||0), +(m[5]||0), +(m[6]||0));
+  // dd/mm/yyyy [hh:mm]
+  m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:[ T](\d{1,2}):(\d{2}))?/);
+  if (m) return new Date(+m[3], +m[2]-1, +m[1], +(m[4]||0), +(m[5]||0));
+  // yyyy-mm-dd
+  m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?/);
+  if (m) return new Date(+m[1], +m[2]-1, +m[3], +(m[4]||0), +(m[5]||0));
+  const d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+
+/* ============================================================
+   1) CARGA DE DATOS — exclusivamente desde Google Sheets
+============================================================ */
+async function loadData(){
+  const res = await fetch(GVIZ_URL);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const text = await res.text();
+  const start = text.indexOf('{'), end = text.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error('Respuesta gviz inválida (¿la hoja es pública?)');
+  const json = JSON.parse(text.slice(start, end + 1));
+  if (json.status === 'error') throw new Error((json.errors||[]).map(e=>e.detailed_message||e.message).join(' · '));
+
+  const gcols = json.table.cols;
+  const grows = json.table.rows || [];
+
+  // Algunas hojas exportan encabezados en la primera fila en lugar de cols.label
+  let labels = gcols.map(c => (c.label || '').trim());
+  let dataRows = grows;
+  if (labels.every(l => !l) && grows.length){
+    labels = grows[0].c.map(c => c ? String(c.v ?? '').trim() : '');
+    dataRows = grows.slice(1);
+  }
+
+  COLS = labels.map((label, i) => ({ i, label: label || `Columna ${i+1}`, gvizType: gcols[i]?.type || 'string' }));
+  ROWS = dataRows.map(r => COLS.map(c => {
+    const cell = r.c[c.i];
+    if (!cell) return null;
+    return cell.v ?? (cell.f ?? null);
+  }));
+  // Descartar filas totalmente vacías
+  ROWS = ROWS.filter(r => r.some(v => v !== null && v !== ''));
+}
+
+/* ============================================================
+   2) PERFILADO AUTOMÁTICO — diccionario de datos
+============================================================ */
+function profileColumns(){
+  const n = ROWS.length;
+  COLS.forEach(col => {
+    let filled = 0, numeric = 0, dateOk = 0;
+    const uniq = new Set(), samples = [];
+    for (let r = 0; r < n; r++){
+      const v = ROWS[r][col.i];
+      if (v === null || v === '') continue;
+      filled++;
+      if (uniq.size < 5000) uniq.add(String(v));
+      if (samples.length < 3 && !samples.includes(String(v))) samples.push(String(v));
+      if (parseNum(v) !== null) numeric++;
+      if (col.gvizType === 'date' || col.gvizType === 'datetime' || parseDate(v)) dateOk++;
+    }
+    col.fill = n ? filled / n : 0;
+    col.uniq = uniq.size;
+    col.samples = samples;
+    if (col.gvizType === 'date' || col.gvizType === 'datetime' || (filled > 0 && dateOk / filled > .9 && /fecha|date|creation/i.test(col.label))) col.type = 'fecha';
+    else if (filled > 0 && numeric / filled > .95) col.type = 'numérica';
+    else col.type = 'texto';
+  });
+}
+
+/* ============================================================
+   3) DETECCIÓN DE ROLES SEMÁNTICOS (sin asumir estructura fija)
+   Cada rol se asigna a la primera columna que matchee, por prioridad.
+============================================================ */
+const ROLE_DEFS = [
+  { role:'sku',      label:'SKU / código de producto', patterns:[/^sku$/, /^skuvalue$/, /^idsku$/, /^skuid$/, /codigosku/, /^referencecode$/, /^refid$/, /^codigo(deproducto)?$/, /^sku(?!name|total|selling|price|quantity)/] },
+  { role:'name',     label:'Nombre del producto', patterns:[/^skuname$/, /^productname$/, /nombre(del)?producto/, /^producto$/, /descripcion(del)?(producto|sku|item)?$/] },
+  { role:'brand',    label:'Marca', patterns:[/^marca$/, /brand/] },
+  { role:'category', label:'Categoría', patterns:[/categor/] },
+  { role:'date',     label:'Fecha', patterns:[/^creationdate$/, /fechadecompra/, /fechadecreacion/, /^fecha$/, /fecha/, /(^|[a-z])date$/, /^date/], typeHint:'fecha' },
+  { role:'order',    label:'Pedido / orden', patterns:[/^order$/, /^orderid$/, /orden/, /pedido/, /order(?!ed)/] },
+  { role:'client',   label:'Cliente', patterns:[/clientdocument/, /documento(del)?cliente/, /^documento$/, /idcliente/, /clienteid/, /^cliente$/, /clientprofile/, /^email$/, /correo/, /clientname/, /client/] },
+  { role:'city',     label:'Ciudad', patterns:[/^city$/, /ciudad/] },
+  { role:'zone',     label:'Zona / departamento', patterns:[/^zona$/, /departamento/, /^uf$/, /^estado$/, /^state$/, /region/] },
+  { role:'channel',  label:'Canal', patterns:[/^canal$/, /channel/, /utmsource/, /^origen$/] },
+  { role:'campaign', label:'Campaña', patterns:[/campana/, /utmcampaign/, /campaign/, /^promo(cion)?$/] },
+  { role:'qty',      label:'Cantidad', patterns:[/quantitysku/, /^quantity$/, /cantidad/, /^qty$/, /unidades/], typeHint:'numérica' },
+  { role:'price',    label:'Precio unitario', patterns:[/sellingprice/, /preciounitario/, /^precio$/, /unitprice/, /^price$/], typeHint:'numérica' },
+  { role:'lineTotal',label:'Total de línea (SKU)', patterns:[/skutotalprice/, /totalproducto/, /totallinea/, /subtotal/, /^importe$/, /^monto$/, /totalitem/], typeHint:'numérica' },
+  { role:'coupon',   label:'Cupón', patterns:[/cupon/, /coupon/] },
+  { role:'status',   label:'Estado del pedido', patterns:[/^status$/, /^estado(delpedido)?$/] },
+  { role:'month',    label:'Mes (derivado)', patterns:[/^mes$/] },
+];
+
+function detectRoles(){
+  ROLES = {};
+  const used = new Set();
+  ROLE_DEFS.forEach(def => {
+    for (const pat of def.patterns){
+      const col = COLS.find(c => !used.has(c.i) && pat.test(normKey(c.label)) && (!def.typeHint || c.type === def.typeHint || def.typeHint !== 'fecha'));
+      if (col){
+        if (def.typeHint === 'numérica' && col.type !== 'numérica') continue;
+        ROLES[def.role] = col.i;
+        col.role = def.label;
+        used.add(col.i);
+        break;
+      }
+    }
+  });
+  // Si no hay fecha detectada por nombre, usar cualquier columna tipo fecha
+  if (ROLES.date === undefined){
+    const c = COLS.find(c => c.type === 'fecha' && !used.has(c.i));
+    if (c){ ROLES.date = c.i; c.role = 'Fecha'; used.add(c.i); }
+  }
+}
+
+/* ============================================================
+   4) ÍNDICES — búsqueda O(1) por SKU, incluso con bases grandes
+============================================================ */
+function buildIndexes(){
+  SKU_INDEX = new Map();
+  const iSku = ROLES.sku, iName = ROLES.name, iBrand = ROLES.brand, iCat = ROLES.category;
+  for (let r = 0; r < ROWS.length; r++){
+    const raw = iSku !== undefined ? ROWS[r][iSku] : null;
+    const key = raw !== null && raw !== '' ? String(raw).trim() : null;
+    if (!key) continue;
+    let e = SKU_INDEX.get(key);
+    if (!e){
+      e = { sku:key, name:'', brand:'', category:'', rows:[] };
+      SKU_INDEX.set(key, e);
+    }
+    e.rows.push(r);
+    if (!e.name && iName !== undefined && ROWS[r][iName]) e.name = String(ROWS[r][iName]);
+    if (!e.brand && iBrand !== undefined && ROWS[r][iBrand]) e.brand = String(ROWS[r][iBrand]);
+    if (!e.category && iCat !== undefined && ROWS[r][iCat]) e.category = String(ROWS[r][iCat]);
+  }
+  SEARCH_LIST = [...SKU_INDEX.values()].map(e => ({
+    ...e,
+    hay: norm([e.sku, e.name, e.brand, e.category].join(' '))
+  }));
+  // Ordenar por volumen de registros (los más vendidos primero en sugerencias)
+  SEARCH_LIST.sort((a,b) => b.rows.length - a.rows.length);
+}
+
+/* ============================================================
+   5) BUSCADOR INTELIGENTE con sugerencias
+============================================================ */
+const inp = document.getElementById('searchInput');
+const sugBox = document.getElementById('sugBox');
+let debounceT = null;
+
+inp.addEventListener('input', () => {
+  clearTimeout(debounceT);
+  debounceT = setTimeout(() => runSearch(inp.value), 90);
+});
+inp.addEventListener('keydown', e => {
+  const items = sugBox.querySelectorAll('.sug');
+  if (!items.length) return;
+  if (e.key === 'ArrowDown'){ e.preventDefault(); activeSug = Math.min(activeSug+1, items.length-1); paintActive(items); }
+  else if (e.key === 'ArrowUp'){ e.preventDefault(); activeSug = Math.max(activeSug-1, 0); paintActive(items); }
+  else if (e.key === 'Enter' && activeSug >= 0){ e.preventDefault(); items[activeSug].click(); }
+  else if (e.key === 'Escape'){ closeSug(); }
+});
+document.addEventListener('click', e => { if (!e.target.closest('.search-wrap')) closeSug(); });
+
+function paintActive(items){
+  items.forEach((el,i) => el.classList.toggle('active', i === activeSug));
+  if (items[activeSug]) items[activeSug].scrollIntoView({block:'nearest'});
+}
+function closeSug(){ sugBox.classList.remove('open'); activeSug = -1; }
+
+function runSearch(q){
+  const nq = norm(q.trim());
+  if (!nq){ closeSug(); return; }
+  const tokens = nq.split(/\s+/);
+  const hits = [];
+  for (const e of SEARCH_LIST){
+    if (tokens.every(t => e.hay.includes(t))){
+      hits.push(e);
+      if (hits.length >= 12) break;
+    }
+  }
+  activeSug = -1;
+  if (!hits.length){
+    sugBox.innerHTML = `<div class="sug-empty">Sin resultados para “${esc(q)}” en la base de datos.</div>`;
+  } else {
+    sugBox.innerHTML = hits.map(e => `
+      <div class="sug" role="option" data-sku="${esc(e.sku)}">
+        <span class="sku-chip">SKU ${hl(esc(e.sku), tokens)}</span>
+        <div>
+          <div class="s-name">${hl(esc(e.name || '(sin nombre en la base)'), tokens)}</div>
+          <div class="s-meta">${[e.brand && hl(esc(e.brand),tokens), e.category && hl(esc(e.category),tokens), fmtInt(e.rows.length)+' registros'].filter(Boolean).join(' · ')}</div>
+        </div>
+      </div>`).join('');
+    sugBox.querySelectorAll('.sug').forEach(el =>
+      el.addEventListener('click', () => { selectSku(el.dataset.sku); closeSug(); }));
+  }
+  sugBox.classList.add('open');
+}
+
+function hl(text, tokens){
+  let out = text;
+  tokens.forEach(t => {
+    if (!t) return;
+    const re = new RegExp('(' + t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')','gi');
+    out = out.replace(re, '<mark>$1</mark>');
+  });
+  return out;
+}
+
+/* ============================================================
+   6) MOTOR DE MÉTRICAS — solo con columnas reales de la base
+============================================================ */
+function computeMetrics(sku){
+  if (METRIC_CACHE.has(sku)) return METRIC_CACHE.get(sku);
+  const e = SKU_INDEX.get(sku);
+  if (!e) return null;
+  const R = ROLES;
+  const m = { sku, entry:e, nRows:e.rows.length };
+
+  const has = k => R[k] !== undefined;
+  const get = (r,k) => ROWS[r][R[k]];
+
+  // ---- Cantidad y facturación (nivel línea/SKU: seguro de sumar) ----
+  if (has('qty')){
+    m.units = 0;
+    e.rows.forEach(r => { const n = parseNum(get(r,'qty')); if (n !== null) m.units += n; });
+  }
+  if (has('lineTotal')){
+    m.revenue = 0;
+    e.rows.forEach(r => { const n = parseNum(get(r,'lineTotal')); if (n !== null) m.revenue += n; });
+  } else if (has('qty') && has('price')){
+    m.revenue = 0;
+    e.rows.forEach(r => {
+      const q = parseNum(get(r,'qty')), p = parseNum(get(r,'price'));
+      if (q !== null && p !== null) m.revenue += q * p;
+    });
+    m.revenueDerived = true;
+  }
+  if (has('price')){
+    let s = 0, c = 0;
+    e.rows.forEach(r => { const p = parseNum(get(r,'price')); if (p !== null){ s += p; c++; } });
+    if (c) m.avgPrice = s / c;
+  }
+
+  // ---- Pedidos únicos (deduplicación por order_id) ----
+  if (has('order')){
+    const set = new Set();
+    e.rows.forEach(r => { const v = get(r,'order'); if (v !== null && v !== '') set.add(String(v)); });
+    m.orders = set.size;
+  }
+
+  // ---- Clientes únicos + recompra ----
+  if (has('client')){
+    const byClient = new Map();
+    e.rows.forEach(r => {
+      const c = get(r,'client');
+      if (c === null || c === '') return;
+      const ck = String(c);
+      if (!byClient.has(ck)) byClient.set(ck, new Set());
+      if (has('order')){ const o = get(r,'order'); if (o !== null && o !== '') byClient.get(ck).add(String(o)); }
+      else byClient.get(ck).add('r'+r);
+    });
+    m.clients = byClient.size;
+    if (has('order')){
+      m.repeaters = [...byClient.values()].filter(s => s.size > 1).length;
+      m.repeatRate = m.clients ? m.repeaters / m.clients * 100 : 0;
+    }
+  }
+
+  // ---- Serie temporal mensual ----
+  if (has('date')){
+    const byMonth = new Map();
+    let minD = null, maxD = null;
+    e.rows.forEach(r => {
+      const d = parseDate(get(r,'date'));
+      if (!d) return;
+      if (!minD || d < minD) minD = d;
+      if (!maxD || d > maxD) maxD = d;
+      const k = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+      if (!byMonth.has(k)) byMonth.set(k, { units:0, revenue:0, rows:0, orders:new Set() });
+      const b = byMonth.get(k);
+      b.rows++;
+      if (has('qty')){ const q = parseNum(get(r,'qty')); if (q !== null) b.units += q; }
+      if (has('lineTotal')){ const t = parseNum(get(r,'lineTotal')); if (t !== null) b.revenue += t; }
+      else if (has('qty') && has('price')){ const q = parseNum(get(r,'qty')), p = parseNum(get(r,'price')); if (q!==null&&p!==null) b.revenue += q*p; }
+      if (has('order')){ const o = get(r,'order'); if (o !== null && o !== '') b.orders.add(String(o)); }
+    });
+    m.byMonth = [...byMonth.entries()].sort((a,b) => a[0].localeCompare(b[0]));
+    m.minDate = minD; m.maxDate = maxD;
+  }
+
+  // ---- Rankings categóricos genéricos ----
+  const catRank = key => {
+    const map = new Map();
+    e.rows.forEach(r => {
+      const v = get(r,key);
+      if (v === null || v === '') return;
+      const k = String(v).trim();
+      let w = 1;
+      if (has('qty')){ const q = parseNum(get(r,'qty')); if (q !== null) w = q; }
+      map.set(k, (map.get(k) || 0) + w);
+    });
+    return [...map.entries()].sort((a,b) => b[1] - a[1]);
+  };
+  if (has('city'))     m.cities    = catRank('city');
+  if (has('zone'))     m.zones     = catRank('zone');
+  if (has('channel'))  m.channels  = catRank('channel');
+  if (has('campaign')) m.campaigns = catRank('campaign');
+  if (has('status'))   m.statuses  = catRank('status');
+
+  // ---- Cupones ----
+  if (has('coupon')){
+    if (has('order')){
+      const withC = new Set(), all = new Set();
+      e.rows.forEach(r => {
+        const o = get(r,'order'); if (o === null || o === '') return;
+        all.add(String(o));
+        const c = get(r,'coupon');
+        if (c !== null && String(c).trim() !== '') withC.add(String(o));
+      });
+      m.couponOrders = withC.size;
+      m.couponRate = all.size ? withC.size / all.size * 100 : 0;
+    } else {
+      let withC = 0;
+      e.rows.forEach(r => { const c = get(r,'coupon'); if (c !== null && String(c).trim() !== '') withC++; });
+      m.couponOrders = withC;
+      m.couponRate = e.rows.length ? withC / e.rows.length * 100 : 0;
+    }
+    const top = catRank('coupon');
+    m.topCoupons = top.slice(0,8);
+  }
+
+  METRIC_CACHE.set(sku, m);
+  return m;
+}
+
+/* ============================================================
+   7) RENDER DEL DASHBOARD — 100% dinámico según columnas reales
+============================================================ */
+const PALETTE = ['#E61A27','#FFB300','#00A651','#0D6EFD','#7B2FBE','#FF7A00','#00B8D9','#C2185B'];
+
+function selectSku(sku){
+  const m = computeMetrics(sku);
+  if (!m) return;
+  const e = m.entry;
+  inp.value = `${e.sku} — ${e.name || ''}`.trim();
+
+  document.getElementById('pSku').textContent = 'SKU ' + e.sku;
+  document.getElementById('pName').textContent = e.name || '(nombre no disponible en la base de datos)';
+  const chips = [];
+  if (e.brand) chips.push(`<span class="chip">Marca <b>${esc(e.brand)}</b></span>`);
+  if (e.category) chips.push(`<span class="chip">Categoría <b>${esc(e.category)}</b></span>`);
+  chips.push(`<span class="chip"><b>${fmtInt(m.nRows)}</b> registros en la base</span>`);
+  document.getElementById('pChips').innerHTML = chips.join('');
+  document.getElementById('pRange').innerHTML = m.minDate
+    ? `Datos desde <b style="color:#FFB300">${m.minDate.toLocaleDateString('es-PY')}</b><br>hasta <b style="color:#FFB300">${m.maxDate.toLocaleDateString('es-PY')}</b>`
+    : '';
+
+  renderKpis(m);
+  renderModules(m);
+  document.getElementById('dash').style.display = 'block';
+  document.getElementById('dash').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function renderKpis(m){
+  const k = [];
+  const add = (label, value, foot) => k.push(`<div class="kpi"><div class="k-label">${label}</div><div class="k-value">${value}</div>${foot?`<div class="k-foot">${foot}</div>`:''}</div>`);
+
+  if (m.units !== undefined) add('Unidades vendidas', fmtInt(m.units));
+  if (m.revenue !== undefined) add('Facturación', fmtGs(m.revenue), m.revenueDerived ? 'Calculado: cantidad × precio' : 'Suma de totales por línea');
+  if (m.orders !== undefined) add('Pedidos únicos', fmtInt(m.orders), 'Deduplicado por N° de pedido');
+  if (m.clients !== undefined) add('Clientes únicos', fmtInt(m.clients));
+  if (m.repeatRate !== undefined) add('Tasa de recompra', fmtPct(m.repeatRate), `${fmtInt(m.repeaters)} clientes con 2+ pedidos`);
+  if (m.avgPrice !== undefined) add('Precio promedio', fmtGs(m.avgPrice));
+  if (m.orders && m.revenue !== undefined) add('Ticket promedio (SKU)', fmtGs(m.revenue / m.orders), 'Facturación del SKU ÷ pedidos');
+  if (m.couponRate !== undefined) add('Pedidos con cupón', fmtPct(m.couponRate), fmtInt(m.couponOrders) + ' pedidos');
+  if (!k.length) add('Registros', fmtInt(m.nRows), 'Única métrica calculable con las columnas disponibles');
+
+  document.getElementById('kpiGrid').innerHTML = k.join('');
+}
+
+function renderModules(m){
+  CHARTS.forEach(c => c.destroy()); CHARTS = [];
+  const grid = document.getElementById('modGrid');
+  grid.innerHTML = '';
+  const hidden = [];
+
+  // --- Evolución mensual ---
+  if (m.byMonth && m.byMonth.length){
+    const id = addChartMod(grid, 'Evolución mensual', 'Unidades' + (m.revenue !== undefined ? ' y facturación' : '') + ' por mes — solo este SKU', true);
+    const labels = m.byMonth.map(([k]) => { const [y,mo] = k.split('-'); return MESES[+mo-1] + ' ' + y.slice(2); });
+    const dsets = [];
+    if (m.units !== undefined) dsets.push({ type:'bar', label:'Unidades', data:m.byMonth.map(([,b])=>b.units), backgroundColor:'#FFB300', borderRadius:5, yAxisID:'y' });
+    else dsets.push({ type:'bar', label:'Registros', data:m.byMonth.map(([,b])=>b.rows), backgroundColor:'#FFB300', borderRadius:5, yAxisID:'y' });
+    if (m.revenue !== undefined) dsets.push({ type:'line', label:'Facturación (Gs.)', data:m.byMonth.map(([,b])=>b.revenue), borderColor:'#E61A27', backgroundColor:'#E61A27', tension:.3, pointRadius:3, yAxisID:'y2' });
+    CHARTS.push(new Chart(document.getElementById(id), {
+      data:{ labels, datasets:dsets },
+      options:{ responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{ labels:{ font:{family:'Inter',size:11} } } },
+        scales:{ y:{ beginAtZero:true, ticks:{font:{family:'Inter',size:10}} },
+                 y2:{ display:m.revenue!==undefined, position:'right', beginAtZero:true, grid:{drawOnChartArea:false}, ticks:{font:{family:'Inter',size:10}, callback:v=>fmtInt(v)} },
+                 x:{ ticks:{font:{family:'Inter',size:10}} } } }
+    }));
+  } else hidden.push('Evolución temporal (requiere columna de fecha)');
+
+  // --- Rankings categóricos ---
+  const rankMod = (data, title, sub, missing) => {
+    if (data && data.length){
+      const top = data.slice(0,10);
+      const max = top[0][1];
+      const unit = ROLES.qty !== undefined ? 'unid.' : 'reg.';
+      const mod = document.createElement('div');
+      mod.className = 'mod';
+      mod.innerHTML = `<h3>${title}</h3><div class="m-sub">${sub}</div>` + top.map(([name,val]) => `
+        <div class="rank-row">
+          <div class="r-name" title="${esc(name)}">${esc(name)}</div>
+          <div class="r-bar"><div class="r-fill" style="width:${(val/max*100).toFixed(1)}%"></div></div>
+          <div class="r-val">${fmtInt(val)} ${unit}</div>
+        </div>`).join('');
+      grid.appendChild(mod);
+    } else hidden.push(missing);
+  };
+  rankMod(m.cities,    '📍 Top ciudades',   'Ranking geográfico para este SKU', 'Ranking por ciudad (requiere columna Ciudad)');
+  rankMod(m.zones,     '🗺️ Zonas / departamentos', 'Distribución territorial del SKU', 'Análisis por zona (requiere columna Zona/Departamento)');
+  rankMod(m.channels,  '📣 Canal', 'Origen de las ventas de este SKU', 'Análisis por canal (requiere columna Canal)');
+  rankMod(m.campaigns, '🎯 Campañas', 'Rendimiento por campaña para este SKU', 'Rendimiento por campaña (requiere columna Campaña)');
+
+  // --- Estados de pedido (dona) ---
+  if (m.statuses && m.statuses.length){
+    const id = addChartMod(grid, 'Estado de los pedidos', 'Distribución de estados — solo este SKU', false);
+    CHARTS.push(new Chart(document.getElementById(id), {
+      type:'doughnut',
+      data:{ labels:m.statuses.map(s=>s[0]), datasets:[{ data:m.statuses.map(s=>s[1]), backgroundColor:PALETTE, borderWidth:2, borderColor:'#fff' }] },
+      options:{ responsive:true, maintainAspectRatio:false, cutout:'62%',
+        plugins:{ legend:{ position:'right', labels:{font:{family:'Inter',size:11}, boxWidth:12} } } }
+    }));
+  } else hidden.push('Estado de pedidos (requiere columna Estado/Status)');
+
+  // --- Cupones ---
+  if (m.topCoupons && m.topCoupons.length){
+    const mod = document.createElement('div');
+    mod.className = 'mod';
+    mod.innerHTML = `<h3>🎟️ Cupones más usados</h3><div class="m-sub">Cupones aplicados en compras de este SKU</div>
+      <table><thead><tr><th>Cupón</th><th class="num">Usos</th></tr></thead><tbody>` +
+      m.topCoupons.map(([c,v]) => `<tr><td>${esc(c)}</td><td class="num">${fmtInt(v)}</td></tr>`).join('') +
+      `</tbody></table>`;
+    grid.appendChild(mod);
+  } else if (ROLES.coupon === undefined) hidden.push('Análisis de cupones (requiere columna Cupón)');
+
+  // --- Últimos registros ---
+  renderLastRows(grid, m);
+
+  const note = document.getElementById('hiddenNote');
+  if (hidden.length){
+    note.style.display = 'block';
+    note.innerHTML = `<b>Módulos ocultos automáticamente</b> — dato no disponible en la base de datos:<br>` +
+      hidden.map(h => `<span class="tag">${h}</span>`).join('');
+  } else note.style.display = 'none';
+}
+
+function addChartMod(grid, title, sub, wide){
+  const id = 'ch' + Math.random().toString(36).slice(2,9);
+  const mod = document.createElement('div');
+  mod.className = 'mod' + (wide ? ' wide' : '');
+  mod.innerHTML = `<h3>${title}</h3><div class="m-sub">${sub}</div><div class="chart-box"><canvas id="${id}"></canvas></div>`;
+  grid.appendChild(mod);
+  return id;
+}
+
+function renderLastRows(grid, m){
+  // Columnas a mostrar: las que tengan rol detectado (en orden útil), máx 8
+  const order = ['date','order','client','city','qty','price','lineTotal','status','coupon','channel','campaign'];
+  const cols = order.filter(k => ROLES[k] !== undefined).slice(0,8).map(k => ({ k, i:ROLES[k], label:COLS[ROLES[k]].label }));
+  if (!cols.length) return;
+
+  let rows = m.entry.rows;
+  if (ROLES.date !== undefined){
+    rows = [...rows].sort((a,b) => (parseDate(ROWS[b][ROLES.date])||0) - (parseDate(ROWS[a][ROLES.date])||0));
+  }
+  rows = rows.slice(0,15);
+
+  const mod = document.createElement('div');
+  mod.className = 'mod wide';
+  mod.innerHTML = `<h3>🧾 Últimos registros del SKU</h3><div class="m-sub">Las ${rows.length} líneas más recientes de la base para este producto</div>
+    <div style="overflow-x:auto"><table><thead><tr>${cols.map(c=>`<th>${esc(c.label)}</th>`).join('')}</tr></thead><tbody>` +
+    rows.map(r => `<tr>${cols.map(c => {
+      let v = ROWS[r][c.i];
+      if (c.k === 'date'){ const d = parseDate(v); v = d ? d.toLocaleDateString('es-PY') : v; }
+      else if (['price','lineTotal'].includes(c.k)){ const n = parseNum(v); v = n !== null ? fmtGs(n) : v; return `<td class="num">${esc(v)}</td>`; }
+      else if (c.k === 'qty'){ const n = parseNum(v); v = n !== null ? fmtInt(n) : v; return `<td class="num">${esc(v)}</td>`; }
+      return `<td>${esc(v ?? '—')}</td>`;
+    }).join('')}</tr>`).join('') +
+    `</tbody></table></div>`;
+  grid.appendChild(mod);
+}
+
+/* ============================================================
+   8) DICCIONARIO DE DATOS (panel)
+============================================================ */
+function renderDictionary(){
+  document.getElementById('dictSub').textContent =
+    `Estructura detectada automáticamente al cargar la base · ${COLS.length} columnas · ${fmtInt(ROWS.length)} filas de datos`;
+  document.getElementById('dictTable').innerHTML =
+    `<thead><tr><th>#</th><th>Columna</th><th>Tipo</th><th>Rol detectado</th><th class="num">Completitud</th><th class="num">Únicos</th><th>Ejemplos</th></tr></thead><tbody>` +
+    COLS.map(c => `<tr>
+      <td>${c.i+1}</td>
+      <td><b>${esc(c.label)}</b></td>
+      <td><span class="type-tag">${c.type}</span></td>
+      <td>${c.role ? `<span class="role-tag">${esc(c.role)}</span>` : '<span style="color:#bbb">—</span>'}</td>
+      <td class="num">${fmtPct(c.fill*100)}</td>
+      <td class="num">${fmtInt(c.uniq)}${c.uniq >= 5000 ? '+' : ''}</td>
+      <td style="color:#777;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(c.samples.join(' · '))}</td>
+    </tr>`).join('') + `</tbody>`;
+
+  const caps = [
+    ['Búsqueda por SKU', 'sku'], ['Nombre / marca / categoría en buscador', 'name'],
+    ['Tendencias y evolución temporal', 'date'], ['Pedidos únicos (deduplicación)', 'order'],
+    ['Clientes únicos, frecuencia y recompra', 'client'], ['Rankings geográficos (ciudad)', 'city'],
+    ['Análisis por canal', 'channel'], ['Rendimiento por campaña', 'campaign'],
+    ['Unidades vendidas', 'qty'], ['Facturación', 'lineTotal'], ['Análisis de cupones', 'coupon'],
+  ];
+  document.getElementById('dictCaps').innerHTML = '<b>Capacidades habilitadas según los datos disponibles:</b><br>' +
+    caps.map(([label, role]) => {
+      const ok = ROLES[role] !== undefined || (role === 'lineTotal' && ROLES.qty !== undefined && ROLES.price !== undefined);
+      return `<span class="${ok?'ok':'no'}">${ok?'✓':'✗'} ${label}</span>`;
+    }).join(' &nbsp;·&nbsp; ');
+}
+document.getElementById('btnDict').addEventListener('click', () => document.getElementById('dictOverlay').classList.add('open'));
+document.getElementById('btnCloseDict').addEventListener('click', () => document.getElementById('dictOverlay').classList.remove('open'));
+document.getElementById('dictOverlay').addEventListener('click', e => { if (e.target.id === 'dictOverlay') e.target.classList.remove('open'); });
+
+/* ============================================================
+   9) INICIALIZACIÓN
+============================================================ */
+(async function init(){
+  try{
+    await loadData();
+    profileColumns();
+    detectRoles();
+    buildIndexes();
+    renderDictionary();
+
+    document.getElementById('hRows').innerHTML = `<b>${fmtInt(ROWS.length)}</b> registros`;
+    document.getElementById('hSkus').innerHTML = `<b>${fmtInt(SKU_INDEX.size)}</b> SKUs`;
+    document.getElementById('searchHint').textContent =
+      ROLES.sku !== undefined
+        ? `${fmtInt(SKU_INDEX.size)} SKUs indexados · escribí al menos 2 caracteres para ver sugerencias`
+        : '';
+
+    document.getElementById('stateBox').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+
+    if (ROLES.sku === undefined){
+      document.getElementById('app').insertAdjacentHTML('afterbegin', `
+        <div class="errbox" style="margin-bottom:20px">
+          <h3>No se detectó una columna de SKU</h3>
+          <p>La base cargó correctamente (${fmtInt(ROWS.length)} filas), pero ninguna columna coincide con un identificador de producto.
+          Revisá el <b>Diccionario de datos</b> para ver la estructura detectada, o agregá una columna llamada <code>SKU</code> a la hoja.</p>
+        </div>`);
+    } else {
+      inp.focus();
+    }
+  } catch(err){
+    document.getElementById('stateBox').innerHTML = `
+      <div class="errbox">
+        <h3>No se pudo conectar con Google Sheets</h3>
+        <p><b>Detalle:</b> ${esc(err.message)}</p>
+        <p style="margin-top:10px">Verificá que la hoja esté compartida como <b>“Cualquier persona con el enlace → Lector”</b>
+        (requisito del endpoint <code>gviz/tq</code>) y que el <code>gid</code> corresponda a la pestaña correcta.
+        Luego recargá esta página.</p>
+      </div>`;
+  }
+})();
+</script>
+</body>
+</html>

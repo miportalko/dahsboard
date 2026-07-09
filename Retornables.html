@@ -75,25 +75,26 @@
   /* FILTER BAR */
   .filter-bar {
     background:var(--white); border-bottom:1px solid var(--border);
-    padding:0 32px; display:flex; align-items:center; gap:16px;
-    height:52px; position:sticky; top:60px; z-index:99;
+    padding:8px 32px; display:flex; align-items:center; gap:12px; row-gap:8px;
+    min-height:52px; height:auto; flex-wrap:wrap;
+    position:sticky; top:60px; z-index:99;
     box-shadow:0 2px 8px rgba(0,0,0,.05);
   }
   .filter-label { font-size:11px; font-weight:700; text-transform:uppercase;
     letter-spacing:.8px; color:var(--muted); white-space:nowrap; flex-shrink:0; }
   .filter-divider { width:1px; height:20px; background:var(--border); flex-shrink:0; }
-  .period-pills { display:flex; gap:5px; align-items:center; flex-wrap:wrap; }
+  .period-pills { display:flex; gap:5px; align-items:center; flex-wrap:wrap; flex:1 1 320px; min-width:0; }
   .ppill {
-    padding:5px 12px; border-radius:20px; border:1px solid var(--border);
-    background:var(--white); font-family:var(--font); font-size:12px;
+    padding:4px 10px; border-radius:20px; border:1px solid var(--border);
+    background:var(--white); font-family:var(--font); font-size:11.5px;
     font-weight:600; color:var(--muted); cursor:pointer; transition:all .15s; white-space:nowrap;
   }
   .ppill:hover { border-color:var(--red); color:var(--red); }
   .ppill.active { background:var(--red); border-color:var(--red); color:white; box-shadow:0 2px 8px rgba(232,36,27,.25); }
   .ypill {
-    padding:5px 12px; border-radius:20px; border:1px solid var(--border);
-    background:var(--white); font-family:var(--font); font-size:12px; font-weight:700;
-    cursor:pointer; transition:all .15s;
+    padding:4px 10px; border-radius:20px; border:1px solid var(--border);
+    background:var(--white); font-family:var(--font); font-size:11.5px; font-weight:700;
+    cursor:pointer; transition:all .15s; white-space:nowrap;
   }
   .ypill:hover { border-color:var(--black); }
   .ypill.active { background:var(--black); border-color:var(--black); color:white; }
@@ -275,8 +276,10 @@
     .row.cols-2,.row.cols-3,.row.cols-1-2,.row.cols-2-1 { grid-template-columns:1fr; }
     .cohort-row { grid-template-columns:1fr; }
     .kpi-grid { grid-template-columns:1fr 1fr; }
-    .filter-bar { gap:10px; padding:0 16px; flex-wrap:wrap; height:auto; padding:8px 16px; }
+    .filter-bar { gap:10px; padding:8px 16px; }
+    .filter-divider { display:none; }
     .range-summary { display:none; }
+    .date-range { flex-wrap:wrap; }
   }
 
   /* DATA OVERLAY (carga / error) */

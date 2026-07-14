@@ -229,20 +229,20 @@
 /* ================================================================
    CONFIGURACIÓN GOOGLE SHEET (actualización automática)
    ----------------------------------------------------------------
-   1) Pegá el ID de tu Google Sheet (la parte entre /d/ y /edit).
-   2) Indicá el nombre de la hoja (pestaña) con la base VTEX.
-   3) El Sheet debe estar compartido como "Cualquiera con el enlace
-      puede ver" para que el endpoint gviz responda.
-   Mientras SHEET_ID esté vacío, el dashboard usa el snapshot
-   embebido del Excel. Con SHEET_ID configurado, lee el Sheet al
-   abrir y se refresca solo cada 5 minutos.
+   Conectado al Google Sheet vía SHEET_ID + SHEET_GID (el gid es
+   el número de la pestaña que aparece en la URL del Sheet).
+   Requisito: el Sheet debe estar compartido como "Cualquiera con
+   el enlace puede ver" para que el endpoint gviz responda.
+   El dashboard lee el Sheet al abrir y se refresca solo cada 5
+   minutos. Si la lectura falla, se mantiene el snapshot embebido
+   (indicador ámbar en el header; verde = Sheet en vivo).
    Encabezados requeridos en la hoja (nombres VTEX exactos):
    Order, Creation Date, Client Name, Client Last Name, City,
    Status, UtmSource, Coupon, Payment System Name, Total Value,
    Discounts Totals
 ================================================================ */
-const SHEET_ID   = "";        // ← pegar acá el ID del Google Sheet
-const SHEET_NAME = "Base";    // ← nombre de la pestaña
+const SHEET_ID   = "1oDuPtSdspEqvoo_0RDWg2eku2zrejNhrp711oqBgUp8"; // ID del Google Sheet
+const SHEET_GID  = "726146797";  // gid de la pestaña con la base VTEX
 const REFRESH_MIN = 5;
 
 /* ============ SNAPSHOT EMBEBIDO (generado del Excel) ============ */
@@ -540,7 +540,7 @@ function parseDateCell(c){
   return null;
 }
 async function loadFromSheet(){
-  const base=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?sheet=${encodeURIComponent(SHEET_NAME)}&headers=1&tqx=out:json`;
+  const base=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${SHEET_GID}&headers=1&tqx=out:json`;
   // Paso 1: mapear encabezados → letras de columna
   const meta=parseGviz(await (await fetch(base+"&tq="+encodeURIComponent("select * limit 1"))).text());
   const need=["Order","Creation Date","Client Name","Client Last Name","City","Status","UtmSource","Coupon","Payment System Name","Total Value","Discounts Totals"];

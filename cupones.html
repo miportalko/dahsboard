@@ -539,18 +539,58 @@ function parseDateCell(c){
   if(c.v instanceof Object) return null;
   return null;
 }
+function parseNum(v){
+  if(typeof v==="number") return v;
+  if(v===null||v===undefined||v==="") return 0;
+  let s=String(v).replace(/[Gs.\s₲]/gi,"").trim();
+  // "1.234.567,89" → "1234567.89" | "1,234,567.89" → "1234567.89"
+  if(/,\d{1,2}$/.test(s)) s=s.replace(/\./g,"").replace(",",".");
+  else s=s.replace(/,/g,"");
+  const n=parseFloat(s);
+  return isNaN(n)?0:n;
+}
+async function fetchGviz(url){
+  const r=await fetch(url+"&_ts="+Date.now(), {cache:"no-store"});
+  if(!r.ok) throw new Error("Google respondió HTTP "+r.status);
+  const text=await r.text();
+  if(text.indexOf("setResponse")===-1){
+    throw new Error("El Sheet no es accesible públicamente. Compartilo como 'Cualquiera con el enlace puede ver'.");
+  }
+  const data=parseGviz(text);
+  if(data.status==="error"){
+    throw new Error("gviz: "+((data.errors&&data.errors[0]&&(data.errors[0].detailed_message||data.errors[0].message))||"error desconocido"));
+  }
+  return data;
+}
 async function loadFromSheet(){
   const base=`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${SHEET_GID}&headers=1&tqx=out:json`;
-  // Paso 1: mapear encabezados → letras de columna
-  const meta=parseGviz(await (await fetch(base+"&tq="+encodeURIComponent("select * limit 1"))).text());
+  // Paso 1: mapear encabezados → letras de columna (tolerante a mayúsculas/espacios)
+  const meta=await fetchGviz(base+"&tq="+encodeURIComponent("select * limit 1"));
   const need=["Order","Creation Date","Client Name","Client Last Name","City","Status","UtmSource","Coupon","Payment System Name","Total Value","Discounts Totals"];
+  const norm=s=>String(s||"").trim().toLowerCase().replace(/\s+/g," ");
   const map={};
-  meta.table.cols.forEach(c=>{ if(need.includes((c.label||"").trim())) map[c.label.trim()]=c.id; });
-  const missing=need.filter(n=>!(n in map));
-  if(missing.length) throw new Error("Faltan columnas en el Sheet: "+missing.join(", "));
+  // a) por etiqueta de columna
+  meta.table.cols.forEach(c=>{
+    const lbl=norm(c.label);
+    need.forEach(n=>{ if(!map[n] && lbl===norm(n)) map[n]=c.id; });
+  });
+  // b) fallback: si gviz no tomó encabezados, usar la primera fila como headers
+  let missing=need.filter(n=>!(n in map));
+  if(missing.length && meta.table.rows.length){
+    const first=meta.table.rows[0].c||[];
+    meta.table.cols.forEach((c,i)=>{
+      const val=norm(first[i]&&first[i].v);
+      need.forEach(n=>{ if(!map[n] && val===norm(n)) map[n]=c.id; });
+    });
+    missing=need.filter(n=>!(n in map));
+  }
+  if(missing.length){
+    const encontrados=meta.table.cols.map(c=>c.label).filter(Boolean).slice(0,15).join(", ");
+    throw new Error("Faltan columnas en el Sheet: "+missing.join(", ")+". Encabezados encontrados: "+(encontrados||"(ninguno)"));
+  }
   // Paso 2: traer solo las columnas necesarias
   const sel="select "+need.map(n=>map[n]).join(", ");
-  const res=parseGviz(await (await fetch(base+"&tq="+encodeURIComponent(sel))).text());
+  const res=await fetchGviz(base+"&tq="+encodeURIComponent(sel));
   const idx={}; need.forEach((n,i)=>idx[n]=i);
   const seen=new Set(); const rows=[]; const allMonthly={}; let maxD=null;
   res.table.rows.forEach(rr=>{
@@ -562,7 +602,7 @@ async function loadFromSheet(){
     if(!d) return;
     if(!maxD||d>maxD) maxD=d;
     const mes=d.toISOString().slice(0,7);
-    const total=+cellVal(c[idx["Total Value"]])||0;
+    const total=parseNum(cellVal(c[idx["Total Value"]]));
     (allMonthly[mes]=allMonthly[mes]||[0,0]); allMonthly[mes][0]++; allMonthly[mes][1]+=total;
     const cup=String(cellVal(c[idx["Coupon"]])).trim();
     if(!cup) return;
@@ -572,7 +612,7 @@ async function loadFromSheet(){
       d.toISOString().slice(0,10), order,
       (String(cellVal(c[idx["Client Name"]]))+" "+String(cellVal(c[idx["Client Last Name"]]))).trim(),
       city, cup,
-      Math.abs(+cellVal(c[idx["Discounts Totals"]])||0),
+      Math.abs(parseNum(cellVal(c[idx["Discounts Totals"]]))),
       total,
       String(cellVal(c[idx["Payment System Name"]])),
       String(cellVal(c[idx["Status"]])),
@@ -616,7 +656,7 @@ function setSrc(estado, detalle){
   dot.classList.remove("live");
   if(estado==="live"){ lbl.textContent="Google Sheet (en vivo)"; dot.classList.add("live"); dot.style.background=""; }
   else if(estado==="cargando"){ lbl.textContent="Conectando al Sheet…"; dot.style.background="#5BDDE8"; }
-  else if(estado==="error"){ lbl.textContent="Snapshot — no se pudo leer el Sheet"; dot.style.background="#E8241B"; }
+  else if(estado==="error"){ lbl.textContent="Snapshot — no se pudo leer el Sheet (pasá el mouse para ver el motivo)"; dot.style.background="#E8241B"; }
   lbl.title = detalle || "";
 }
 
@@ -627,8 +667,7 @@ async function refrescar(){
     await loadFromSheet();
   }catch(err){
     console.error("Error leyendo el Google Sheet, se mantiene el snapshot:", err);
-    setSrc("error", "Detalle: " + (err && err.message ? err.message :
-      "verificá que el Sheet esté compartido como 'Cualquiera con el enlace puede ver' y que los encabezados VTEX no hayan cambiado."));
+    setSrc("error", (err && err.message) ? err.message : String(err));
   }
 }
 document.getElementById("btnRefresh").addEventListener("click", refrescar);

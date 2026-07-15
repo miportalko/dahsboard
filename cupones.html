@@ -98,7 +98,7 @@
     </div>
     <div class="head-meta">
       <div>Última actualización de los datos: <b id="lastUpdate" style="color:#fff">—</b></div>
-      <div class="src"><span class="dot" id="srcDot"></span><span id="srcLabel">Snapshot Excel</span></div>
+      <div class="src"><span class="dot" id="srcDot"></span><span id="srcLabel">Snapshot Excel</span><button id="btnRefresh" title="Actualizar ahora desde el Google Sheet" style="background:none;border:none;color:#D5D8DC;cursor:pointer;font-size:13px;padding:0 0 0 6px;font-family:inherit">⟳</button></div>
     </div>
   </div>
 </header>
@@ -580,8 +580,7 @@ async function loadFromSheet(){
     ]);
   });
   DATA={generado:maxD?maxD.toISOString().slice(0,16).replace("T"," "):"—", allMonthly, rows};
-  document.getElementById("srcLabel").textContent="Google Sheet (en vivo)";
-  document.getElementById("srcDot").classList.add("live");
+  setSrc("live");
   renderAll();
 }
 
@@ -611,11 +610,31 @@ document.querySelectorAll("#tblDet th[data-k]").forEach(th=>th.addEventListener(
 /* ================= INICIO ================= */
 DATA=SNAPSHOT;
 renderAll();
+
+function setSrc(estado, detalle){
+  const lbl=document.getElementById("srcLabel"), dot=document.getElementById("srcDot");
+  dot.classList.remove("live");
+  if(estado==="live"){ lbl.textContent="Google Sheet (en vivo)"; dot.classList.add("live"); dot.style.background=""; }
+  else if(estado==="cargando"){ lbl.textContent="Conectando al Sheet…"; dot.style.background="#5BDDE8"; }
+  else if(estado==="error"){ lbl.textContent="Snapshot — no se pudo leer el Sheet"; dot.style.background="#E8241B"; }
+  lbl.title = detalle || "";
+}
+
+async function refrescar(){
+  if(!SHEET_ID) return;
+  setSrc("cargando");
+  try{
+    await loadFromSheet();
+  }catch(err){
+    console.error("Error leyendo el Google Sheet, se mantiene el snapshot:", err);
+    setSrc("error", "Detalle: " + (err && err.message ? err.message :
+      "verificá que el Sheet esté compartido como 'Cualquiera con el enlace puede ver' y que los encabezados VTEX no hayan cambiado."));
+  }
+}
+document.getElementById("btnRefresh").addEventListener("click", refrescar);
 if(SHEET_ID){
-  loadFromSheet().catch(err=>{
-    console.error("Error leyendo el Google Sheet, se mantiene el snapshot:",err);
-  });
-  setInterval(()=>loadFromSheet().catch(e=>console.error(e)), REFRESH_MIN*60*1000);
+  refrescar();
+  setInterval(refrescar, REFRESH_MIN*60*1000);
 }
 </script>
 </body>

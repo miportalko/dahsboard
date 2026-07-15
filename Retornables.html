@@ -316,41 +316,57 @@
   .source-chip a { color:var(--muted); text-decoration:underline; }
   .source-chip a:hover { color:var(--red); }
 
-  /* ══ SIN DATOS DISPONIBLES ══ */
-  .nodata {
-    position:absolute; inset:0; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:6px; text-align:center;
-    background:var(--light); border-radius:8px; padding:16px; z-index:5;
+  /* ── FILTROS ADICIONALES (Ciudad / Canal / SKU / Cliente) ── */
+  .fsel {
+    padding:5px 9px; border-radius:8px; border:1px solid var(--border);
+    background:var(--white); font-family:var(--font); font-size:11.5px;
+    font-weight:600; color:var(--text); max-width:190px; cursor:pointer; transition:border-color .15s;
   }
-  .nodata-title { font-size:12px; font-weight:700; color:var(--muted); }
-  .nodata-sub { font-size:11px; color:var(--muted); line-height:1.5; max-width:280px; }
+  .fsel:hover:not(:disabled) { border-color:var(--red); }
+  .fsel:focus { outline:none; border-color:var(--red); }
+  .fsel:disabled { opacity:.45; cursor:not-allowed; }
+  .finput { cursor:text; min-width:160px; }
+  .btn-clear {
+    padding:5px 11px; border-radius:8px; border:1px solid var(--border);
+    background:var(--white); font-family:var(--font); font-size:11.5px;
+    font-weight:700; color:var(--muted); cursor:pointer; transition:all .15s; white-space:nowrap;
+  }
+  .btn-clear:hover { border-color:var(--black); color:var(--black); }
 
-  /* ══ CALIDAD DE DATOS ══ */
-  .dq-alerts { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
-  .dq-alert {
-    display:flex; align-items:flex-start; gap:10px; font-size:12px; line-height:1.5;
-    background:var(--white); border:1px solid var(--border); border-radius:8px;
-    padding:10px 14px; color:var(--text); box-shadow:var(--shadow);
+  /* ── ESTADO "INFORMACIÓN NO DISPONIBLE" ── */
+  .na-box {
+    display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;
+    height:100%; min-height:170px; color:var(--muted); font-size:12.5px; font-weight:600;
+    background:repeating-linear-gradient(45deg,#FAFAFA,#FAFAFA 10px,#F3F3F3 10px,#F3F3F3 20px);
+    border:1px dashed var(--border); border-radius:8px; text-align:center; padding:16px; line-height:1.55;
   }
-  .dq-alert.warn { border-left:4px solid var(--c3); }
-  .dq-alert.err  { border-left:4px solid var(--red); }
-  .dq-alert.ok   { border-left:4px solid #00AF55; }
-  .dq-alert .ico { flex-shrink:0; }
-  .col-chip {
-    display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:600;
-    padding:4px 10px; border-radius:20px; margin:0 6px 6px 0;
-    border:1px solid var(--border); background:var(--white);
+  .na-box .na-t { font-size:13px; color:var(--text); font-weight:700; }
+  .na-box .na-s { font-weight:500; font-size:11.5px; max-width:420px; }
+  .hidden-el { display:none !important; }
+
+  /* ── CHIP DE ADVERTENCIA / COBERTURA ── */
+  .warn-chip {
+    display:flex; gap:8px; align-items:flex-start;
+    background:rgba(255,180,0,.10); border:1px solid rgba(255,135,0,.35); color:#7A5200;
+    font-size:11.5px; font-weight:600; padding:8px 14px; border-radius:8px;
+    margin:0 0 16px; line-height:1.5;
   }
-  .col-chip.ok   { color:#00753A; background:rgba(0,175,85,.07); border-color:rgba(0,175,85,.25); }
-  .col-chip.miss { color:var(--red); background:rgba(232,36,27,.06); border-color:rgba(232,36,27,.25); }
-  .col-chip.opt  { color:var(--muted); }
-  table.dt td.trace-cols { font-family:ui-monospace,Menlo,monospace; font-size:10.5px; color:var(--muted); }
-  .kpi[data-trace] { cursor:help; }
-  .est-note {
-    display:flex; gap:8px; align-items:flex-start; font-size:11px; color:var(--muted);
-    background:rgba(255,180,0,.08); border:1px solid rgba(255,180,0,.35);
-    border-radius:8px; padding:8px 12px; margin-bottom:12px; line-height:1.5;
+  .ok-chip {
+    display:flex; gap:8px; align-items:center;
+    background:rgba(120,230,160,.12); border:1px solid rgba(0,175,85,.3); color:#00713A;
+    font-size:11.5px; font-weight:600; padding:7px 14px; border-radius:8px;
+    margin:0 0 16px; line-height:1.5;
   }
+
+  /* ── STARTER / REFILL ── */
+  .kpi-st { border-top:3px solid var(--red); }
+  .kpi-rf { border-top:3px solid #00AF55; }
+  .sr-dot { display:inline-block; width:9px; height:9px; border-radius:3px; margin-right:7px; vertical-align:baseline; }
+  .sr-subtitle {
+    font-size:12.5px; font-weight:800; letter-spacing:.2px; color:var(--text);
+    margin:4px 0 10px; display:flex; align-items:center;
+  }
+  .sr-note { font-size:11px; color:var(--muted); font-weight:500; margin:-6px 0 14px; line-height:1.5; }
 </style>
 </head>
 <body>
@@ -393,6 +409,14 @@
     <button class="btn-apply" onclick="applyDateRange()">Aplicar</button>
   </div>
   <div class="filter-divider"></div>
+  <select class="fsel" id="fCity" onchange="onFilterChange()" disabled title="Filtrar por ciudad"><option value="">Ciudad · todas</option></select>
+  <select class="fsel" id="fChannel" onchange="onFilterChange()" disabled title="Filtrar por canal"><option value="">Canal · todos</option></select>
+  <select class="fsel" id="fSku" onchange="onFilterChange()" disabled title="Filtrar por SKU retornable"><option value="">SKU · todos</option></select>
+  <input class="fsel finput" id="fClient" list="clientList" placeholder="Cliente (email o doc.)" autocomplete="off"
+         oninput="onClientInput(this.value)" onchange="onFilterChange()" disabled title="Buscar cliente por email o documento">
+  <datalist id="clientList"></datalist>
+  <button class="btn-clear" onclick="clearFilters()" title="Quitar filtros de ciudad, canal, SKU y cliente">✕ Limpiar</button>
+  <div class="filter-divider"></div>
   <button class="btn-export" id="btnExportExcel" onclick="exportExcel()" disabled title="Exporta el período mostrado (según el filtro activo)">📥 Excel</button>
   <div class="range-summary">
     <div class="range-dot"></div>
@@ -413,54 +437,208 @@
   </div>
 
   <div class="tabs">
-    <button class="tab active" onclick="showTab('resumen',this)">📊 Resumen</button>
+    <button class="tab active" onclick="showTab('sr',this)">⚖️ Starter vs Refill</button>
+    <button class="tab" onclick="showTab('resumen',this)">📊 Resumen</button>
     <button class="tab" onclick="showTab('nuevos',this)">🆕 Nuevos Clientes</button>
     <button class="tab" onclick="showTab('cohorte',this)">🔄 Cohorte</button>
     <button class="tab" onclick="showTab('productos',this)">🧴 Productos</button>
     <button class="tab" onclick="showTab('segmentos',this)">👥 Segmentos</button>
     <button class="tab" onclick="showTab('comparativo',this)">📈 Comparativo</button>
-    <button class="tab" onclick="showTab('calidad',this)">✅ Calidad de Datos</button>
+  </div>
+
+  <!-- S0: STARTER VS REFILL -->
+  <div class="section active" id="sec-sr">
+    <div class="sec-title" id="srTitle">Starter (con envase) vs Refill (sin envase)</div>
+    <div id="srCoverage"></div>
+
+    <div class="sr-subtitle"><span class="sr-dot" style="background:var(--red)"></span> Starter · productos retornables con envase</div>
+    <div class="kpi-grid">
+      <div class="kpi kpi-st">
+        <div class="kpi-label">Ingresos Starter</div>
+        <div class="kpi-value" id="st1v">—</div>
+        <div class="kpi-sub" id="st1s">Cargando…</div>
+        <div class="kpi-badge badge-red" id="st1b"></div>
+      </div>
+      <div class="kpi kpi-st">
+        <div class="kpi-label">Órdenes con Starter</div>
+        <div class="kpi-value" id="st2v">—</div>
+        <div class="kpi-sub" id="st2s">Cargando…</div>
+        <div class="kpi-badge badge-red" id="st2b"></div>
+      </div>
+      <div class="kpi kpi-st">
+        <div class="kpi-label">Unidades Starter</div>
+        <div class="kpi-value" id="st3v">—</div>
+        <div class="kpi-sub" id="st3s">Cargando…</div>
+      </div>
+      <div class="kpi kpi-st">
+        <div class="kpi-label">Ticket Promedio Starter</div>
+        <div class="kpi-value" id="st4v">—</div>
+        <div class="kpi-sub" id="st4s">Cargando…</div>
+      </div>
+      <div class="kpi kpi-st">
+        <div class="kpi-label">Participación Starter</div>
+        <div class="kpi-value" id="st5v">—</div>
+        <div class="kpi-sub" id="st5s">sobre revenue retornable</div>
+      </div>
+      <div class="kpi kpi-st">
+        <div class="kpi-label">Clientes Nuevos Starter</div>
+        <div class="kpi-value" id="st6v">—</div>
+        <div class="kpi-sub" id="st6s">1ª compra ret. incluye envase</div>
+      </div>
+    </div>
+
+    <div class="sr-subtitle" style="margin-top:8px"><span class="sr-dot" style="background:#00AF55"></span> Refill · reposición de retornables sin envase</div>
+    <div class="kpi-grid">
+      <div class="kpi kpi-rf">
+        <div class="kpi-label">Ingresos Refill</div>
+        <div class="kpi-value" id="rf1v">—</div>
+        <div class="kpi-sub" id="rf1s">Cargando…</div>
+        <div class="kpi-badge badge-green" id="rf1b"></div>
+      </div>
+      <div class="kpi kpi-rf">
+        <div class="kpi-label">Órdenes con Refill</div>
+        <div class="kpi-value" id="rf2v">—</div>
+        <div class="kpi-sub" id="rf2s">Cargando…</div>
+        <div class="kpi-badge badge-green" id="rf2b"></div>
+      </div>
+      <div class="kpi kpi-rf">
+        <div class="kpi-label">Unidades Refill</div>
+        <div class="kpi-value" id="rf3v">—</div>
+        <div class="kpi-sub" id="rf3s">Cargando…</div>
+      </div>
+      <div class="kpi kpi-rf">
+        <div class="kpi-label">Ticket Promedio Refill</div>
+        <div class="kpi-value" id="rf4v">—</div>
+        <div class="kpi-sub" id="rf4s">Cargando…</div>
+      </div>
+      <div class="kpi kpi-rf">
+        <div class="kpi-label">Participación Refill</div>
+        <div class="kpi-value" id="rf5v">—</div>
+        <div class="kpi-sub" id="rf5s">sobre revenue retornable</div>
+      </div>
+      <div class="kpi kpi-rf">
+        <div class="kpi-label">Clientes Recurrentes Refill</div>
+        <div class="kpi-value" id="rf6v">—</div>
+        <div class="kpi-sub" id="rf6s">refill con compra ret. previa</div>
+      </div>
+    </div>
+    <div class="sr-note">Una orden puede contener productos Starter y Refill a la vez; por eso las órdenes de cada bloque pueden superponerse. Los ingresos se calculan a nivel de línea, sin superposición. Las unidades cuentan los packs/cajas vendidos: las líneas de detalle a precio 0 (el contenido de los combos) no suman, para evitar doble conteo.</div>
+
+    <div class="row cols-2-1">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Evolución Mensual · Starter vs Refill (Gs.)</div>
+        <div class="chart-wrap h280"><canvas id="c_srMonth"></canvas><div class="na-box hidden-el" id="na_srMonth"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Participación Mensual (%)</div>
+        <div class="chart-wrap h280"><canvas id="c_srShare"></canvas><div class="na-box hidden-el" id="na_srShare"></div></div>
+      </div>
+    </div>
+    <div class="row cols-2">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Unidades Mensuales · Starter vs Refill</div>
+        <div class="chart-wrap h240"><canvas id="c_srUnits"></canvas><div class="na-box hidden-el" id="na_srUnits"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Comparativo por Ciudad (Gs.)</div>
+        <div class="chart-wrap h240"><canvas id="c_srCity"></canvas><div class="na-box hidden-el" id="na_srCity"></div></div>
+      </div>
+    </div>
+    <div class="row" style="grid-template-columns:1fr">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Comparativo por SKU · Top 12 retornables por revenue (Gs.)</div>
+        <div class="chart-wrap" style="height:340px"><canvas id="c_srSku"></canvas><div class="na-box hidden-el" id="na_srSku"></div></div>
+      </div>
+    </div>
+
+    <div class="sec-title" style="margin-top:20px" id="convTitle">Conversión Starter → Refill</div>
+    <div class="kpi-grid">
+      <div class="kpi">
+        <div class="kpi-label">Clientes Starter (período)</div>
+        <div class="kpi-value" id="cv1v">—</div>
+        <div class="kpi-sub" id="cv1s">1ª compra Starter en el período</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Compraron Refill Después</div>
+        <div class="kpi-value" id="cv2v">—</div>
+        <div class="kpi-sub" id="cv2s">Cargando…</div>
+        <div class="kpi-badge badge-green" id="cv2b"></div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Tiempo Starter → 1er Refill</div>
+        <div class="kpi-value" id="cv3v">—</div>
+        <div class="kpi-sub" id="cv3s">Cargando…</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Aún sin Refill</div>
+        <div class="kpi-value" id="cv4v">—</div>
+        <div class="kpi-sub" id="cv4s">sin recompra refill registrada</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Frecuencia de Compra</div>
+        <div class="kpi-value" id="cv5v">—</div>
+        <div class="kpi-sub" id="cv5s">compras ret. por cliente (período)</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Clientes Únicos Ret.</div>
+        <div class="kpi-value" id="cv6v">—</div>
+        <div class="kpi-sub" id="cv6s">compradores ret. del período</div>
+      </div>
+    </div>
+    <div class="row cols-2">
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Tiempo hasta el 1er Refill · distribución (clientes)</div>
+        <div class="chart-wrap h240"><canvas id="c_convDist"></canvas><div class="na-box hidden-el" id="na_convDist"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title"><span class="card-title-dot"></span> Clientes Starter → con Refill posterior · por mes de inicio</div>
+        <div class="chart-wrap h240"><canvas id="c_convMonth"></canvas><div class="na-box hidden-el" id="na_convMonth"></div></div>
+      </div>
+    </div>
+
+    <div class="sec-title" style="margin-top:20px">Tendencias, oportunidades y alertas · según datos del período</div>
+    <div class="insight-grid" id="srInsights"></div>
   </div>
 
   <!-- S1: RESUMEN -->
-  <div class="section active" id="sec-resumen">
+  <div class="section" id="sec-resumen">
     <div class="sec-title" id="s1Title">KPIs principales · retornables · Ene–May 2026</div>
     <div class="kpi-grid">
       <div class="kpi">
         <div class="kpi-label">Ventas Retornables</div>
-        <div class="kpi-value" id="k1v">—</div>
-        <div class="kpi-sub" id="k1s">esperando datos del Sheet</div>
-        <div class="kpi-badge badge-red" id="k1b">—</div>
+        <div class="kpi-value" id="k1v">342M</div>
+        <div class="kpi-sub" id="k1s">Gs. 342.164.734 en el período</div>
+        <div class="kpi-badge badge-red" id="k1b">↑ Pico en Mayo</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Órdenes con Ret.</div>
-        <div class="kpi-value" id="k2v">—</div>
-        <div class="kpi-sub" id="k2s">esperando datos del Sheet</div>
-        <div class="kpi-badge badge-orange" id="k2b">—</div>
+        <div class="kpi-value" id="k2v">4.054</div>
+        <div class="kpi-sub" id="k2s">de 9.054 órdenes totales</div>
+        <div class="kpi-badge badge-orange" id="k2b">44.8% del total</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Unidades Vendidas</div>
-        <div class="kpi-value" id="k3v">—</div>
+        <div class="kpi-value" id="k3v">42.363</div>
         <div class="kpi-sub" id="k3s">SKUs retornables despachados</div>
         <div class="kpi-badge badge-blue" id="k3b">Multi-marca</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Ticket Promedio</div>
-        <div class="kpi-value" id="k4v">—</div>
+        <div class="kpi-value" id="k4v">84.4K</div>
         <div class="kpi-sub" id="k4s">Gs. por orden retornable</div>
-        <div class="kpi-badge badge-red" id="k4b">—</div>
+        <div class="kpi-badge badge-red" id="k4b">vs 160K tienda</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Clientes Únicos Ret.</div>
-        <div class="kpi-value" id="k5v">—</div>
-        <div class="kpi-sub" id="k5s">esperando datos del Sheet</div>
-        <div class="kpi-badge badge-green" id="k5b">—</div>
+        <div class="kpi-value" id="k5v">2.056</div>
+        <div class="kpi-sub" id="k5s">compradores en el período</div>
+        <div class="kpi-badge badge-green" id="k5b">40% del base total</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Participación Revenue</div>
-        <div class="kpi-value" id="k6v">—</div>
-        <div class="kpi-sub" id="k6s">esperando datos del Sheet</div>
-        <div class="kpi-badge badge-blue" id="k6b">—</div>
+        <div class="kpi-value" id="k6v">23.5%</div>
+        <div class="kpi-sub" id="k6s">ret. sobre total tienda</div>
+        <div class="kpi-badge badge-blue" id="k6b">2º categoría</div>
       </div>
     </div>
     <div class="row cols-2-1">
@@ -483,16 +661,6 @@
         <div class="chart-wrap h240"><canvas id="c_sizeMix"></canvas></div>
       </div>
     </div>
-    <div class="row cols-2">
-      <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Distribución por Ciudad · Revenue Ret. (Gs.)</div>
-        <div class="chart-wrap h240" id="wrap_cityRev"><canvas id="c_cityRev"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Distribución por Ciudad · Órdenes Ret.</div>
-        <div class="chart-wrap h240" id="wrap_cityOrd"><canvas id="c_cityOrd"></canvas></div>
-      </div>
-    </div>
   </div>
 
   <!-- S2: NUEVOS CLIENTES -->
@@ -501,39 +669,39 @@
     <div class="kpi-grid">
       <div class="kpi">
         <div class="kpi-label">Nuevos en Ret.</div>
-        <div class="kpi-value" id="n1v">—</div>
+        <div class="kpi-value" id="n1v">2.056</div>
         <div class="kpi-sub" id="n1s">compradores 1ª vez en ret.</div>
-        <div class="kpi-badge badge-red" id="n1b">—</div>
+        <div class="kpi-badge badge-red" id="n1b">Ene: pico con 577</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">% del Total Clientes</div>
-        <div class="kpi-value" id="n2v">—</div>
-        <div class="kpi-sub" id="n2s">esperando datos del Sheet</div>
-        <div class="kpi-badge badge-green" id="n2b">según datos reales</div>
+        <div class="kpi-value" id="n2v">40%</div>
+        <div class="kpi-sub" id="n2s">de 5.145 clientes únicos</div>
+        <div class="kpi-badge badge-green" id="n2b">Alto potencial</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Revenue Nuevos</div>
-        <div class="kpi-value" id="n3v">—</div>
-        <div class="kpi-sub" id="n3s">esperando datos del Sheet</div>
-        <div class="kpi-badge badge-blue" id="n3b">—</div>
+        <div class="kpi-value" id="n3v">159M</div>
+        <div class="kpi-sub" id="n3s">Gs. generados por nuevos</div>
+        <div class="kpi-badge badge-blue" id="n3b">46% del rev. ret.</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Ticket Nuevos</div>
-        <div class="kpi-value" id="n4v">—</div>
+        <div class="kpi-value" id="n4v">77.2K</div>
         <div class="kpi-sub" id="n4s">Gs. primer orden promedio</div>
-        <div class="kpi-badge badge-red" id="n4b">—</div>
+        <div class="kpi-badge badge-red" id="n4b">−8.5% vs ticket ret.</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Cross-sell a Ret.</div>
-        <div class="kpi-value" id="n5v">—</div>
+        <div class="kpi-value" id="n5v">189</div>
         <div class="kpi-sub" id="n5s">ya compraban no-retornables</div>
-        <div class="kpi-badge badge-orange" id="n5b">—</div>
+        <div class="kpi-badge badge-orange" id="n5b">9.2% del total</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Mejor Semana</div>
-        <div class="kpi-value" id="n6v">—</div>
-        <div class="kpi-sub" id="n6s">esperando datos del Sheet</div>
-        <div class="kpi-badge badge-green" id="n6b">dato real semanal</div>
+        <div class="kpi-value" id="n6v">162</div>
+        <div class="kpi-sub" id="n6s">nuevos/semana (5–11 ene)</div>
+        <div class="kpi-badge badge-green" id="n6b">¿Lanzamiento?</div>
       </div>
     </div>
     <div class="row cols-1-2">
@@ -553,30 +721,30 @@
       </div>
       <div class="card">
         <div class="card-title"><span class="card-title-dot"></span> Canal de Adquisición (UTM Source)</div>
-        <div class="chart-wrap h240" id="wrap_utmSource"><canvas id="c_utmSource"></canvas></div>
+        <div class="chart-wrap h240"><canvas id="c_utmSource"></canvas></div>
       </div>
     </div>
   </div>
 
   <!-- S3: COHORTE -->
   <div class="section" id="sec-cohorte">
-    <div class="sec-title" id="s3Title">Recompra y comportamiento de los compradores de retornables</div>
+    <div class="sec-title" id="s3Title">Recompra y comportamiento de los 2.056 compradores</div>
     <div class="kpi-grid" style="margin-bottom:20px">
       <div class="kpi">
         <div class="kpi-label">Tasa de Recompra</div>
-        <div class="kpi-value" id="c1v">—</div>
-        <div class="kpi-sub" id="c1s">esperando datos del Sheet</div>
+        <div class="kpi-value" id="c1v">33.9%</div>
+        <div class="kpi-sub" id="c1s">698 compraron 2+ veces en ret.</div>
         <div class="kpi-badge badge-green">Crecimiento posible</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Solo 1 Compra</div>
-        <div class="kpi-value" id="c2v">—</div>
-        <div class="kpi-sub" id="c2s">esperando datos del Sheet</div>
+        <div class="kpi-value" id="c2v">66.1%</div>
+        <div class="kpi-sub" id="c2s">1.358 clientes · target reactivar</div>
         <div class="kpi-badge badge-red">Prioridad reactivar</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Recurrentes</div>
-        <div class="kpi-value" id="c3v">—</div>
+        <div class="kpi-value" id="c3v">698</div>
         <div class="kpi-sub" id="c3s">compraron ret. en 2+ ocasiones</div>
         <div class="kpi-badge badge-blue">Segmento VIP</div>
       </div>
@@ -584,21 +752,21 @@
     <div class="cohort-row">
       <div class="cohort-box">
         <div class="cohort-days">Recompra · 7 días</div>
-        <div class="cohort-pct" id="ch7v">—<span>%</span></div>
-        <div class="cohort-sub" id="ch7s">esperando datos del Sheet</div>
-        <div class="cohort-bar"><div class="cohort-bar-fill" id="ch7bar" style="width:0%"></div></div>
+        <div class="cohort-pct" id="ch7v">21<span>%</span></div>
+        <div class="cohort-sub" id="ch7s">~432 clientes en la 1ª semana</div>
+        <div class="cohort-bar"><div class="cohort-bar-fill" id="ch7bar" style="width:21%"></div></div>
       </div>
       <div class="cohort-box">
         <div class="cohort-days">Recompra · 15 días</div>
-        <div class="cohort-pct" id="ch15v">—<span>%</span></div>
-        <div class="cohort-sub" id="ch15s">esperando datos del Sheet</div>
-        <div class="cohort-bar"><div class="cohort-bar-fill" id="ch15bar" style="width:0%"></div></div>
+        <div class="cohort-pct" id="ch15v">29<span>%</span></div>
+        <div class="cohort-sub" id="ch15s">~597 clientes dentro de 2 semanas</div>
+        <div class="cohort-bar"><div class="cohort-bar-fill" id="ch15bar" style="width:29%"></div></div>
       </div>
       <div class="cohort-box">
         <div class="cohort-days">Recompra · 30 días</div>
-        <div class="cohort-pct" id="ch30v">—<span>%</span></div>
-        <div class="cohort-sub" id="ch30s">esperando datos del Sheet</div>
-        <div class="cohort-bar"><div class="cohort-bar-fill" id="ch30bar" style="width:0%"></div></div>
+        <div class="cohort-pct" id="ch30v">33.9<span>%</span></div>
+        <div class="cohort-sub" id="ch30s">698 clientes en el primer mes</div>
+        <div class="cohort-bar"><div class="cohort-bar-fill" id="ch30bar" style="width:33.9%"></div></div>
       </div>
     </div>
     <div class="row cols-2">
@@ -611,23 +779,23 @@
         <div class="chart-wrap h240"><canvas id="c_cohortPct"></canvas></div>
       </div>
     </div>
-    <div class="sec-title" style="margin-top:20px">Lecturas del período · verificables contra la fuente</div>
+    <div class="sec-title" style="margin-top:20px">Recomendaciones accionables</div>
     <div class="insight-grid">
       <div class="insight">
-        <div class="insight-tag">🎯 Base de 1 sola compra</div>
-        <div class="insight-body" id="ins1">Calculando desde el Google Sheet…</div>
+        <div class="insight-tag">🎯 Retargeting urgente</div>
+        <div class="insight-body" id="ins1">1.358 clientes hicieron 1 sola compra. Una campaña con descuento en 2ª orden puede duplicar el LTV de esta base en 30 días.</div>
       </div>
       <div class="insight" style="border-left-color:var(--c4)">
-        <div class="insight-tag" style="color:var(--c4)">⚡ Recompra en 7 días</div>
-        <div class="insight-body" id="ins2">Calculando desde el Google Sheet…</div>
+        <div class="insight-tag" style="color:var(--c4)">⚡ Trigger D+6</div>
+        <div class="insight-body" id="ins2">El 21% recompra en 7 días naturalmente. Un mensaje automático al día 6 puede llevar esa tasa al 30%+.</div>
       </div>
       <div class="insight" style="border-left-color:#00AF55">
-        <div class="insight-tag" style="color:#00AF55">📦 Recompra en 30 días</div>
-        <div class="insight-body" id="ins3">Calculando desde el Google Sheet…</div>
+        <div class="insight-tag" style="color:#00AF55">📦 Pack programado</div>
+        <div class="insight-body" id="ins3">El 33.9% vuelve en 30 días. Un modelo de suscripción mensual captura a estos recurrentes y reduce el costo de adquisición.</div>
       </div>
       <div class="insight" style="border-left-color:var(--c1)">
-        <div class="insight-tag" style="color:#0078FF">🏆 Peso de los recurrentes</div>
-        <div class="insight-body" id="ins4">Calculando desde el Google Sheet…</div>
+        <div class="insight-tag" style="color:#0078FF">🏆 Programa fidelidad</div>
+        <div class="insight-body" id="ins4">Los 698 recurrentes son el segmento de mayor valor. Puntos para 3ª compra en adelante puede multiplicar este número rápido.</div>
       </div>
     </div>
   </div>
@@ -669,25 +837,25 @@
     <div class="kpi-grid">
       <div class="kpi">
         <div class="kpi-label">Solo 1 compra ret.</div>
-        <div class="kpi-value" id="sg1v">—</div>
-        <div class="kpi-sub" id="sg1s">esperando datos del Sheet</div>
+        <div class="kpi-value" id="sg1v">1.358</div>
+        <div class="kpi-sub" id="sg1s">66.1% de compradores ret.</div>
         <div class="kpi-badge badge-red">Target retargeting</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Recurrentes ret.</div>
-        <div class="kpi-value" id="sg2v">—</div>
-        <div class="kpi-sub" id="sg2s">esperando datos del Sheet</div>
+        <div class="kpi-value" id="sg2v">698</div>
+        <div class="kpi-sub" id="sg2s">33.9% — compraron 2+ veces</div>
         <div class="kpi-badge badge-green">Segmento VIP</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Activos (último mes)</div>
-        <div class="kpi-value" id="sg3v">—</div>
-        <div class="kpi-sub" id="sg3s">esperando datos del Sheet</div>
-        <div class="kpi-badge badge-green" id="sg3b">—</div>
+        <div class="kpi-value" id="sg3v">393</div>
+        <div class="kpi-sub" id="sg3s">nuevos en el último mes del período</div>
+        <div class="kpi-badge badge-green" id="sg3b">+38.9% vs anterior</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Cross-sell a Ret.</div>
-        <div class="kpi-value" id="sg4v">—</div>
+        <div class="kpi-value" id="sg4v">189</div>
         <div class="kpi-sub" id="sg4s">tenían compras no-ret previas</div>
         <div class="kpi-badge badge-blue">Cross-sell logrado</div>
       </div>
@@ -698,23 +866,23 @@
         <div style="padding:8px 0" id="segBarsContainer">
           <div class="seg-bar-row">
             <div class="seg-bar-label">Solo 1 compra</div>
-            <div class="seg-bar-track"><div class="seg-bar-fill" id="sb1fill" style="width:0%;background:var(--c6)"></div></div>
-            <div class="seg-bar-val" id="sb1val">—</div>
+            <div class="seg-bar-track"><div class="seg-bar-fill" id="sb1fill" style="width:66.1%;background:var(--c6)"></div></div>
+            <div class="seg-bar-val" id="sb1val">1.358</div>
           </div>
           <div class="seg-bar-row">
             <div class="seg-bar-label">2 compras</div>
-            <div class="seg-bar-track"><div class="seg-bar-fill" id="sb2fill" style="width:0%;background:var(--c4)"></div></div>
-            <div class="seg-bar-val" id="sb2val">—</div>
+            <div class="seg-bar-track"><div class="seg-bar-fill" id="sb2fill" style="width:22%;background:var(--c4)"></div></div>
+            <div class="seg-bar-val" id="sb2val">~452</div>
           </div>
           <div class="seg-bar-row">
             <div class="seg-bar-label">3–5 compras</div>
-            <div class="seg-bar-track"><div class="seg-bar-fill" id="sb3fill" style="width:0%;background:var(--c3)"></div></div>
-            <div class="seg-bar-val" id="sb3val">—</div>
+            <div class="seg-bar-track"><div class="seg-bar-fill" id="sb3fill" style="width:10%;background:var(--c3)"></div></div>
+            <div class="seg-bar-val" id="sb3val">~205</div>
           </div>
           <div class="seg-bar-row">
             <div class="seg-bar-label">6+ compras</div>
-            <div class="seg-bar-track"><div class="seg-bar-fill" id="sb4fill" style="width:0%;background:var(--c2)"></div></div>
-            <div class="seg-bar-val" id="sb4val">—</div>
+            <div class="seg-bar-track"><div class="seg-bar-fill" id="sb4fill" style="width:4%;background:var(--c2)"></div></div>
+            <div class="seg-bar-val" id="sb4val">~41</div>
           </div>
         </div>
       </div>
@@ -748,80 +916,9 @@
     <div class="mini-kpis" id="projKpis"></div>
     <div class="row" style="grid-template-columns:1fr">
       <div class="card">
-        <div class="est-note"><span>⚠️</span><span><strong>Estimación calculada — no es un dato de la base.</strong> La proyección aplica la estacionalidad mensual real de 2025 ajustada por el ritmo real acumulado de 2026 (ratio de meses completos). Todo lo demás en esta pestaña son datos reales del Sheet. Método verificable en la pestaña Calidad de Datos.</span></div>
         <div class="card-title"><span class="card-title-dot"></span> Real 2026 + Proyección vs referencia 2025 (Gs.)</div>
         <div class="chart-wrap h280"><canvas id="c_projRet"></canvas></div>
       </div>
-    </div>
-  </div>
-
-  <!-- ══════ SECCIÓN 7 · CALIDAD DE DATOS ══════ -->
-  <div class="section" id="sec-calidad">
-    <div class="sec-title">Control de calidad · auditoría del dashboard</div>
-
-    <div class="kpi-grid" id="qaKpis">
-      <div class="kpi">
-        <div class="kpi-label">Última actualización</div>
-        <div class="kpi-value" style="font-size:20px" id="qa1v">—</div>
-        <div class="kpi-sub" id="qa1s">fecha del pedido más reciente en el Sheet</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Filas leídas del Sheet</div>
-        <div class="kpi-value" id="qa2v">—</div>
-        <div class="kpi-sub" id="qa2s">líneas crudas (1 fila = 1 SKU por orden)</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Filas válidas analizadas</div>
-        <div class="kpi-value" id="qa3v">—</div>
-        <div class="kpi-sub" id="qa3s">tras filtro de estado y validación</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Órdenes únicas</div>
-        <div class="kpi-value" id="qa4v">—</div>
-        <div class="kpi-sub" id="qa4s">deduplicadas por nro. de orden</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Período de datos</div>
-        <div class="kpi-value" style="font-size:17px" id="qa5v">—</div>
-        <div class="kpi-sub" id="qa5s">rango real de fechas en la fuente</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Cargado al navegador</div>
-        <div class="kpi-value" style="font-size:20px" id="qa6v">—</div>
-        <div class="kpi-sub" id="qa6s">momento de la última lectura del Sheet</div>
-      </div>
-    </div>
-
-    <div class="sec-title" style="margin-top:20px">Alertas de calidad detectadas</div>
-    <div class="dq-alerts" id="qaAlerts"><div class="dq-alert"><span class="ico">⏳</span><span>Esperando datos del Sheet…</span></div></div>
-
-    <div class="row cols-2">
-      <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Columnas requeridas (validadas antes de calcular)</div>
-        <div id="qaColsReq">—</div>
-      </div>
-      <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Columnas opcionales detectadas</div>
-        <div id="qaColsOpt">—</div>
-        <div style="font-size:11px;color:var(--muted);line-height:1.5;margin-top:8px">Si una columna opcional falta, el gráfico que depende de ella muestra "Sin datos disponibles" en vez de datos estimados.</div>
-      </div>
-    </div>
-
-    <div class="row cols-2" style="margin-top:0">
-      <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Filtros activos aplicados a todos los cálculos</div>
-        <div id="qaFilters" style="font-size:12px;line-height:1.9;color:var(--text)">—</div>
-      </div>
-      <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Descartes y observaciones del ETL</div>
-        <table class="dt" id="qaDiscards"></table>
-      </div>
-    </div>
-
-    <div class="sec-title" style="margin-top:20px">Trazabilidad de cada indicador</div>
-    <div class="card">
-      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Cada métrica del dashboard se calcula exclusivamente con las columnas y filtros listados abajo. Cualquier valor mostrado puede reproducirse aplicando estas reglas sobre el Google Sheet original (link en el encabezado).</div>
-      <div style="overflow-x:auto"><table class="dt" id="qaTrace"></table></div>
     </div>
   </div>
 
@@ -847,47 +944,48 @@ let YEAR = '2026';                                // año activo al abrir
 function sheetCfg(){ return SHEETS_BY_YEAR[YEAR]; }
 const VALID_STATUS = ['faturado', 'pronto para o manuseio'];
 
-// D se reconstruye por completo en cada carga a partir del Sheet
-let D = { months:[], retRev:[], totalRev:[], ordRet:[], ordNoRet:[], units:[],
-  clients:[], retClients:[], newRev:[], recRev:[], crossSell:[],
-  weeks:[], weekMonth:[], newByWeek:[], skus:[], brandRev:{}, sizeRev:{}, sizeUnits:{},
-  campaigns:[], utmSource:{} };
+// ═══════════════════════════════════════════════════
+// CLASIFICACIÓN STARTER / REFILL — por nombre de SKU
+// Starter  = retornable CON envase (incluye la botella)
+// Refill   = retornable SIN envase (reposición)
+// Si el nombre no coincide con ningún patrón queda como
+// "Sin clasificar": se muestra tal cual, NUNCA se estima.
+// Ajustá los patrones si el catálogo usa otra nomenclatura.
+// ═══════════════════════════════════════════════════
+// Patrones validados contra el catálogo real de "Fuente General VTEX 2026":
+//   Starter → "(Con envase)" en el nombre · ref con "STARTER" o "C+B"
+//   Refill  → "(Sin envase)" o sufijo "- RF" en el nombre · ref con "RF"
+const STARTER_NAME_PATTERNS = [/con\s+envase/i, /c\/\s*envase/i, /\+\s*envase/i, /incluye\s+envase/i, /envase\s+incluido/i, /\bstarter\b/i];
+const REFILL_NAME_PATTERNS  = [/sin\s+envase/i, /s\/\s*envase/i, /-\s*rf\b/i, /\brefill\b/i, /solo\s+l[ií]quido/i, /sin\s+botella/i];
+const STARTER_REF_PATTERNS  = [/starter/i, /c\+b/i];
+const REFILL_REF_PATTERNS   = [/(?:^|[^a-z])rf(?:$|[^a-z])/i];
 
-// ═══ CALIDAD DE DATOS Y TRAZABILIDAD ═══
-// Todo lo que se muestra debe poder auditarse contra el Sheet: acá se registra
-// qué se leyó, qué se descartó y por qué, y qué columnas existen realmente.
-const REQUIRED_COLS = ['Order','Creation Date','Status','Client Document','Email','Quantity_SKU','SKU Name','SKU Total Price','Total Value'];
-const OPTIONAL_COLS = ['UtmSource','UtmCampaign','City'];
-let SHEET_COLS = [];           // etiquetas reales de columnas encontradas en el Sheet
-let OPT = { UtmSource:false, UtmCampaign:false, City:false };
-let DQ = null;                 // métricas de calidad del ETL (se reconstruye en cada carga)
-function newDQ(){ return {
-  rowsTotal:0, skippedNoOrder:0, skippedNoDate:0,
-  statusCounts:{}, validLines:0, invalidStatusLines:0,
-  retLinesQtyZero:0, retLinesPriceZero:0,
-  ordersNoClientId:0, ordersEmptyDoc:0, ordersEmptyEmail:0,
-  utmEmpty:0, cityEmpty:0,
-};}
-const MIN_N_INSIGHT = 20;      // mínimo de clientes nuevos para afirmar comportamientos (%)
-
-let MONTH_INDEX = new Map();   // 'YYYY-MM' -> índice en D.months
-let TOTAL_CLIENTS = 0;         // clientes únicos en TODA la tienda (todos los pedidos válidos)
-let DATA_MIN_DATE = null, DATA_MAX_DATE = null; // rango real de fechas del Sheet
-let LAST_ORDER_DATE = null;    // fecha del pedido más reciente (para el chip de fuente)
-let LOADED_AT = null;
-
-// Datos crudos a nivel orden/línea para cálculo EXACTO por período (sin proporciones estimadas)
-let RAW = {
-  orders: [],              // {mi, clientKey, hasRet, retRev, totalValue, date, utmSource}
-  retLines: [],            // líneas retornables: {mi, skuName, qty, skuTotal, order}
-  retOrdersByClient: new Map(), // clientKey -> [{date, retRev}] ordenado por fecha
-  firstRetMi: new Map(),   // clientKey -> índice de mes de su 1ª compra ret.
-  firstRetDate: new Map(), // clientKey -> fecha de su 1ª compra ret.
-  hadPriorOrder: new Map(),// clientKey -> true si tenía pedidos ANTES de su 1ª compra ret. (cross-sell)
-};
+// Retornable = dice "retorn" O trae la marca de envase ("Con/Sin envase"),
+// porque las Cajas Combinadas (que llevan el precio) no dicen "retornable".
+function isRetornable(skuName) {
+  const n = skuName || '';
+  return /retorn/i.test(n) || /(?:con|sin)\s+envase/i.test(n);
+}
+function catOf(skuName, refCode) {
+  const n = skuName || '';
+  const st = STARTER_NAME_PATTERNS.some(r => r.test(n));
+  const rf = REFILL_NAME_PATTERNS.some(r => r.test(n));
+  if (st && !rf) return 'starter';
+  if (rf && !st) return 'refill';
+  if (!st && !rf) {
+    const ref = refCode || '';
+    const stR = STARTER_REF_PATTERNS.some(r => r.test(ref));
+    const rfR = REFILL_REF_PATTERNS.some(r => r.test(ref));
+    if (stR && !rfR) return 'starter';
+    if (rfR && !stR) return 'refill';
+  }
+  return 'unknown';
+}
+const CAT_LABEL = { starter:'Starter (con envase)', refill:'Refill (sin envase)', unknown:'Sin clasificar' };
+const ST_COLOR = '#E8241B', RF_COLOR = '#00AF55', UK_COLOR = '#C4C4C4';
 
 // ═══════════════════════════════════════════════════
-// ESTADO DEL FILTRO
+// HELPERS
 // ═══════════════════════════════════════════════════
 const PALETTE = ['#82E1FF','#78E6A0','#FFB400','#FF8700','#FF5A00','#E8241B'];
 const RED = '#E8241B';
@@ -896,23 +994,13 @@ Chart.defaults.font.size = 11;
 Chart.defaults.color = '#6B6B6B';
 Chart.defaults.borderColor = '#E8E8E8';
 
-const FMT  = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(0)+'K' : String(n);
+const FMT  = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(0)+'K' : String(Math.round(n));
 const FMTn = n => n >= 1e6 ? (n/1e6).toFixed(1)+'M' : n >= 1e3 ? (n/1e3).toFixed(1)+'K' : String(Math.round(n));
 const PCT  = (a,b) => b ? (a/b*100).toFixed(1)+'%' : '—';
 const NUM  = n => Math.round(n).toLocaleString('es-PY');
-
-let ACTIVE_IDX = [];
-let PRESETS = {};
-let charts = {};
-
-// Slice helpers
-const sl  = arr => ACTIVE_IDX.map(i => arr[i]);
-const sum = arr => sl(arr).reduce((a,b)=>a+b,0);
-
-// ═══════════════════════════════════════════════════
-// ETL — traer y transformar la hoja cruda VTEX
-// ═══════════════════════════════════════════════════
-function isRetornable(skuName) { return /retorn/i.test(skuName || ''); }
+const NA_TXT = 'Información no disponible';
+const arrSum = a => a.reduce((x,y)=>x+y,0);
+const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
 function sizeOf(name) {
   const s = (name || '').toLowerCase();
@@ -926,6 +1014,7 @@ function sizeOf(name) {
 }
 function brandOf(name) {
   const s = (name || '').toLowerCase();
+  if (/combinad/.test(s)) return 'Caja Combinada';
   if (/sin az[uú]car|zero/.test(s)) return 'CC Zero';
   if (/sprite/.test(s)) return 'Sprite';
   if (/fanta/.test(s)) return 'Fanta';
@@ -945,7 +1034,66 @@ function monthLabelOf(key) {
   const [y,m] = key.split('-');
   return MES_ABR[+m-1] + ' ' + y.slice(2);
 }
+// Fechas en horario LOCAL (evita el corrimiento de toISOString con la zona horaria de Paraguay)
+const isoLocal = d => d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+function parseLocal(s) { const [y,m,dd] = s.split('-').map(Number); return new Date(y, m-1, dd); }
+function endOfDay(d)   { const x = new Date(d); x.setHours(23,59,59,999); return x; }
+function startOfDay(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+const fmtShortD = d => d.getDate() + ' ' + MES_MIN[d.getMonth()] + ' ' + String(d.getFullYear()).slice(2);
 
+// ═══════════════════════════════════════════════════
+// DATOS GLOBALES (se reconstruyen por completo en cada carga)
+// ═══════════════════════════════════════════════════
+let ORDERS = [];        // pedidos deduplicados con agregados starter/refill
+let RETLINES = [];      // líneas retornables crudas {O, skuName, qty, skuTotal, cat, brand, size}
+let ALL_MONTH_KEYS = [], ALL_MONTH_LABELS = [];
+let FIRST_RET = new Map();          // ck -> {date, mk, order} 1ª compra retornable (histórico completo de la fuente)
+let RET_BY_CLIENT = new Map();      // ck -> [orderRef,...] órdenes ret. ordenadas por fecha
+let HAD_PRIOR = new Map();          // ck -> tenía pedidos ANTES de su 1ª compra ret.
+let FIRST_STARTER = new Map();      // ck -> orderRef de su 1ª compra con producto Starter
+let FIRST_REFILL_AFTER = new Map(); // ck -> {date, days} 1er Refill POSTERIOR a su 1er Starter
+let CITY_LIST = [], CHANNEL_LIST = [], SKU_LIST = [], CLIENT_LIST = [];
+let CLASS_TOTALS = { st:0, rf:0, uk:0 };  // revenue ret. de TODA la fuente por categoría
+let UNK_SKUS = [];                        // SKUs retornables que no matchean ningún patrón
+let TOTAL_CLIENTS = 0;
+let DATA_MIN_DATE = null, DATA_MAX_DATE = null, LAST_ORDER_DATE = null, LOADED_AT = null;
+let PRESETS = {};
+let charts = {};
+let LAST_M = null;
+
+// Columnas opcionales detectadas en la fuente (Ciudad / Canal)
+let SRC_META = { cityCol:null, chanCol:null, hasUtm:false };
+let HAS_CITY = false, HAS_CHANNEL = false, CHANNEL_LABEL = 'Canal', CHANNEL_IS_UTM = false;
+function applyMeta(meta) {
+  HAS_CITY = !!meta.cityCol;
+  CHANNEL_IS_UTM = !meta.chanCol && meta.hasUtm;
+  HAS_CHANNEL = !!(meta.chanCol || meta.hasUtm);
+  CHANNEL_LABEL = meta.chanCol ? 'Canal' : (meta.hasUtm ? 'Canal (UTM)' : 'Canal');
+}
+
+// ═══════════════════════════════════════════════════
+// ESTADO DEL FILTRO GLOBAL
+// Fecha exacta + Ciudad + Canal + SKU + Cliente.
+// TODOS los indicadores del dashboard (KPIs, gráficos,
+// tablas y export) se calculan desde este mismo filtro
+// para garantizar coherencia entre sí.
+// ═══════════════════════════════════════════════════
+let FILTER = { from:null, to:null, city:'', channel:'', sku:'', client:'' };
+
+function matchesOrderBase(o) {
+  if (FILTER.city    && (o.city    || '(Sin ciudad)') !== FILTER.city)    return false;
+  if (FILTER.channel && (o.channel || '(Sin canal)')  !== FILTER.channel) return false;
+  if (FILTER.client  && !(o.emailL.includes(FILTER.client) || o.docL.includes(FILTER.client))) return false;
+  if (FILTER.sku     && !o.retSkuSet.has(FILTER.sku)) return false;
+  return true;
+}
+function matchesOrder(o) {
+  return o.date >= FILTER.from && o.date <= FILTER.to && matchesOrderBase(o);
+}
+
+// ═══════════════════════════════════════════════════
+// FETCH — gviz + detección de columnas opcionales
+// ═══════════════════════════════════════════════════
 async function fetchSheetRows(year) {
   const cfg = SHEETS_BY_YEAR[year || YEAR];
   const url = `https://docs.google.com/spreadsheets/d/${cfg.id}/gviz/tq?tqx=out:json&gid=${cfg.gid}&headers=1&cb=${Date.now()}`;
@@ -963,17 +1111,24 @@ async function fetchSheetRows(year) {
   const idx = {};
   cols.forEach((c,i) => { if (c) idx[c] = i; });
 
-  // ── Validación de columnas ANTES de calcular nada ──
-  const missing = REQUIRED_COLS.filter(n => !(n in idx));
-  if (missing.length) throw new Error('Faltan columnas requeridas en la hoja: ' + missing.join(', ') + '. Sin ellas no es posible calcular las métricas del dashboard.');
+  const need = ['Order','Creation Date','Status','Client Document','Email','Quantity_SKU','SKU Name','SKU Total Price','Total Value'];
+  const missing = need.filter(n => !(n in idx));
+  if (missing.length) throw new Error('Faltan columnas en la hoja: ' + missing.join(', '));
 
-  const isActive = (year || YEAR) === YEAR;
-  const dq = newDQ();
-  dq.rowsTotal = rows.length;
-  if (isActive) {
-    SHEET_COLS = cols.filter(Boolean);
-    OPTIONAL_COLS.forEach(c => OPT[c] = (c in idx));
-  }
+  // Columnas OPCIONALES: se usan solo si existen en la fuente; nunca se inventan valores.
+  const findCol = cands => {
+    for (const c of cands) {
+      const k = Object.keys(idx).find(l => l.toLowerCase() === c.toLowerCase());
+      if (k) return k;
+    }
+    return null;
+  };
+  const cityCol = findCol(['City','Ciudad','Shipping City','ShippingCity','Ship City','Municipio','Localidad']);
+  // Nota: se excluyen a propósito Origin ("Marketplace") y SalesChannel ("1") del Sheet
+  // VTEX porque tienen un único valor y no sirven como canal; el canal útil es UtmSource.
+  const chanCol = findCol(['Canal','Channel','Canal de Venta']);
+  const refCol = findCol(['Reference Code','ReferenceCode','Referencia']);
+  SRC_META = { cityCol, chanCol, hasUtm: ('UtmSource' in idx), refCol };
 
   const gv = (row,i) => (i!=null && row.c && row.c[i] && row.c[i].v != null) ? row.c[i].v : null;
   const gDate = (row,i) => {
@@ -990,261 +1145,1245 @@ async function fetchSheetRows(year) {
   const out = [];
   rows.forEach(r => {
     const order = gStr(r, idx['Order']);
-    if (!order) { dq.skippedNoOrder++; return; }
+    if (!order) return;
     const date = gDate(r, idx['Creation Date']);
-    if (!date) { dq.skippedNoDate++; return; }
-    const status = gStr(r, idx['Status']).toLowerCase();
-    dq.statusCounts[status || '(vacío)'] = (dq.statusCounts[status || '(vacío)'] || 0) + 1;
-    const utmRaw  = OPT.UtmSource ? gStr(r, idx['UtmSource']) : '';
-    const cityRaw = OPT.City ? gStr(r, idx['City']) : '';
-    if (OPT.UtmSource && !utmRaw) dq.utmEmpty++;
-    if (OPT.City && !cityRaw) dq.cityEmpty++;
+    if (!date) return;
     out.push({
-      order, date, status,
+      order, date,
+      status: gStr(r, idx['Status']).toLowerCase(),
       doc: gStr(r, idx['Client Document']),
       email: gStr(r, idx['Email']).toLowerCase(),
-      utmSource: utmRaw || 'Directo / sin dato',
-      utmCampaign: (OPT.UtmCampaign ? gStr(r, idx['UtmCampaign']) : '') || 'Sin campaña',
-      city: cityRaw,
+      utmSource: gStr(r, idx['UtmSource']) || 'Directo',
+      utmCampaign: gStr(r, idx['UtmCampaign']) || 'Sin campaña',
+      city: cityCol ? gStr(r, idx[cityCol]) : '',
+      channel: chanCol ? gStr(r, idx[chanCol]) : '',
+      refCode: refCol ? gStr(r, idx[refCol]) : '',
       qty: gNum(r, idx['Quantity_SKU']),
       skuName: gStr(r, idx['SKU Name']),
       skuTotal: gNum(r, idx['SKU Total Price']),
       totalValue: gNum(r, idx['Total Value']),
     });
   });
-  if (isActive) DQ = dq;
   return out;
 }
 
+// ═══════════════════════════════════════════════════
+// ETL — construir órdenes, líneas retornables y mapas
+// históricos EXACTOS a partir de la hoja cruda VTEX.
+// Sin estimaciones: todo sale de las filas de la fuente.
+// ═══════════════════════════════════════════════════
 function buildDataset(lines) {
-  // 1) Filtrar sólo estados válidos (misma convención que el resto de tus pipelines)
   const valid = lines.filter(l => VALID_STATUS.includes(l.status));
   if (!valid.length) throw new Error('No se encontraron filas con estado válido (Faturado / Pronto para o manuseio) en la hoja.');
-  if (DQ) {
-    DQ.validLines = valid.length;
-    DQ.invalidStatusLines = lines.length - valid.length;
-    valid.forEach(l => {
-      if (isRetornable(l.skuName)) {
-        if (!(l.qty > 0)) DQ.retLinesQtyZero++;
-        if (!(l.skuTotal > 0)) DQ.retLinesPriceZero++;
-      }
-    });
-  }
 
-  // 2) Deduplicar a nivel de orden
+  // Canal efectivo por línea: columna de canal si existe; si no, UtmSource; si no hay ninguna, vacío.
+  const useChanCol = !!SRC_META.chanCol;
+  const useUtm = !useChanCol && SRC_META.hasUtm;
+
+  // 1) Deduplicar a nivel de orden con agregados Starter/Refill exactos por línea
   const ordersMap = new Map();
   valid.forEach(l => {
     let o = ordersMap.get(l.order);
     if (!o) {
       o = { order:l.order, date:l.date, doc:l.doc, email:l.email,
-            utmSource:l.utmSource, utmCampaign:l.utmCampaign, city:l.city,
-            totalValue:l.totalValue, retRev:0, retUnits:0, hasRet:false };
+            utmSource:l.utmSource, utmCampaign:l.utmCampaign,
+            city:'', channel:'',
+            totalValue:l.totalValue,
+            retRev:0, retUnits:0, stRev:0, stUnits:0, rfRev:0, rfUnits:0, ukRev:0, ukUnits:0,
+            hasRet:false, hasStarter:false, hasRefill:false, hasUnknown:false,
+            retSkuSet:new Set() };
       ordersMap.set(l.order, o);
     }
-    if (!o.city && l.city) o.city = l.city;
     if (l.date < o.date) o.date = l.date;
+    if (!o.city && l.city) o.city = l.city;
+    const ch = useChanCol ? l.channel : (useUtm ? (l.utmSource || 'Directo') : '');
+    if (!o.channel && ch) o.channel = ch;
     if (isRetornable(l.skuName)) {
+      const cat = catOf(l.skuName, l.refCode);
+      const uQty = l.skuTotal > 0 ? l.qty : 0;   // líneas a precio 0 = desglose del combo: no suman unidades
       o.hasRet = true;
-      o.retRev += l.skuTotal;
-      o.retUnits += l.qty;
+      o.retRev += l.skuTotal; o.retUnits += uQty;
+      o.retSkuSet.add(l.skuName);
+      if (cat === 'starter')     { o.stRev += l.skuTotal; o.stUnits += uQty; o.hasStarter = true; }
+      else if (cat === 'refill') { o.rfRev += l.skuTotal; o.rfUnits += uQty; o.hasRefill  = true; }
+      else                       { o.ukRev += l.skuTotal; o.ukUnits += uQty; o.hasUnknown = true; }
     }
   });
-  const orders = Array.from(ordersMap.values()).sort((a,b) => a.date - b.date);
-  if (DQ) {
-    orders.forEach(o => {
-      if (!o.doc && !o.email) DQ.ordersNoClientId++;   // identidad cae al nro. de orden: puede inflar "clientes únicos"
-      if (!o.doc) DQ.ordersEmptyDoc++;
-      if (!o.email) DQ.ordersEmptyEmail++;
+  ORDERS = Array.from(ordersMap.values()).sort((a,b) => a.date - b.date);
+  ORDERS.forEach(o => {
+    o.mk = monthKeyOf(o.date);
+    o.ck = clientKeyOf(o);
+    o.emailL = (o.email || '').toLowerCase();
+    o.docL   = String(o.doc || '').toLowerCase();
+  });
+
+  // 2) Líneas retornables crudas (para cálculo exacto por SKU/categoría/mes/ciudad)
+  RETLINES = [];
+  valid.forEach(l => {
+    if (!isRetornable(l.skuName)) return;
+    RETLINES.push({
+      O: ordersMap.get(l.order),
+      skuName: l.skuName, qty: l.qty, skuTotal: l.skuTotal,
+      uQty: l.skuTotal > 0 ? l.qty : 0,
+      cat: catOf(l.skuName, l.refCode), brand: brandOf(l.skuName), size: sizeOf(l.skuName),
     });
-  }
+  });
 
-  // 3) Meses dinámicos según lo que haya en el Sheet
-  const monthKeys = Array.from(new Set(orders.map(o => monthKeyOf(o.date)))).sort();
-  MONTH_INDEX = new Map(monthKeys.map((k,i) => [k,i]));
-  D.months = monthKeys.map(monthLabelOf);
-  const n = monthKeys.length;
-
-  DATA_MIN_DATE = orders[0].date;
-  DATA_MAX_DATE = orders[orders.length-1].date;
+  // 3) Meses reales presentes en la fuente
+  ALL_MONTH_KEYS = Array.from(new Set(ORDERS.map(o => o.mk))).sort();
+  ALL_MONTH_LABELS = ALL_MONTH_KEYS.map(monthLabelOf);
+  DATA_MIN_DATE = ORDERS[0].date;
+  DATA_MAX_DATE = ORDERS[ORDERS.length-1].date;
   LAST_ORDER_DATE = DATA_MAX_DATE;
+  TOTAL_CLIENTS = new Set(ORDERS.map(o => o.ck)).size;
 
-  // 4) Clientes totales de la tienda (todos los pedidos válidos, no sólo ret.)
-  TOTAL_CLIENTS = new Set(orders.map(clientKeyOf)).size;
-
-  // 5) Agregados mensuales base
-  D.retRev = Array(n).fill(0);  D.totalRev = Array(n).fill(0);
-  D.ordRet = Array(n).fill(0);  D.ordNoRet = Array(n).fill(0);
-  D.units  = Array(n).fill(0);
-  orders.forEach(o => {
-    const mi = MONTH_INDEX.get(monthKeyOf(o.date));
-    D.totalRev[mi] += o.totalValue;
-    if (o.hasRet) { D.ordRet[mi]++; D.retRev[mi] += o.retRev; D.units[mi] += o.retUnits; }
-    else D.ordNoRet[mi]++;
+  // 4) Mapas históricos por cliente (sobre TODA la fuente — la 1ª compra
+  //    retornable se identifica únicamente con el histórico disponible aquí)
+  FIRST_RET = new Map(); RET_BY_CLIENT = new Map(); HAD_PRIOR = new Map();
+  FIRST_STARTER = new Map(); FIRST_REFILL_AFTER = new Map();
+  const firstAny = new Map();
+  ORDERS.forEach(o => {
+    if (!firstAny.has(o.ck)) firstAny.set(o.ck, o.date);
+    if (!o.hasRet) return;
+    if (!FIRST_RET.has(o.ck)) FIRST_RET.set(o.ck, { date:o.date, mk:o.mk, order:o });
+    if (!RET_BY_CLIENT.has(o.ck)) RET_BY_CLIENT.set(o.ck, []);
+    RET_BY_CLIENT.get(o.ck).push(o);
+    if (o.hasStarter && !FIRST_STARTER.has(o.ck)) FIRST_STARTER.set(o.ck, o);
   });
-
-  // 6) Cohortes nuevos vs recurrentes (sobre pedidos con retornables)
-  const retOrders = orders.filter(o => o.hasRet);
-  const ordersByClient = new Map();
-  orders.forEach(o => {
-    const k = clientKeyOf(o);
-    if (!ordersByClient.has(k)) ordersByClient.set(k, []);
-    ordersByClient.get(k).push(o);
-  });
-  const firstRetByClient = new Map();     // clientKey -> fecha de 1ª compra ret.
-  const firstRetMonthByClient = new Map();// clientKey -> índice de mes de 1ª compra ret.
-  retOrders.forEach(o => {
-    const k = clientKeyOf(o);
-    if (!firstRetByClient.has(k)) {
-      firstRetByClient.set(k, o.date);
-      firstRetMonthByClient.set(k, MONTH_INDEX.get(monthKeyOf(o.date)));
+  FIRST_RET.forEach((f, ck) => HAD_PRIOR.set(ck, firstAny.get(ck) < f.date));
+  FIRST_STARTER.forEach((so, ck) => {
+    const list = RET_BY_CLIENT.get(ck) || [];
+    for (const o of list) {
+      if (o.hasRefill && o.date > so.date) {
+        FIRST_REFILL_AFTER.set(ck, { date:o.date, days:Math.round((o.date - so.date)/864e5) });
+        break;
+      }
     }
   });
 
-  D.clients = Array(n).fill(0); D.retClients = Array(n).fill(0);
-  D.newRev  = Array(n).fill(0); D.recRev     = Array(n).fill(0);
-  D.crossSell = Array(n).fill(0);
-  const newClientsByMonth = Array.from({length:n}, () => new Set());
-  const recClientsByMonth = Array.from({length:n}, () => new Set());
-
-  retOrders.forEach(o => {
-    const k = clientKeyOf(o);
-    const mi = MONTH_INDEX.get(monthKeyOf(o.date));
-    const firstMi = firstRetMonthByClient.get(k);
-    if (firstMi === mi) { newClientsByMonth[mi].add(k); D.newRev[mi] += o.retRev; }
-    else                { recClientsByMonth[mi].add(k); D.recRev[mi] += o.retRev; }
+  // 5) Cobertura de clasificación en TODA la fuente + SKUs sin clasificar
+  CLASS_TOTALS = { st:0, rf:0, uk:0 };
+  const unkMap = new Map();
+  RETLINES.forEach(l => {
+    if (l.cat === 'starter') CLASS_TOTALS.st += l.skuTotal;
+    else if (l.cat === 'refill') CLASS_TOTALS.rf += l.skuTotal;
+    else {
+      CLASS_TOTALS.uk += l.skuTotal;
+      let u = unkMap.get(l.skuName);
+      if (!u) { u = { name:l.skuName, rev:0, units:0 }; unkMap.set(l.skuName, u); }
+      u.rev += l.skuTotal; u.units += l.qty;
+    }
   });
-  for (let i=0;i<n;i++) { D.clients[i] = newClientsByMonth[i].size; D.retClients[i] = recClientsByMonth[i].size; }
+  UNK_SKUS = Array.from(unkMap.values()).sort((a,b) => b.rev - a.rev);
 
-  // Cross-sell: nuevos del mes que YA tenían pedidos previos (necesariamente no-ret.) antes de su 1ª compra ret.
-  for (let i=0;i<n;i++) {
-    let c = 0;
-    newClientsByMonth[i].forEach(k => {
-      const firstDate = firstRetByClient.get(k);
-      const had = (ordersByClient.get(k)||[]).some(o => o.date < firstDate);
-      if (had) c++;
-    });
-    D.crossSell[i] = c;
-  }
-
-  // 7) Semanas (lunes a domingo) cubriendo todo el rango de datos
-  function startOfWeek(d){ const nd=new Date(d.getFullYear(),d.getMonth(),d.getDate()); const day=(nd.getDay()+6)%7; nd.setDate(nd.getDate()-day); return nd; }
-  const fmtDM = d => d.getDate() + ' ' + MES_MIN[d.getMonth()];
-  D.weeks = []; D.weekMonth = []; D.newByWeek = [];
-  let cursor = startOfWeek(DATA_MIN_DATE);
-  const weekRanges = [];
-  while (cursor <= DATA_MAX_DATE) {
-    const wEnd = new Date(cursor); wEnd.setDate(wEnd.getDate()+6); wEnd.setHours(23,59,59,999);
-    weekRanges.push({ start:new Date(cursor), end:wEnd });
-    D.weeks.push(`${fmtDM(cursor)}–${fmtDM(wEnd)}`);
-    let mi = MONTH_INDEX.get(monthKeyOf(cursor));
-    if (mi == null) mi = MONTH_INDEX.get(monthKeyOf(wEnd)) ?? 0;
-    D.weekMonth.push(mi);
-    cursor = new Date(cursor); cursor.setDate(cursor.getDate()+7);
-  }
-  D.newByWeek = weekRanges.map(w => {
-    let c = 0;
-    firstRetByClient.forEach(d => { if (d >= w.start && d <= w.end) c++; });
-    return c;
+  // 6) Listas para los filtros (solo valores realmente presentes en la fuente)
+  const citySet = new Set(), chanSet = new Set(), skuSet = new Set();
+  let cityEmpty = false, chanEmpty = false;
+  ORDERS.forEach(o => {
+    if (o.city) citySet.add(o.city); else cityEmpty = true;
+    if (o.channel) chanSet.add(o.channel); else chanEmpty = true;
   });
+  RETLINES.forEach(l => skuSet.add(l.skuName));
+  CITY_LIST = Array.from(citySet).sort((a,b) => a.localeCompare(b,'es'));
+  if (HAS_CITY && cityEmpty) CITY_LIST.push('(Sin ciudad)');
+  CHANNEL_LIST = Array.from(chanSet).sort((a,b) => a.localeCompare(b,'es'));
+  if (HAS_CHANNEL && chanEmpty) CHANNEL_LIST.push('(Sin canal)');
+  SKU_LIST = Array.from(skuSet).sort((a,b) => a.localeCompare(b,'es'));
 
-  // 8) Productos, mix marca/tamaño — se guardan las líneas crudas con su mes
-  //    para poder recalcular EXACTO según el período activo
-  const retLines = valid.filter(l => isRetornable(l.skuName));
-  RAW.retLines = retLines.map(l => ({
-    mi: MONTH_INDEX.get(monthKeyOf(l.date)),
-    skuName: l.skuName, qty: l.qty, skuTotal: l.skuTotal, order: l.order,
-  }));
-
-  // Estructuras crudas por orden y por cliente (para cohortes exactas)
-  RAW.orders = orders.map(o => ({
-    mi: MONTH_INDEX.get(monthKeyOf(o.date)),
-    clientKey: clientKeyOf(o), hasRet: o.hasRet,
-    retRev: o.retRev, totalValue: o.totalValue,
-    date: o.date, utmSource: o.utmSource || 'Directo / sin dato',
-    city: o.city || '',
-  }));
-  RAW.retOrdersByClient = new Map();
-  retOrders.forEach(o => {
-    const k = clientKeyOf(o);
-    if (!RAW.retOrdersByClient.has(k)) RAW.retOrdersByClient.set(k, []);
-    RAW.retOrdersByClient.get(k).push({ date:o.date, retRev:o.retRev });
+  const cliMap = new Map();
+  ORDERS.forEach(o => {
+    if (cliMap.has(o.ck)) return;
+    const label = o.email || o.doc || o.order;
+    cliMap.set(o.ck, { label, q:String(label).toLowerCase() });
   });
-  RAW.retOrdersByClient.forEach(list => list.sort((a,b) => a.date - b.date));
-  RAW.firstRetMi = firstRetMonthByClient;
-  RAW.firstRetDate = firstRetByClient;
-  RAW.hadPriorOrder = new Map();
-  firstRetByClient.forEach((firstDate, k) => {
-    const had = (ordersByClient.get(k)||[]).some(o => o.date < firstDate);
-    RAW.hadPriorOrder.set(k, had);
-  });
+  CLIENT_LIST = Array.from(cliMap.values()).sort((a,b) => a.label.localeCompare(b.label,'es'));
 
-  // Agregados históricos (fallback inicial; los charts se refrescan por período)
-  const skuAgg = new Map();
-  D.brandRev = {}; D.sizeRev = {}; D.sizeUnits = {};
-  retLines.forEach(l => {
-    let s = skuAgg.get(l.skuName);
-    if (!s) { s = {name:l.skuName, units:0, revenue:0, ordersSet:new Set()}; skuAgg.set(l.skuName, s); }
-    s.units += l.qty; s.revenue += l.skuTotal; s.ordersSet.add(l.order);
-    const b = brandOf(l.skuName), sz = sizeOf(l.skuName);
-    D.brandRev[b] = (D.brandRev[b]||0) + l.skuTotal;
-    D.sizeRev[sz] = (D.sizeRev[sz]||0) + l.skuTotal;
-    D.sizeUnits[sz] = (D.sizeUnits[sz]||0) + l.qty;
-  });
-  D.skus = Array.from(skuAgg.values())
-    .map(s => ({ name:s.name, units:Math.round(s.units), revenue:Math.round(s.revenue), orders:s.ordersSet.size }))
-    .sort((a,b) => b.revenue - a.revenue).slice(0,10);
-
-  // 9) Campañas UTM y fuentes (sobre pedidos con retornables)
-  const campAgg = new Map();
-  const utmAgg = {};
-  retOrders.forEach(o => {
-    const camp = o.utmCampaign || 'Sin campaña';
-    let c = campAgg.get(camp);
-    if (!c) { c = {name:camp, revenue:0, ordersSet:new Set(), clientsSet:new Set()}; campAgg.set(camp,c); }
-    c.revenue += o.retRev; c.ordersSet.add(o.order); c.clientsSet.add(clientKeyOf(o));
-    const src = o.utmSource || 'Directo';
-    utmAgg[src] = (utmAgg[src]||0) + 1;
-  });
-  D.campaigns = Array.from(campAgg.values())
-    .map(c => ({ name:c.name, revenue:Math.round(c.revenue), orders:c.ordersSet.size, clients:c.clientsSet.size }))
-    .sort((a,b) => b.revenue - a.revenue).slice(0,8);
-  D.utmSource = utmAgg;
-
-  // 10) Presets de período dinámicos: un botón por mes + "Todo"
-  const iso = d => d.toISOString().slice(0,10);
-  PRESETS = { all: { idx: monthKeys.map((_,i)=>i), from: iso(DATA_MIN_DATE), to: iso(DATA_MAX_DATE) } };
-  monthKeys.forEach((k,i) => {
+  // 7) Presets de período: un botón por mes + "Todo"
+  PRESETS = { all: { from: isoLocal(DATA_MIN_DATE), to: isoLocal(DATA_MAX_DATE) } };
+  ALL_MONTH_KEYS.forEach((k,i) => {
     const [y,m] = k.split('-').map(Number);
     const first = new Date(y, m-1, 1);
     const last  = new Date(y, m, 0);
     PRESETS['m'+i] = {
-      idx: [i],
-      from: iso(i===0 ? DATA_MIN_DATE : first),
-      to:   iso(i===monthKeys.length-1 ? DATA_MAX_DATE : last),
+      from: isoLocal(i===0 ? DATA_MIN_DATE : first),
+      to:   isoLocal(i===ALL_MONTH_KEYS.length-1 ? DATA_MAX_DATE : last),
     };
   });
 }
 
-function monthIdxForDate(dateStr) {
-  const key = dateStr.slice(0,7);
-  if (MONTH_INDEX.has(key)) return MONTH_INDEX.get(key);
-  const keys = Array.from(MONTH_INDEX.keys()).sort();
-  if (!keys.length) return 0;
-  if (key < keys[0]) return 0;
-  if (key > keys[keys.length-1]) return keys.length-1;
-  let idx = 0; for (let i=0;i<keys.length;i++) if (keys[i] <= key) idx = i;
-  return idx;
+// ═══════════════════════════════════════════════════
+// COMPUTE — TODAS las métricas del filtro activo.
+// Cálculo EXACTO desde órdenes y líneas crudas: nada se
+// estima ni se completa. Si algo no puede calcularse con
+// los datos, se devuelve null y la UI muestra
+// "Información no disponible".
+// ═══════════════════════════════════════════════════
+function compute() {
+  const FO = ORDERS.filter(matchesOrder);
+  const passSet = new Set(FO);
+  const skuF = FILTER.sku;
+  const FRL = RETLINES.filter(l => passSet.has(l.O) && (!skuF || l.skuName === skuF));
+
+  // ── Meses presentes dentro del filtro ──
+  const keySet = new Set(); FO.forEach(o => keySet.add(o.mk));
+  const monthKeys = Array.from(keySet).sort();
+  const kIdx = new Map(monthKeys.map((k,i) => [k,i]));
+  const n = monthKeys.length;
+  const months = monthKeys.map(monthLabelOf);
+  const Z = () => Array(n).fill(0);
+
+  // ── Agregados mensuales base ──
+  const totalRevM = Z(), ordNoRetM = Z();
+  const retRevM = Z(), unitsM = Z();
+  const stRevM = Z(), stUnitsM = Z(), rfRevM = Z(), rfUnitsM = Z(), ukRevM = Z(), ukUnitsM = Z();
+  const ordRetSetM = Array.from({length:n}, () => new Set());
+  const ordStSetM  = Array.from({length:n}, () => new Set());
+  const ordRfSetM  = Array.from({length:n}, () => new Set());
+  let ordTotal = 0;
+  FO.forEach(o => { totalRevM[kIdx.get(o.mk)] += o.totalValue; ordTotal++; });
+
+  // Agregado por orden (respeta el filtro de SKU: si hay SKU activo, solo cuentan sus líneas)
+  const ordAgg = new Map();
+  const ordStarterSet = new Set(), ordRefillSet = new Set(), ordUnkSet = new Set();
+  FRL.forEach(l => {
+    const o = l.O, ki = kIdx.get(o.mk);
+    retRevM[ki] += l.skuTotal; unitsM[ki] += l.uQty;
+    if (l.cat === 'starter')     { stRevM[ki] += l.skuTotal; stUnitsM[ki] += l.uQty; ordStarterSet.add(o.order); ordStSetM[ki].add(o.order); }
+    else if (l.cat === 'refill') { rfRevM[ki] += l.skuTotal; rfUnitsM[ki] += l.uQty; ordRefillSet.add(o.order); ordRfSetM[ki].add(o.order); }
+    else                         { ukRevM[ki] += l.skuTotal; ukUnitsM[ki] += l.uQty; ordUnkSet.add(o.order); }
+    ordRetSetM[ki].add(o.order);
+    let a = ordAgg.get(o.order);
+    if (!a) { a = { rev:0, units:0, ki, ck:o.ck, mk:o.mk, date:o.date, O:o }; ordAgg.set(o.order, a); }
+    a.rev += l.skuTotal; a.units += l.qty;
+  });
+  const ordRetM = ordRetSetM.map(s => s.size);
+  FO.forEach(o => { if (!ordAgg.has(o.order)) ordNoRetM[kIdx.get(o.mk)]++; });
+
+  // ── Totales del período ──
+  const retRevTotal = arrSum(retRevM), totalRevTot = arrSum(totalRevM);
+  const ordRetTotal = arrSum(ordRetM), ordNoRetTot = arrSum(ordNoRetM);
+  const unitsTotal  = arrSum(unitsM);
+  const stRev = arrSum(stRevM), stUnits = arrSum(stUnitsM);
+  const rfRev = arrSum(rfRevM), rfUnits = arrSum(rfUnitsM);
+  const ukRev = arrSum(ukRevM), ukUnits = arrSum(ukUnitsM);
+
+  // ── Clientes únicos EXACTOS del período ──
+  const uniqueStoreClients = new Set(FO.map(o => o.ck));
+  const uniqueRetClients = new Set();
+  const starterClientSet = new Set(), refillClientSet = new Set();
+  const cliPeriodRev = new Map();
+  const minRefillDate = new Map();
+  ordAgg.forEach(a => {
+    uniqueRetClients.add(a.ck);
+    cliPeriodRev.set(a.ck, (cliPeriodRev.get(a.ck)||0) + a.rev);
+  });
+  FRL.forEach(l => {
+    if (l.cat === 'starter') starterClientSet.add(l.O.ck);
+    else if (l.cat === 'refill') {
+      refillClientSet.add(l.O.ck);
+      const cur = minRefillDate.get(l.O.ck);
+      if (!cur || l.O.date < cur) minRefillDate.set(l.O.ck, l.O.date);
+    }
+  });
+
+  // ── Nuevos vs recurrentes por mes (1ª compra ret. según histórico COMPLETO de la fuente) ──
+  const newCliSetM = Array.from({length:n}, () => new Set());
+  const recCliSetM = Array.from({length:n}, () => new Set());
+  const newRevM = Z(), recRevM = Z();
+  ordAgg.forEach(a => {
+    const f = FIRST_RET.get(a.ck);
+    if (f && f.mk === a.mk) { newCliSetM[a.ki].add(a.ck); newRevM[a.ki] += a.rev; }
+    else                    { recCliSetM[a.ki].add(a.ck); recRevM[a.ki] += a.rev; }
+  });
+  const clientsM = newCliSetM.map(s => s.size);
+  const retClientsM = recCliSetM.map(s => s.size);
+  const crossM = newCliSetM.map(set => { let c = 0; set.forEach(ck => { if (HAD_PRIOR.get(ck)) c++; }); return c; });
+
+  // Nuevos del período: su 1ª compra ret. (histórico) cae dentro del filtro
+  const newClientKeys = [];
+  FIRST_RET.forEach((f, ck) => { if (matchesOrder(f.order)) newClientKeys.push(ck); });
+  const newClients = newClientKeys.length;
+  const newRevTotal = arrSum(newRevM), recRevTotal = arrSum(recRevM);
+
+  // ── Cohorte de recompra EXACTA (ventanas reales de días, histórico completo) ──
+  const DAY = 864e5;
+  let n7 = 0, n15 = 0, n30 = 0, reuseN = 0;
+  const freq = { f1:0, f2:0, f3:0, f45:0, f6:0 };
+  const segRev = { s1:0, s2:0, s35:0, s6:0 };
+  newClientKeys.forEach(ck => {
+    const list = RET_BY_CLIENT.get(ck) || [];
+    const nOrd = list.length;
+    const first = list[0] ? list[0].date : null;
+    if (nOrd >= 2) {
+      reuseN++;
+      const delta = list[1].date - first;
+      if (delta <= 7*DAY)  n7++;
+      if (delta <= 15*DAY) n15++;
+      if (delta <= 30*DAY) n30++;
+    }
+    if      (nOrd === 1) freq.f1++;
+    else if (nOrd === 2) freq.f2++;
+    else if (nOrd === 3) freq.f3++;
+    else if (nOrd <= 5)  freq.f45++;
+    else                 freq.f6++;
+    const rev = cliPeriodRev.get(ck) || 0;
+    if      (nOrd === 1) segRev.s1  += rev;
+    else if (nOrd === 2) segRev.s2  += rev;
+    else if (nOrd <= 5)  segRev.s35 += rev;
+    else                 segRev.s6  += rev;
+  });
+  const noReuse   = newClients - reuseN;
+  const reuse7    = newClients ? (n7 /newClients*100).toFixed(1) : '0.0';
+  const reuse15   = newClients ? (n15/newClients*100).toFixed(1) : '0.0';
+  const reuse30   = newClients ? (n30/newClients*100).toFixed(1) : '0.0';
+  const reuseRate = newClients ? (reuseN/newClients*100).toFixed(1) : '0.0';
+  const crossSellExact = newClientKeys.filter(ck => HAD_PRIOR.get(ck)).length;
+
+  // ── Clientes nuevos Starter / recurrentes Refill ──
+  const newStarterClients = newClientKeys.filter(ck => FIRST_RET.get(ck).order.hasStarter).length;
+  let recRefillClients = 0;
+  minRefillDate.forEach((d, ck) => {
+    const f = FIRST_RET.get(ck);
+    if (f && f.date < d) recRefillClients++;
+  });
+
+  // ── Conversión Starter → Refill (solo con datos reales de la fuente) ──
+  // Base: clientes cuya 1ª compra Starter cae dentro del filtro.
+  // Convertido: registra un Refill POSTERIOR en cualquier momento de la fuente.
+  const convBaseKeys = [];
+  FIRST_STARTER.forEach((so, ck) => { if (matchesOrder(so)) convBaseKeys.push(ck); });
+  const convBase = convBaseKeys.length;
+  let converted = 0, daysSum = 0;
+  const convBuckets = [0,0,0,0,0];   // ≤7 / 8–15 / 16–30 / 31–60 / 60+
+  const convByMonth = new Map();
+  convBaseKeys.forEach(ck => {
+    const so = FIRST_STARTER.get(ck);
+    let e = convByMonth.get(so.mk);
+    if (!e) { e = { base:0, conv:0 }; convByMonth.set(so.mk, e); }
+    e.base++;
+    const fr = FIRST_REFILL_AFTER.get(ck);
+    if (fr) {
+      converted++; daysSum += fr.days; e.conv++;
+      const d = fr.days;
+      if (d <= 7) convBuckets[0]++;
+      else if (d <= 15) convBuckets[1]++;
+      else if (d <= 30) convBuckets[2]++;
+      else if (d <= 60) convBuckets[3]++;
+      else convBuckets[4]++;
+    }
+  });
+  const convPct  = convBase ? converted/convBase*100 : null;
+  const avgDays  = converted ? daysSum/converted : null;
+  const notConverted = convBase - converted;
+  const convBaseM = Z(), convConvM = Z();
+  convByMonth.forEach((e, mk) => {
+    const ki = kIdx.get(mk);
+    if (ki != null) { convBaseM[ki] = e.base; convConvM[ki] = e.conv; }
+  });
+
+  // ── Frecuencia de compra (período) ──
+  const avgFreq = uniqueRetClients.size ? ordAgg.size/uniqueRetClients.size : null;
+
+  // ── Comparativo por ciudad (solo si la fuente trae ciudad) ──
+  let cityAgg = null;
+  if (HAS_CITY) {
+    const cmap = new Map();
+    FRL.forEach(l => {
+      const c = l.O.city || '(Sin ciudad)';
+      let e = cmap.get(c);
+      if (!e) { e = { city:c, st:0, rf:0, uk:0, tot:0 }; cmap.set(c, e); }
+      if (l.cat === 'starter') e.st += l.skuTotal;
+      else if (l.cat === 'refill') e.rf += l.skuTotal;
+      else e.uk += l.skuTotal;
+      e.tot += l.skuTotal;
+    });
+    cityAgg = Array.from(cmap.values()).sort((a,b) => b.tot - a.tot).slice(0,8);
+  }
+
+  // ── SKUs del período (con su categoría) ──
+  const skuMap = new Map();
+  FRL.forEach(l => {
+    let s = skuMap.get(l.skuName);
+    if (!s) { s = { name:l.skuName, units:0, revenue:0, ordersSet:new Set(), cat:l.cat }; skuMap.set(l.skuName, s); }
+    s.units += l.qty; s.revenue += l.skuTotal; s.ordersSet.add(l.O.order);
+  });
+  const skuAll = Array.from(skuMap.values()).sort((a,b) => b.revenue - a.revenue);
+  const skusP  = skuAll.slice(0,10).map(s => ({ name:s.name, units:Math.round(s.units), revenue:Math.round(s.revenue), orders:s.ordersSet.size, cat:s.cat }));
+  const srSkus = skuAll.slice(0,12).map(s => ({ name:s.name, revenue:Math.round(s.revenue), cat:s.cat }));
+
+  // ── Mix marca/tamaño y canal UTM del período ──
+  const brandRevP = {}, sizeRevP = {}, sizeUnitsP = {};
+  FRL.forEach(l => {
+    brandRevP[l.brand]  = (brandRevP[l.brand] ||0) + l.skuTotal;
+    sizeRevP[l.size]    = (sizeRevP[l.size]   ||0) + l.skuTotal;
+    sizeUnitsP[l.size]  = (sizeUnitsP[l.size] ||0) + l.uQty;
+  });
+  const utmSourceP = {};
+  ordAgg.forEach(a => { const s = a.O.utmSource || 'Directo'; utmSourceP[s] = (utmSourceP[s]||0) + 1; });
+
+  // ── Semanas (lunes a domingo) dentro del filtro ──
+  function startOfWeek(d){ const nd = startOfDay(d); const day = (nd.getDay()+6)%7; nd.setDate(nd.getDate()-day); return nd; }
+  const fmtDM = d => d.getDate() + ' ' + MES_MIN[d.getMonth()];
+  const wLabels = [], wRanges = [];
+  if (FILTER.from && FILTER.to) {
+    let cursor = startOfWeek(FILTER.from);
+    while (cursor <= FILTER.to) {
+      const wEnd = new Date(cursor); wEnd.setDate(wEnd.getDate()+6); wEnd.setHours(23,59,59,999);
+      wRanges.push({ start:new Date(cursor), end:wEnd });
+      wLabels.push(`${fmtDM(cursor)}–${fmtDM(wEnd)}`);
+      cursor = new Date(cursor); cursor.setDate(cursor.getDate()+7);
+    }
+  }
+  const newByWeek = wRanges.map(w => {
+    let c = 0;
+    newClientKeys.forEach(ck => { const d = FIRST_RET.get(ck).date; if (d >= w.start && d <= w.end) c++; });
+    return c;
+  });
+  const maxWk = newByWeek.length ? Math.max(...newByWeek) : 0;
+  const maxWkLbl = newByWeek.length ? (wLabels[newByWeek.indexOf(maxWk)] || '—') : '—';
+
+  // ── Ratios y referencias ──
+  const ticket      = ordRetTotal ? retRevTotal/ordRetTotal : 0;
+  const storeTicket = ordTotal    ? totalRevTot/ordTotal    : 0;
+  const newTicket   = newClients  ? newRevTotal/newClients  : 0;
+  const stTicket    = ordStarterSet.size ? stRev/ordStarterSet.size : null;
+  const rfTicket    = ordRefillSet.size  ? rfRev/ordRefillSet.size  : null;
+  const pctRet      = ordTotal    ? (ordRetTotal/ordTotal*100).toFixed(1)+'%' : '—';
+  const pctRevPart  = totalRevTot ? (retRevTotal/totalRevTot*100).toFixed(1)+'%' : '—';
+  const pctNewOfAll = uniqueStoreClients.size ? (uniqueRetClients.size/uniqueStoreClients.size*100).toFixed(0)+'%' : '—';
+
+  const maxNc = clientsM.length ? Math.max(...clientsM) : 0;
+  const maxNcMonth = clientsM.length ? (months[clientsM.indexOf(maxNc)] || '—') : '—';
+  const lastMonth  = n ? months[n-1] : '—';
+  const lastNew    = n ? clientsM[n-1] : 0;
+  const prevNew    = n > 1 ? clientsM[n-2] : null;
+  const prevMonth  = n > 1 ? months[n-2] : '—';
+  const lastVsPrev = prevNew ? ((lastNew - prevNew)/prevNew*100).toFixed(1) : null;
+  const f1 = freq.f1, f2 = freq.f2, f3 = freq.f3 + freq.f45, f4 = freq.f6;
+
+  // ── Etiquetas de período y filtros ──
+  const monthAligned =
+    n > 0 && FILTER.from && FILTER.to &&
+    (FILTER.from.getTime() === startOfDay(DATA_MIN_DATE).getTime() || FILTER.from.getDate() === 1) &&
+    (startOfDay(FILTER.to).getTime() === startOfDay(DATA_MAX_DATE).getTime() ||
+     FILTER.to.getDate() === new Date(FILTER.to.getFullYear(), FILTER.to.getMonth()+1, 0).getDate());
+  let periodLabel;
+  if (n === 0) periodLabel = fmtShortD(FILTER.from) + ' – ' + fmtShortD(FILTER.to);
+  else if (monthAligned) periodLabel = n === 1 ? months[0] : months[0] + ' – ' + months[n-1];
+  else periodLabel = fmtShortD(FILTER.from) + ' – ' + fmtShortD(FILTER.to);
+
+  const fParts = [];
+  if (FILTER.city)    fParts.push('Ciudad: ' + FILTER.city);
+  if (FILTER.channel) fParts.push(CHANNEL_LABEL + ': ' + FILTER.channel);
+  if (FILTER.sku)     fParts.push('SKU: ' + FILTER.sku);
+  if (FILTER.client)  fParts.push('Cliente: "' + FILTER.client + '"');
+  const filtersLabel = fParts.join(' · ');
+
+  const srAvailable = (CLASS_TOTALS.st + CLASS_TOTALS.rf) > 0;
+
+  return {
+    // meses y series (para gráficos y export)
+    monthKeys, months, n,
+    totalRevM, ordRetM, ordNoRetM, retRevM, unitsM,
+    stRevM, stUnitsM, rfRevM, rfUnitsM, ukRevM, ukUnitsM,
+    ordStM: ordStSetM.map(s=>s.size), ordRfM: ordRfSetM.map(s=>s.size),
+    clientsM, retClientsM, newRevM, recRevM, crossM,
+    wLabels, newByWeek,
+    convBaseM, convConvM,
+    // totales
+    retRevTotal, totalRevTot, ordRetTotal, ordTotal, ordNoRetTot, unitsTotal,
+    stRev, stUnits, rfRev, rfUnits, ukRev, ukUnits,
+    ordStarter: ordStarterSet.size, ordRefill: ordRefillSet.size, ordUnk: ordUnkSet.size,
+    // clientes
+    newClients, newRevTotal, recRevTotal,
+    uniqueRetClients: uniqueRetClients.size,
+    uniqueStoreClients: uniqueStoreClients.size,
+    starterClients: starterClientSet.size,
+    refillClients: refillClientSet.size,
+    newStarterClients, recRefillClients,
+    crossSellExact,
+    // cohorte
+    reuse30, reuse15, reuse7, n7, n15, n30, reuseN, noReuse, reuseRate,
+    freq, segRev, f1, f2, f3, f4,
+    // conversión starter→refill
+    convBase, converted, notConverted, convPct, avgDays, convBuckets,
+    // tickets y ratios
+    ticket, storeTicket, newTicket, stTicket, rfTicket, avgFreq,
+    pctRet, pctRevPart, pctNewOfAll,
+    // productos / mix / ciudad
+    skusP, srSkus, cityAgg, brandRevP, sizeRevP, sizeUnitsP, utmSourceP,
+    // referencias de UI
+    maxWk, maxWkLbl, maxNc, maxNcMonth,
+    lastMonth, lastNew, prevNew, prevMonth, lastVsPrev,
+    periodLabel, filtersLabel, srAvailable,
+  };
 }
 
+// ═══════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════
+function flash(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('kpi-animating');
+  void el.offsetWidth;
+  el.classList.add('kpi-animating');
+}
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = val; flash(id); }
+}
+function setNAcard(prefix, msg) {
+  setText(prefix + 'v', '—');
+  setText(prefix + 's', msg || NA_TXT);
+  const b = document.getElementById(prefix + 'b');
+  if (b) b.textContent = '';
+}
+function toggleNA(canvasId, naId, show, title, sub) {
+  const c = document.getElementById(canvasId), na = document.getElementById(naId);
+  if (!c || !na) return;
+  c.classList.toggle('hidden-el', !!show);
+  na.classList.toggle('hidden-el', !show);
+  if (show) na.innerHTML = '<div class="na-t">' + esc(title || NA_TXT) + '</div>' +
+                           (sub ? '<div class="na-s">' + esc(sub) + '</div>' : '');
+}
+
+// ═══════════════════════════════════
+// UPDATE KPIs — todos los indicadores del filtro activo
+// ═══════════════════════════════════
+function updateKPIs(m) {
+  const noData = m.n === 0;
+
+  // ── S1 RESUMEN ──
+  setText('k1v', FMT(m.retRevTotal));
+  setText('k1s', `Gs. ${NUM(m.retRevTotal)} en el período`);
+  setText('k1b', noData ? '' : `↑ Pico en ${m.maxNcMonth}`);
+
+  setText('k2v', NUM(m.ordRetTotal));
+  setText('k2s', `de ${NUM(m.ordTotal)} órdenes totales`);
+  setText('k2b', `${m.pctRet} del total`);
+
+  setText('k3v', NUM(m.unitsTotal));
+  setText('k3s', 'packs/cajas ret. vendidos (líneas con precio)');
+
+  setText('k4v', FMTn(m.ticket));
+  setText('k4s', 'Gs. por orden retornable');
+  const k4bEl = document.getElementById('k4b');
+  if (k4bEl) { k4bEl.textContent = `vs ${FMTn(m.storeTicket)} tienda`; flash('k4b'); }
+
+  setText('k5v', NUM(m.uniqueRetClients));
+  setText('k5s', 'compradores únicos en ret.');
+  setText('k5b', `${m.pctNewOfAll} del base total`);
+
+  setText('k6v', m.pctRevPart);
+  setText('k6s', `ret. sobre Gs. ${FMT(m.totalRevTot)} total`);
+
+  document.getElementById('s1Title').textContent = `KPIs principales · retornables · ${m.periodLabel}`;
+
+  // ── S2 NUEVOS ──
+  setText('n1v', NUM(m.newClients));
+  setText('n1s', 'compradores 1ª vez en ret.');
+  setText('n1b', noData ? '' : `${m.maxNcMonth}: pico con ${m.maxNc}`);
+
+  setText('n2v', m.pctNewOfAll);
+  setText('n2s', `de ${NUM(m.uniqueStoreClients)} clientes únicos del período`);
+
+  setText('n3v', FMT(m.newRevTotal));
+  setText('n3s', `Gs. ${NUM(m.newRevTotal)} generados`);
+  setText('n3b', `${PCT(m.newRevTotal, m.retRevTotal)} del rev. ret.`);
+
+  const tktDiff = m.ticket ? ((m.newTicket - m.ticket)/m.ticket*100).toFixed(1) : null;
+  setText('n4v', FMTn(m.newTicket));
+  setText('n4s', 'Gs. primer orden promedio');
+  setText('n4b', tktDiff === null ? '' : `${tktDiff > 0 ? '+' : ''}${tktDiff}% vs ticket ret.`);
+
+  setText('n5v', NUM(m.crossSellExact));
+  setText('n5s', 'ya compraban no-retornables');
+  setText('n5b', `${PCT(m.crossSellExact, m.newClients)} del total`);
+
+  setText('n6v', m.maxWk);
+  setText('n6s', `nuevos/semana (${m.maxWkLbl})`);
+
+  document.getElementById('s2Title').textContent = `Clientes que compran retornables por primera vez · ${m.periodLabel}`;
+
+  // ── S3 COHORTE ──
+  setText('c1v', `${m.reuseRate}%`);
+  setText('c1s', `${NUM(m.reuseN)} compraron 2+ veces en ret.`);
+  const noReuseRate = (100 - parseFloat(m.reuseRate)).toFixed(1);
+  setText('c2v', `${noReuseRate}%`);
+  setText('c2s', `${NUM(m.noReuse)} clientes · target reactivar`);
+  setText('c3v', NUM(m.reuseN));
+  setText('c3s', 'compraron ret. en 2+ ocasiones');
+
+  document.getElementById('ch7v').innerHTML  = `${m.reuse7}<span>%</span>`;
+  document.getElementById('ch15v').innerHTML = `${m.reuse15}<span>%</span>`;
+  document.getElementById('ch30v').innerHTML = `${m.reuse30}<span>%</span>`;
+  setText('ch7s',  `${NUM(m.n7)} clientes en la 1ª semana`);
+  setText('ch15s', `${NUM(m.n15)} clientes dentro de 2 semanas`);
+  setText('ch30s', `${NUM(m.n30)} clientes en el primer mes`);
+  document.getElementById('ch7bar').style.width  = `${parseFloat(m.reuse7)}%`;
+  document.getElementById('ch15bar').style.width = `${parseFloat(m.reuse15)}%`;
+  document.getElementById('ch30bar').style.width = `${parseFloat(m.reuse30)}%`;
+
+  // Insights de cohorte — solo hechos que los datos del período respaldan
+  setText('ins1', m.newClients === 0 ? NA_TXT + ': no hay clientes nuevos de retornables en el período seleccionado.' :
+    m.noReuse > 0
+      ? `${NUM(m.noReuse)} clientes (${noReuseRate}%) hicieron 1 sola compra ret. en el histórico: es la base disponible para acciones de 2ª compra.`
+      : 'Todos los clientes nuevos del período ya registran una recompra en la fuente.');
+  setText('ins2', m.newClients === 0 ? NA_TXT :
+    `El ${m.reuse7}% de los nuevos del período (${NUM(m.n7)} clientes) recompró retornables dentro de los 7 días de su 1ª compra.`);
+  setText('ins3', m.newClients === 0 ? NA_TXT :
+    `El ${m.reuse30}% (${NUM(m.n30)} clientes) volvió a comprar dentro de los 30 días de su 1ª compra retornable.`);
+  setText('ins4', m.reuseN > 0
+    ? `${NUM(m.reuseN)} clientes del período registran 2+ compras ret. y concentran Gs. ${FMT(m.segRev.s2 + m.segRev.s35 + m.segRev.s6)} del revenue ret. del período.`
+    : (m.newClients === 0 ? NA_TXT : 'Ningún cliente nuevo del período registra recompra todavía.'));
+
+  document.getElementById('s3Title').textContent = `Recompra y comportamiento de los ${NUM(m.newClients)} compradores de retornables`;
+
+  // ── S4 PRODUCTOS ──
+  document.getElementById('s4Title').textContent = `Top SKUs retornables por revenue · ${m.periodLabel}`;
+
+  // ── S6 SEGMENTOS ──
+  setText('sg1v', NUM(m.noReuse));
+  setText('sg1s', `${noReuseRate}% de compradores ret.`);
+  setText('sg2v', NUM(m.reuseN));
+  setText('sg2s', `${m.reuseRate}% — compraron 2+ veces`);
+  setText('sg3v', NUM(m.lastNew));
+  setText('sg3s', `nuevos en ${m.lastMonth}`);
+  const sg3bEl = document.getElementById('sg3b');
+  if (sg3bEl) {
+    if (m.lastVsPrev !== null) {
+      const up = parseFloat(m.lastVsPrev) >= 0;
+      sg3bEl.textContent = `${up ? '↑' : '↓'}${m.lastVsPrev}% vs ${m.prevMonth}`;
+      sg3bEl.className = `kpi-badge ${up ? 'badge-green' : 'badge-red'}`;
+    } else sg3bEl.textContent = '';
+  }
+  setText('sg4v', NUM(m.crossSellExact));
+  setText('sg4s', 'tenían compras no-ret previas');
+
+  const totSeg = m.f1 + m.f2 + m.f3 + m.f4;
+  document.getElementById('sb1fill').style.width = totSeg ? `${(m.f1/totSeg*100).toFixed(1)}%` : '0%';
+  document.getElementById('sb2fill').style.width = totSeg ? `${(m.f2/totSeg*100).toFixed(1)}%` : '0%';
+  document.getElementById('sb3fill').style.width = totSeg ? `${(m.f3/totSeg*100).toFixed(1)}%` : '0%';
+  document.getElementById('sb4fill').style.width = totSeg ? `${(m.f4/totSeg*100).toFixed(1)}%` : '0%';
+  setText('sb1val', NUM(m.f1));
+  setText('sb2val', NUM(m.f2));
+  setText('sb3val', NUM(m.f3));
+  setText('sb4val', NUM(m.f4));
+
+  document.getElementById('s6Title').textContent = `Nuevos vs recurrentes · ${m.periodLabel}`;
+
+  // ── S0 STARTER VS REFILL ──
+  updateSRKpis(m);
+
+  // ── Barra de filtros / encabezado ──
+  const fl = m.filtersLabel ? ' · ' + m.filtersLabel : '';
+  setText('rangeLabel', m.periodLabel + fl);
+  setText('rangeOrders', NUM(m.ordRetTotal));
+  setText('rangeRevenue', 'Gs. ' + FMT(m.retRevTotal));
+  document.getElementById('headerPeriodChip').textContent = m.periodLabel;
+  document.getElementById('pageSub').textContent =
+    `${NUM(m.ordTotal)} órdenes · Período: ${m.periodLabel}` + fl +
+    (noData ? ' · Sin órdenes con los filtros activos' : '');
+}
+
+// ── KPIs, cobertura e insights de la pestaña Starter vs Refill ──
+function updateSRKpis(m) {
+  document.getElementById('srTitle').textContent = `Starter (con envase) vs Refill (sin envase) · ${m.periodLabel}`;
+  document.getElementById('convTitle').textContent = `Conversión Starter → Refill · ${m.periodLabel}`;
+
+  const covEl = document.getElementById('srCoverage');
+  if (!m.srAvailable) {
+    const names = UNK_SKUS.slice(0,6).map(u => '“' + esc(u.name) + '”').join(', ');
+    covEl.innerHTML = `<div class="warn-chip"><span>⚠️</span><span><strong>${NA_TXT}:</strong> ningún nombre de SKU retornable de la fuente coincide con los patrones “con envase” / “sin envase”, así que Starter y Refill no pueden separarse sin estimar. SKUs retornables detectados: ${names}${UNK_SKUS.length>6 ? ` y ${UNK_SKUS.length-6} más` : ''}. Si el catálogo usa otra nomenclatura, ajustá STARTER_PATTERNS / REFILL_PATTERNS al inicio del script.</span></div>`;
+    ['st1','st2','st3','st4','st5','st6','rf1','rf2','rf3','rf4','rf5','rf6','cv1','cv2','cv3','cv4','cv5'].forEach(p =>
+      setNAcard(p, 'Sin patrón con/sin envase en los SKUs'));
+    setText('cv6v', NUM(m.uniqueRetClients));
+    setText('cv6s', 'compradores ret. del período');
+    renderSRInsights(m);
+    return;
+  }
+  if (m.ukRev > 0) {
+    const ukNames = [];
+    const seen = new Set();
+    RETLINES.forEach(l => { if (l.cat === 'unknown' && !seen.has(l.skuName)) { seen.add(l.skuName); ukNames.push(l.skuName); } });
+    const shown = ukNames.slice(0,4).map(nm => '“' + esc(nm) + '”').join(', ');
+    covEl.innerHTML = `<div class="warn-chip"><span>⚠️</span><span><strong>Gs. ${FMT(m.ukRev)}</strong> (${PCT(m.ukRev, m.retRevTotal)} del revenue ret. del período) corresponden a SKU(s) retornables <strong>sin clasificar</strong>: ${shown}${ukNames.length>4 ? ` y ${ukNames.length-4} más` : ''}. Se muestran aparte, sin asignarlos a ninguna categoría.</span></div>`;
+  } else {
+    covEl.innerHTML = `<div class="ok-chip"><span>✓</span><span>Clasificación completa: el 100% del revenue retornable del período está identificado como Starter o Refill por el nombre del SKU.</span></div>`;
+  }
+
+  // Starter
+  setText('st1v', FMT(m.stRev));
+  setText('st1s', `Gs. ${NUM(m.stRev)} en el período`);
+  setText('st1b', `${PCT(m.stRev, m.retRevTotal)} del rev. ret.`);
+  setText('st2v', NUM(m.ordStarter));
+  setText('st2s', `de ${NUM(m.ordRetTotal)} órdenes ret.`);
+  setText('st2b', `${PCT(m.ordStarter, m.ordRetTotal)} de las órdenes`);
+  setText('st3v', NUM(m.stUnits));
+  setText('st3s', `${PCT(m.stUnits, m.unitsTotal)} de unidades ret.`);
+  if (m.stTicket === null) setNAcard('st4', 'sin órdenes Starter en el período');
+  else { setText('st4v', FMTn(m.stTicket)); setText('st4s', 'Gs. de Starter por orden con Starter'); }
+  setText('st5v', PCT(m.stRev, m.retRevTotal));
+  setText('st5s', `sobre Gs. ${FMT(m.retRevTotal)} retornables`);
+  setText('st6v', NUM(m.newStarterClients));
+  setText('st6s', `de ${NUM(m.newClients)} nuevos ret. del período`);
+
+  // Refill
+  setText('rf1v', FMT(m.rfRev));
+  setText('rf1s', `Gs. ${NUM(m.rfRev)} en el período`);
+  setText('rf1b', `${PCT(m.rfRev, m.retRevTotal)} del rev. ret.`);
+  setText('rf2v', NUM(m.ordRefill));
+  setText('rf2s', `de ${NUM(m.ordRetTotal)} órdenes ret.`);
+  setText('rf2b', `${PCT(m.ordRefill, m.ordRetTotal)} de las órdenes`);
+  setText('rf3v', NUM(m.rfUnits));
+  setText('rf3s', `${PCT(m.rfUnits, m.unitsTotal)} de unidades ret.`);
+  if (m.rfTicket === null) setNAcard('rf4', 'sin órdenes Refill en el período');
+  else { setText('rf4v', FMTn(m.rfTicket)); setText('rf4s', 'Gs. de Refill por orden con Refill'); }
+  setText('rf5v', PCT(m.rfRev, m.retRevTotal));
+  setText('rf5s', `sobre Gs. ${FMT(m.retRevTotal)} retornables`);
+  setText('rf6v', NUM(m.recRefillClients));
+  setText('rf6s', 'compraron refill con compra ret. previa');
+
+  // Conversión
+  setText('cv1v', NUM(m.convBase));
+  setText('cv1s', '1ª compra Starter dentro del período');
+  if (m.convBase === 0) {
+    setNAcard('cv2', 'sin clientes Starter en el período');
+    setNAcard('cv3', 'sin clientes Starter en el período');
+    setNAcard('cv4', 'sin clientes Starter en el período');
+  } else {
+    setText('cv2v', m.convPct.toFixed(1) + '%');
+    setText('cv2s', `${NUM(m.converted)} de ${NUM(m.convBase)} clientes`);
+    setText('cv2b', 'Refill posterior en la fuente');
+    if (m.avgDays === null) { setText('cv3v', '—'); setText('cv3s', 'sin conversiones registradas aún'); }
+    else { setText('cv3v', Math.round(m.avgDays) + ' días'); setText('cv3s', `promedio sobre ${NUM(m.converted)} conversiones`); }
+    setText('cv4v', NUM(m.notConverted));
+    setText('cv4s', 'clientes Starter sin Refill registrado');
+  }
+  if (m.avgFreq === null) setNAcard('cv5', 'sin compradores ret. en el período');
+  else { setText('cv5v', m.avgFreq.toFixed(2)); setText('cv5s', 'compras ret. por cliente (período)'); }
+  setText('cv6v', NUM(m.uniqueRetClients));
+  setText('cv6s', 'compradores ret. del período');
+
+  renderSRInsights(m);
+}
+
+// ── Tendencias / oportunidades / alertas — SOLO con respaldo de datos ──
+function renderSRInsights(m) {
+  const box = document.getElementById('srInsights');
+  const items = [];
+
+  if (!m.srAvailable) {
+    items.push({ tag:'⚠️ Alerta de datos', color:'#FF8700',
+      body:`Los nombres de SKU no permiten separar Starter y Refill, por lo que esta pestaña no puede calcularse con los datos actuales de la fuente. Revisá la nomenclatura del catálogo o ajustá los patrones de clasificación.` });
+  } else {
+    // Tendencia mensual (necesita al menos 2 meses con revenue clasificado)
+    if (m.n >= 2) {
+      const iL = m.n - 1, iP = m.n - 2;
+      const stL = m.stRevM[iL], stP = m.stRevM[iP];
+      const rfL = m.rfRevM[iL], rfP = m.rfRevM[iP];
+      if (stP > 0 && stL >= 0) {
+        const d = ((stL - stP) / stP * 100).toFixed(1);
+        items.push({ tag:'📈 Tendencia Starter', color:'var(--red)',
+          body:`El revenue Starter pasó de Gs. ${FMT(stP)} en ${m.months[iP]} a Gs. ${FMT(stL)} en ${m.months[iL]} (${d >= 0 ? '+' : ''}${d}%).` });
+      }
+      if (rfP > 0 && rfL >= 0) {
+        const d = ((rfL - rfP) / rfP * 100).toFixed(1);
+        items.push({ tag:'📈 Tendencia Refill', color:'#00AF55',
+          body:`El revenue Refill pasó de Gs. ${FMT(rfP)} en ${m.months[iP]} a Gs. ${FMT(rfL)} en ${m.months[iL]} (${d >= 0 ? '+' : ''}${d}%).` });
+      }
+    }
+    // Conversión (solo si hay base)
+    if (m.convBase > 0) {
+      items.push({ tag:'🔁 Conversión', color:'#0078FF',
+        body:`De ${NUM(m.convBase)} clientes que iniciaron con Starter en el período, ${NUM(m.converted)} (${m.convPct.toFixed(1)}%) ya registran un Refill posterior en la fuente${m.avgDays !== null ? `, con un promedio de ${Math.round(m.avgDays)} días hasta el 1er Refill` : ''}.` });
+      if (m.notConverted > 0) {
+        items.push({ tag:'🎯 Oportunidad', color:'var(--c3, #FFB400)',
+          body:`${NUM(m.notConverted)} clientes Starter del período todavía no registran ninguna compra Refill: es la base directa para acciones de recompra de retornables.` });
+      }
+    }
+    // Alerta de clasificación parcial
+    if (m.ukRev > 0) {
+      items.push({ tag:'⚠️ Alerta de datos', color:'#FF8700',
+        body:`Gs. ${FMT(m.ukRev)} (${PCT(m.ukRev, m.retRevTotal)}) del revenue retornable del período quedaron sin clasificar por el nombre del SKU y se muestran aparte.` });
+    }
+    // Ciudad líder (solo si la fuente trae ciudad y hay datos)
+    if (HAS_CITY && m.cityAgg && m.cityAgg.length) {
+      const c = m.cityAgg[0];
+      items.push({ tag:'📍 Ciudad líder', color:'#6B6B6B',
+        body:`${esc(c.city)} concentra Gs. ${FMT(c.tot)} del revenue retornable del período (Starter ${PCT(c.st, c.tot)} · Refill ${PCT(c.rf, c.tot)}).` });
+    }
+  }
+
+  if (!items.length) {
+    items.push({ tag:'ℹ️ Sin señales suficientes', color:'#6B6B6B',
+      body:`${NA_TXT}: los datos del período seleccionado no alcanzan para destacar tendencias, oportunidades ni alertas sin estimar.` });
+  }
+  box.innerHTML = items.map(it =>
+    `<div class="insight" style="border-left-color:${it.color}">
+       <div class="insight-tag" style="color:${it.color}">${it.tag}</div>
+       <div class="insight-body">${it.body}</div>
+     </div>`).join('');
+}
+
+// ═══════════════════════════════════
+// CHART HELPERS
+// ═══════════════════════════════════
+function baseOpts(extra={}) {
+  return {
+    responsive:true, maintainAspectRatio:false,
+    plugins:{
+      legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:14,font:{size:11}}},
+      tooltip:{backgroundColor:'#fff',borderColor:'#E0E0E0',borderWidth:1,
+               titleColor:'#1A1A1A',bodyColor:'#6B6B6B',padding:10,callbacks:{}}
+    },
+    scales:{
+      x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#9A9A9A'}},
+      y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#9A9A9A'}}
+    }, ...extra
+  };
+}
+function doughnutOpts(pos='bottom') {
+  return {
+    responsive:true, maintainAspectRatio:false, cutout:'60%',
+    plugins:{
+      legend:{position:pos,labels:{color:'#6B6B6B',boxWidth:10,padding:12,font:{size:11}}},
+      tooltip:{backgroundColor:'#fff',borderColor:'#E0E0E0',borderWidth:1,
+               titleColor:'#1A1A1A',bodyColor:'#6B6B6B',padding:10}
+    }
+  };
+}
+
+// ═══════════════════════════════════
+// BUILD CHARTS (una sola vez; los datos se inyectan en refreshCharts)
+// ═══════════════════════════════════
+function buildCharts() {
+  // S1 – Revenue mensual
+  charts['c_revMonth'] = new Chart('c_revMonth',{ type:'bar', data:{
+    labels: [],
+    datasets:[
+      {type:'bar',  label:'Revenue Ret.', data:[],
+        backgroundColor: [], borderRadius:6, borderSkipped:false},
+      {type:'line', label:'Tendencia', data:[],
+        borderColor:PALETTE[2], backgroundColor:'transparent',
+        borderWidth:2, pointRadius:4, pointBackgroundColor:PALETTE[2], tension:.4}
+    ]},
+    options: baseOpts({plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>' Gs. '+ctx.parsed.y.toLocaleString()}}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}}}})
+  });
+
+  // S1 – Brand doughnut
+  charts['c_brandMix'] = new Chart('c_brandMix',{ type:'doughnut', data:{
+    labels:[],
+    datasets:[{data:[],backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
+    options:doughnutOpts()
+  });
+
+  // S1 – Órdenes stacked
+  charts['c_ordersVsTotal'] = new Chart('c_ordersVsTotal',{ type:'bar', data:{
+    labels:[],
+    datasets:[
+      {label:'Retornables', data:[], backgroundColor:RED,                borderRadius:4,borderSkipped:false},
+      {label:'No-Retorn.',  data:[], backgroundColor:'rgba(0,0,0,0.07)', borderRadius:4,borderSkipped:false}
+    ]},
+    options:baseOpts({
+      plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:14,font:{size:11}}}},
+      scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
+  });
+
+  // S1 – Size mix
+  charts['c_sizeMix'] = new Chart('c_sizeMix',{ type:'doughnut', data:{
+    labels:[],
+    datasets:[{data:[],backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
+    options:doughnutOpts()
+  });
+
+  // S2 – New by month
+  charts['c_newByMonth'] = new Chart('c_newByMonth',{ type:'bar', data:{
+    labels:[],
+    datasets:[{label:'Nuevos clientes',data:[], backgroundColor:[], borderRadius:6,borderSkipped:false}]},
+    options:baseOpts({plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
+  });
+
+  // S2 – New by week
+  charts['c_newByWeek'] = new Chart('c_newByWeek',{ type:'line', data:{
+    labels:[],
+    datasets:[{label:'Nuevos/semana',data:[],
+      borderColor:RED,backgroundColor:'rgba(232,36,27,0.08)',
+      fill:true,tension:.4,pointRadius:3,pointBackgroundColor:RED,borderWidth:2}]},
+    options:baseOpts({plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',maxRotation:45,font:{size:9}}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
+  });
+
+  // S2 – New vs returning
+  charts['c_newVsRet'] = new Chart('c_newVsRet',{ type:'bar', data:{
+    labels:[],
+    datasets:[
+      {label:'Revenue Nuevos',      data:[],backgroundColor:RED,       borderRadius:4,borderSkipped:false},
+      {label:'Revenue Recurrentes', data:[],backgroundColor:PALETTE[1],borderRadius:4,borderSkipped:false}
+    ]},
+    options:baseOpts({
+      plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:14,font:{size:11}}},
+               tooltip:{callbacks:{label:ctx=>' Gs. '+FMT(ctx.parsed.y)}}},
+      scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}}}})
+  });
+
+  // S2 – UTM Source
+  charts['c_utmSource'] = new Chart('c_utmSource',{ type:'doughnut', data:{
+    labels:[],datasets:[{data:[],backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
+    options:doughnutOpts('right')
+  });
+
+  // S3 – Freq dist
+  charts['c_freqDist'] = new Chart('c_freqDist',{ type:'bar', data:{
+    labels:['1 compra','2 compras','3 compras','4-5 compras','6+ compras'],
+    datasets:[{label:'Clientes',data:[0,0,0,0,0],
+      backgroundColor:PALETTE.slice().reverse(),borderRadius:6,borderSkipped:false}]},
+    options:baseOpts({plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
+  });
+
+  // S3 – Cohort %
+  charts['c_cohortPct'] = new Chart('c_cohortPct',{ type:'bar', data:{
+    labels:[],
+    datasets:[
+      {label:'% Nuevos',      data:[],backgroundColor:RED,        borderRadius:4,borderSkipped:false},
+      {label:'% Recurrentes', data:[],backgroundColor:PALETTE[1], borderRadius:4,borderSkipped:false}
+    ]},
+    options:baseOpts({
+      plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:14,font:{size:11}}},
+               tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y}%`}}},
+      scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{stacked:true,max:100,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>v+'%'}}}})
+  });
+
+  // S4 – Top SKU
+  charts['c_topSku'] = new Chart('c_topSku',{ type:'bar', data:{
+    labels:[],
+    datasets:[{label:'Unidades',data:[],
+      backgroundColor:PALETTE[0],borderRadius:4,borderSkipped:false}]},
+    options:baseOpts({indexAxis:'y',plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#6B6B6B',font:{size:10}}}}})
+  });
+
+  // S4 – Size / Brand
+  charts['c_sizeRev']   = new Chart('c_sizeRev',{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
+  charts['c_sizeUnits'] = new Chart('c_sizeUnits',{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
+  charts['c_brandRev']  = new Chart('c_brandRev',{type:'doughnut',data:{labels:[],datasets:[{data:[],backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
+
+  // S6 – Seg doughnut
+  charts['c_segDoughnut'] = new Chart('c_segDoughnut',{ type:'doughnut', data:{
+    labels:['Solo 1 compra','Recurrentes (2+)','Cross-sell'],
+    datasets:[{data:[0,0,0],backgroundColor:[RED,PALETTE[1],PALETTE[0]],borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
+    options:doughnutOpts('right')
+  });
+
+  // S6 – Acumulado
+  charts['c_newAccum'] = new Chart('c_newAccum',{ type:'line', data:{
+    labels:[],
+    datasets:[{label:'Acumulado',data:[],
+      borderColor:PALETTE[2],backgroundColor:'rgba(255,180,0,0.08)',
+      fill:true,tension:.4,pointRadius:5,pointBackgroundColor:PALETTE[2],borderWidth:2}]},
+    options:baseOpts({plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
+  });
+
+  // S6 – Seg value
+  charts['c_segValue'] = new Chart('c_segValue',{ type:'bar', data:{
+    labels:['Solo 1 compra','2 compras','3–5 compras','6+ compras'],
+    datasets:[{label:'Revenue (Gs.)',data:[0,0,0,0],
+      backgroundColor:PALETTE.slice(0,4).reverse(),borderRadius:6,borderSkipped:false}]},
+    options:baseOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' Gs. '+FMT(ctx.parsed.y)}}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}}}})
+  });
+
+  // ── S0 STARTER VS REFILL ──
+  const srTip = { callbacks:{ label:ctx=>` ${ctx.dataset.label}: Gs. ${(ctx.parsed.y ?? ctx.parsed.x ?? 0).toLocaleString('es-PY')}` } };
+
+  charts['c_srMonth'] = new Chart('c_srMonth',{ type:'bar', data:{
+    labels:[],
+    datasets:[
+      {label:'Starter (con envase)', data:[], backgroundColor:ST_COLOR, borderRadius:5, borderSkipped:false},
+      {label:'Refill (sin envase)',  data:[], backgroundColor:RF_COLOR, borderRadius:5, borderSkipped:false},
+      {label:'Sin clasificar',       data:[], backgroundColor:UK_COLOR, borderRadius:5, borderSkipped:false}
+    ]},
+    options:baseOpts({
+      plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:14,font:{size:11}}}, tooltip:srTip},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}}}})
+  });
+
+  charts['c_srShare'] = new Chart('c_srShare',{ type:'bar', data:{
+    labels:[],
+    datasets:[
+      {label:'Starter', data:[], backgroundColor:ST_COLOR, borderRadius:4, borderSkipped:false},
+      {label:'Refill',  data:[], backgroundColor:RF_COLOR, borderRadius:4, borderSkipped:false},
+      {label:'Sin clasificar', data:[], backgroundColor:UK_COLOR, borderRadius:4, borderSkipped:false}
+    ]},
+    options:baseOpts({
+      plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:12,font:{size:11}}},
+               tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y}%`}}},
+      scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{stacked:true,max:100,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>v+'%'}}}})
+  });
+
+  charts['c_srUnits'] = new Chart('c_srUnits',{ type:'bar', data:{
+    labels:[],
+    datasets:[
+      {label:'Starter', data:[], backgroundColor:ST_COLOR, borderRadius:5, borderSkipped:false},
+      {label:'Refill',  data:[], backgroundColor:RF_COLOR, borderRadius:5, borderSkipped:false},
+      {label:'Sin clasificar', data:[], backgroundColor:UK_COLOR, borderRadius:5, borderSkipped:false}
+    ]},
+    options:baseOpts({
+      plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:12,font:{size:11}}},
+               tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${NUM(ctx.parsed.y||0)} unds.`}}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
+  });
+
+  charts['c_srCity'] = new Chart('c_srCity',{ type:'bar', data:{
+    labels:[],
+    datasets:[
+      {label:'Starter', data:[], backgroundColor:ST_COLOR, borderRadius:4, borderSkipped:false},
+      {label:'Refill',  data:[], backgroundColor:RF_COLOR, borderRadius:4, borderSkipped:false},
+      {label:'Sin clasificar', data:[], backgroundColor:UK_COLOR, borderRadius:4, borderSkipped:false}
+    ]},
+    options:baseOpts({indexAxis:'y',
+      plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:12,font:{size:11}}},
+               tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: Gs. ${(ctx.parsed.x||0).toLocaleString('es-PY')}`}}},
+      scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}},
+              y:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#6B6B6B',font:{size:10}}}}})
+  });
+
+  charts['c_srSku'] = new Chart('c_srSku',{ type:'bar', data:{
+    labels:[],
+    datasets:[{label:'Revenue', data:[], backgroundColor:[], borderRadius:4, borderSkipped:false}]},
+    options:baseOpts({indexAxis:'y',
+      plugins:{legend:{display:false},
+               tooltip:{callbacks:{
+                 label:ctx=>` Gs. ${(ctx.parsed.x||0).toLocaleString('es-PY')}`,
+                 afterLabel:ctx=>' ' + (ctx.dataset.cats ? CAT_LABEL[ctx.dataset.cats[ctx.dataIndex]] : '')
+               }}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#6B6B6B',font:{size:10}}}}})
+  });
+
+  charts['c_convDist'] = new Chart('c_convDist',{ type:'bar', data:{
+    labels:['≤ 7 días','8–15 días','16–30 días','31–60 días','60+ días'],
+    datasets:[{label:'Clientes', data:[0,0,0,0,0], backgroundColor:PALETTE.slice().reverse(), borderRadius:6, borderSkipped:false}]},
+    options:baseOpts({plugins:{legend:{display:false},
+      tooltip:{callbacks:{label:ctx=>` ${NUM(ctx.parsed.y||0)} clientes`}}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
+  });
+
+  charts['c_convMonth'] = new Chart('c_convMonth',{ type:'bar', data:{
+    labels:[],
+    datasets:[
+      {label:'Clientes Starter (1ª compra)', data:[], backgroundColor:'rgba(232,36,27,0.35)', borderRadius:5, borderSkipped:false},
+      {label:'Con Refill posterior',         data:[], backgroundColor:RF_COLOR,               borderRadius:5, borderSkipped:false}
+    ]},
+    options:baseOpts({
+      plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:12,font:{size:11}}},
+               tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${NUM(ctx.parsed.y||0)}`}}},
+      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
+              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
+  });
+}
+
+// ═══════════════════════════════════
+// REFRESH CHARTS — inyecta las métricas exactas de compute()
+// ═══════════════════════════════════
+function refreshCharts(m) {
+  const months = m.months;
+
+  function upd(id, datasets, labels) {
+    const ch = charts[id]; if (!ch) return;
+    ch.data.labels = labels || months;
+    datasets.forEach((ds,i) => { if (ch.data.datasets[i]) ch.data.datasets[i].data = ds; });
+    ch.update('active');
+  }
+
+  // S1
+  upd('c_revMonth', [m.retRevM, m.retRevM]);
+  if (charts['c_revMonth']) {
+    charts['c_revMonth'].data.datasets[0].backgroundColor =
+      m.retRevM.map((_,i) => i === m.retRevM.length-1 ? RED : 'rgba(232,36,27,0.4)');
+    charts['c_revMonth'].update('active');
+  }
+  upd('c_ordersVsTotal', [m.ordRetM, m.ordNoRetM]);
+  upd('c_newByMonth', [m.clientsM]);
+  if (charts['c_newByMonth']) {
+    const mx = m.clientsM.length ? Math.max(...m.clientsM) : 0;
+    charts['c_newByMonth'].data.datasets[0].backgroundColor =
+      m.clientsM.map(v => v === mx && mx > 0 ? RED : 'rgba(232,36,27,0.4)');
+    charts['c_newByMonth'].update('active');
+  }
+
+  upd('c_newVsRet', [m.newRevM, m.recRevM]);
+  upd('c_cohortPct', [
+    m.clientsM.map((v,i) => { const t = v + (m.retClientsM[i]||0); return t ? Math.round(v/t*100) : 100; }),
+    m.clientsM.map((v,i) => { const t = v + (m.retClientsM[i]||0); return t ? 100 - Math.round(v/t*100) : 0; }),
+  ]);
+
+  upd('c_newByWeek', [m.newByWeek], m.wLabels);
+
+  let acc = 0;
+  upd('c_newAccum', [m.clientsM.map(v => { acc += v; return acc; })]);
+
+  // Doughnuts de producto / mix — EXACTOS del período activo
+  function updDoughnut(id, obj) {
+    const ch = charts[id]; if (!ch) return;
+    const entries = Object.entries(obj).sort((a,b) => b[1] - a[1]);
+    ch.data.labels = entries.map(e => e[0]);
+    ch.data.datasets[0].data = entries.map(e => Math.round(e[1]));
+    ch.update('active');
+  }
+  updDoughnut('c_brandMix',  m.brandRevP);
+  updDoughnut('c_sizeMix',   m.sizeRevP);
+  updDoughnut('c_brandRev',  m.brandRevP);
+  updDoughnut('c_sizeRev',   m.sizeRevP);
+  updDoughnut('c_sizeUnits', m.sizeUnitsP);
+  updDoughnut('c_utmSource', m.utmSourceP);
+
+  // Top SKUs del período (chart + tabla)
+  if (charts['c_topSku']) {
+    charts['c_topSku'].data.labels = m.skusP.map(s=>s.name.length>28?s.name.slice(0,28)+'…':s.name);
+    charts['c_topSku'].data.datasets[0].data = m.skusP.map(s=>s.units);
+    charts['c_topSku'].update('active');
+  }
+  buildTable(m.skusP);
+
+  if (charts['c_segDoughnut']) {
+    charts['c_segDoughnut'].data.datasets[0].data = [m.noReuse, m.reuseN, m.crossSellExact];
+    charts['c_segDoughnut'].update('active');
+  }
+  if (charts['c_freqDist']) {
+    charts['c_freqDist'].data.datasets[0].data =
+      [m.freq.f1, m.freq.f2, m.freq.f3, m.freq.f45, m.freq.f6];
+    charts['c_freqDist'].update('active');
+  }
+  if (charts['c_segValue']) {
+    charts['c_segValue'].data.datasets[0].data =
+      [Math.round(m.segRev.s1), Math.round(m.segRev.s2), Math.round(m.segRev.s35), Math.round(m.segRev.s6)];
+    charts['c_segValue'].update('active');
+  }
+
+  // ── S0 STARTER VS REFILL ──
+  const srNA = !m.srAvailable;
+  const naSub = 'Los nombres de SKU retornables de la fuente no permiten distinguir “con envase” / “sin envase”, así que este gráfico no puede calcularse sin estimar.';
+
+  toggleNA('c_srMonth','na_srMonth', srNA, NA_TXT, naSub);
+  toggleNA('c_srShare','na_srShare', srNA, NA_TXT, naSub);
+  toggleNA('c_srUnits','na_srUnits', srNA, NA_TXT, naSub);
+  toggleNA('c_srSku','na_srSku',     srNA, NA_TXT, naSub);
+  if (!HAS_CITY) {
+    toggleNA('c_srCity','na_srCity', true, NA_TXT,
+      'La fuente no incluye una columna de ciudad (City / Ciudad / Shipping City). Agregala al export de VTEX para habilitar este análisis.');
+  } else {
+    toggleNA('c_srCity','na_srCity', srNA, NA_TXT, naSub);
+  }
+
+  if (!srNA) {
+    upd('c_srMonth', [m.stRevM.map(Math.round), m.rfRevM.map(Math.round), m.ukRevM.map(Math.round)]);
+    const shareOf = arr => arr.map((v,i) => {
+      const t = m.stRevM[i] + m.rfRevM[i] + m.ukRevM[i];
+      return t ? +(v/t*100).toFixed(1) : 0;
+    });
+    upd('c_srShare', [shareOf(m.stRevM), shareOf(m.rfRevM), shareOf(m.ukRevM)]);
+    upd('c_srUnits', [m.stUnitsM, m.rfUnitsM, m.ukUnitsM]);
+
+    if (HAS_CITY && charts['c_srCity']) {
+      const ca = m.cityAgg || [];
+      charts['c_srCity'].data.labels = ca.map(c => c.city.length > 22 ? c.city.slice(0,22)+'…' : c.city);
+      charts['c_srCity'].data.datasets[0].data = ca.map(c => Math.round(c.st));
+      charts['c_srCity'].data.datasets[1].data = ca.map(c => Math.round(c.rf));
+      charts['c_srCity'].data.datasets[2].data = ca.map(c => Math.round(c.uk));
+      charts['c_srCity'].update('active');
+    }
+    if (charts['c_srSku']) {
+      const sk = m.srSkus || [];
+      charts['c_srSku'].data.labels = sk.map(s => s.name.length > 34 ? s.name.slice(0,34)+'…' : s.name);
+      charts['c_srSku'].data.datasets[0].data = sk.map(s => s.revenue);
+      charts['c_srSku'].data.datasets[0].backgroundColor =
+        sk.map(s => s.cat === 'starter' ? ST_COLOR : s.cat === 'refill' ? RF_COLOR : UK_COLOR);
+      charts['c_srSku'].data.datasets[0].cats = sk.map(s => s.cat);
+      charts['c_srSku'].update('active');
+    }
+  }
+
+  // Conversión
+  if (srNA) {
+    toggleNA('c_convDist','na_convDist', true, NA_TXT, naSub);
+    toggleNA('c_convMonth','na_convMonth', true, NA_TXT, naSub);
+  } else if (m.convBase === 0) {
+    const sub = 'No hay clientes con 1ª compra Starter dentro del período y filtros seleccionados.';
+    toggleNA('c_convDist','na_convDist', true, NA_TXT, sub);
+    toggleNA('c_convMonth','na_convMonth', true, NA_TXT, sub);
+  } else {
+    toggleNA('c_convMonth','na_convMonth', false);
+    upd('c_convMonth', [m.convBaseM, m.convConvM]);
+    if (m.converted === 0) {
+      toggleNA('c_convDist','na_convDist', true, 'Sin conversiones registradas',
+        `${NUM(m.convBase)} clientes iniciaron con Starter en el período, pero la fuente aún no registra ningún Refill posterior de ellos.`);
+    } else {
+      toggleNA('c_convDist','na_convDist', false);
+      if (charts['c_convDist']) {
+        charts['c_convDist'].data.datasets[0].data = m.convBuckets;
+        charts['c_convDist'].update('active');
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════
+// TABLA TOP SKUs (con tipo Starter/Refill)
+// ═══════════════════════════════════
+function buildTable(skus) {
+  const table = document.getElementById('t_topSku');
+  const list = skus || [];
+  table.innerHTML = `<thead><tr><th>#</th><th>Producto</th><th>Revenue</th><th>Unds.</th></tr></thead>`;
+  if (!list.length) return;
+  const maxR = list[0].revenue || 1;
+  const tb = document.createElement('tbody');
+  const dot = c => `<span class="sr-dot" style="background:${c === 'starter' ? ST_COLOR : c === 'refill' ? RF_COLOR : UK_COLOR}" title="${CAT_LABEL[c] || ''}"></span>`;
+  list.forEach((s,i)=>{
+    const pct = (s.revenue/maxR*100).toFixed(0);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</span></td>
+      <td><div style="font-size:12px;font-weight:500;color:#1A1A1A;line-height:1.3">${dot(s.cat)}${esc(s.name)}</div>
+          <div class="bar-mini" style="width:${pct}%"></div></td>
+      <td class="val-primary">${FMT(s.revenue)}</td>
+      <td class="val-secondary">${s.units.toLocaleString()}</td>`;
+    tb.appendChild(tr);
+  });
+  table.appendChild(tb);
+}
+
+// ═══════════════════════════════════
+// PERÍODO, RANGO DE FECHAS Y FILTROS
+// ═══════════════════════════════════
 function renderPeriodPills() {
   const box = document.getElementById('periodPills');
-  const monthKeys = Array.from(MONTH_INDEX.keys());
   let html = `<button class="ypill${YEAR==='2025'?' active':''}" onclick="setYear('2025')">2025</button>`
            + `<button class="ypill${YEAR==='2026'?' active':''}" onclick="setYear('2026')">2026</button>`
            + `<span class="ysep"></span>`
            + `<button class="ppill active" onclick="setPeriod('all',this)">Todo</button>`;
-  monthKeys.forEach((k,i) => {
-    html += `<button class="ppill" onclick="setPeriod('m${i}',this)">${D.months[i]}</button>`;
+  ALL_MONTH_KEYS.forEach((k,i) => {
+    html += `<button class="ppill" onclick="setPeriod('m${i}',this)">${ALL_MONTH_LABELS[i]}</button>`;
   });
   box.innerHTML = html;
 }
@@ -1252,13 +2391,130 @@ function renderPeriodPills() {
 function setDateBounds() {
   const from = document.getElementById('dateFrom');
   const to   = document.getElementById('dateTo');
-  const iso = d => d.toISOString().slice(0,10);
-  from.min = to.min = iso(DATA_MIN_DATE);
-  from.max = to.max = iso(DATA_MAX_DATE);
-  from.value = iso(DATA_MIN_DATE);
-  to.value   = iso(DATA_MAX_DATE);
+  from.min = to.min = isoLocal(DATA_MIN_DATE);
+  from.max = to.max = isoLocal(DATA_MAX_DATE);
+  from.value = isoLocal(DATA_MIN_DATE);
+  to.value   = isoLocal(DATA_MAX_DATE);
 }
 
+function populateFilterControls() {
+  const fCity = document.getElementById('fCity');
+  const fChan = document.getElementById('fChannel');
+  const fSku  = document.getElementById('fSku');
+  const fCli  = document.getElementById('fClient');
+
+  if (HAS_CITY && CITY_LIST.length) {
+    fCity.innerHTML = '<option value="">Ciudad · todas</option>' +
+      CITY_LIST.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    fCity.disabled = false;
+    fCity.title = 'Filtrar por ciudad';
+  } else {
+    fCity.innerHTML = '<option value="">Ciudad · no disponible</option>';
+    fCity.disabled = true;
+    fCity.title = 'La fuente no incluye una columna de ciudad';
+  }
+
+  if (HAS_CHANNEL && CHANNEL_LIST.length) {
+    fChan.innerHTML = `<option value="">${esc(CHANNEL_LABEL)} · todos</option>` +
+      CHANNEL_LIST.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('');
+    fChan.disabled = false;
+    fChan.title = CHANNEL_IS_UTM
+      ? 'La fuente no trae una columna de canal: se usa UtmSource como canal de adquisición'
+      : 'Filtrar por canal';
+  } else {
+    fChan.innerHTML = '<option value="">Canal · no disponible</option>';
+    fChan.disabled = true;
+    fChan.title = 'La fuente no incluye una columna de canal ni UtmSource';
+  }
+
+  if (SKU_LIST.length) {
+    fSku.innerHTML = '<option value="">SKU · todos</option>' +
+      SKU_LIST.map(s => `<option value="${esc(s)}">${esc(s.length > 48 ? s.slice(0,48)+'…' : s)}</option>`).join('');
+    fSku.disabled = false;
+  } else {
+    fSku.innerHTML = '<option value="">SKU · no disponible</option>';
+    fSku.disabled = true;
+  }
+
+  fCli.value = '';
+  fCli.disabled = !CLIENT_LIST.length;
+  document.getElementById('clientList').innerHTML = '';
+}
+
+function onClientInput(v) {
+  const dl = document.getElementById('clientList');
+  const q = (v || '').trim().toLowerCase();
+  if (!q) { dl.innerHTML = ''; return; }
+  const matches = [];
+  for (const c of CLIENT_LIST) {
+    if (c.q.includes(q)) { matches.push(c.label); if (matches.length >= 50) break; }
+  }
+  dl.innerHTML = matches.map(l => `<option value="${esc(l)}"></option>`).join('');
+}
+
+function readDimFilters() {
+  FILTER.city    = document.getElementById('fCity').value || '';
+  FILTER.channel = document.getElementById('fChannel').value || '';
+  FILTER.sku     = document.getElementById('fSku').value || '';
+  FILTER.client  = (document.getElementById('fClient').value || '').trim().toLowerCase();
+}
+
+function onFilterChange() { readDimFilters(); applyFilter(); }
+
+function clearFilters() {
+  document.getElementById('fCity').value = '';
+  document.getElementById('fChannel').value = '';
+  document.getElementById('fSku').value = '';
+  document.getElementById('fClient').value = '';
+  document.getElementById('clientList').innerHTML = '';
+  FILTER.city = FILTER.channel = FILTER.sku = FILTER.client = '';
+  applyFilter();
+}
+
+function applyFilter() {
+  const m = compute();
+  updateKPIs(m);
+  refreshCharts(m);
+  LAST_M = m;
+}
+
+function setPeriod(key, btn) {
+  const p = PRESETS[key]; if (!p) return;
+  FILTER.from = startOfDay(parseLocal(p.from));
+  FILTER.to   = endOfDay(parseLocal(p.to));
+  document.querySelectorAll('.ppill').forEach(b=>b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('dateFrom').value = p.from;
+  document.getElementById('dateTo').value   = p.to;
+  applyFilter();
+}
+
+function applyDateRange() {
+  const from = document.getElementById('dateFrom').value;
+  const to   = document.getElementById('dateTo').value;
+  if (!from || !to || from > to) return;
+  FILTER.from = startOfDay(parseLocal(from));
+  FILTER.to   = endOfDay(parseLocal(to));
+  document.querySelectorAll('.ppill').forEach(b=>b.classList.remove('active'));
+  for (const [k,p] of Object.entries(PRESETS)) {
+    if (p.from === from && p.to === to) {
+      document.querySelector(`.ppill[onclick*="'${k}'"]`)?.classList.add('active');
+      break;
+    }
+  }
+  applyFilter();
+}
+
+function showTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('sec-'+name).classList.add('active');
+}
+
+// ═══════════════════════════════════
+// OVERLAY Y CHIP DE FUENTE
+// ═══════════════════════════════════
 function updateSourceChip() {
   const chip = document.getElementById('sourceChip');
   const url = `https://docs.google.com/spreadsheets/d/${sheetCfg().id}/edit?gid=${sheetCfg().gid}`;
@@ -1290,879 +2546,7 @@ function showOverlay(mode, msg) {
 function hideOverlay() { document.getElementById('dataOverlay').classList.add('hidden'); }
 
 // ═══════════════════════════════════
-// COMPUTED METRICS para el filtro activo
-// Todo se calcula EXACTO desde las órdenes crudas (sin proporciones estimadas)
-// ═══════════════════════════════════
-function compute() {
-  const activeSet = new Set(ACTIVE_IDX);
-
-  // Sumas mensuales exactas (ya deduplicadas por orden en el ETL)
-  const retRevTotal  = sum(D.retRev);
-  const totalRevTot  = sum(D.totalRev);
-  const ordRetTotal  = sum(D.ordRet);
-  const ordNoRetTot  = sum(D.ordNoRet);
-  const ordTotal     = ordRetTotal + ordNoRetTot;
-  const unitsTotal   = sum(D.units);
-  const newRevTotal  = sum(D.newRev);
-  const recRevTotal  = sum(D.recRev);
-  const crossSellTot = sum(D.crossSell);
-
-  // ── Clientes únicos EXACTOS del período (no suma de meses, que duplicaría) ──
-  const uniqueStoreClients = new Set();  // cualquier compra en el período
-  const uniqueRetClients   = new Set();  // compra ret. en el período
-  const recurrentClients   = new Set();  // compra ret. en el período que NO es su 1ª (histórico)
-  RAW.orders.forEach(o => {
-    if (!activeSet.has(o.mi)) return;
-    uniqueStoreClients.add(o.clientKey);
-    if (o.hasRet) {
-      uniqueRetClients.add(o.clientKey);
-      if (o.date > RAW.firstRetDate.get(o.clientKey)) recurrentClients.add(o.clientKey);
-    }
-  });
-
-  // Nuevos del período: su 1ª compra ret. cae en un mes activo
-  const newClientKeys = [];
-  RAW.firstRetMi.forEach((mi, k) => { if (activeSet.has(mi)) newClientKeys.push(k); });
-  const newClients = newClientKeys.length;
-
-  // ── Cohorte de recompra EXACTA (nuevos del período, ventanas reales de días) ──
-  const DAY = 864e5;
-  let n7 = 0, n15 = 0, n30 = 0, reuseN = 0;
-  const freq = { f1:0, f2:0, f3:0, f45:0, f6:0 };       // 1 / 2 / 3 / 4–5 / 6+ compras ret. (histórico)
-  const segRev = { s1:0, s2:0, s35:0, s6:0 };            // revenue ret. del período por segmento
-  newClientKeys.forEach(k => {
-    const list = RAW.retOrdersByClient.get(k) || [];
-    const nOrd = list.length;
-    const first = list[0]?.date;
-    if (nOrd >= 2) {
-      reuseN++;
-      const delta = list[1].date - first;               // días hasta la 2ª compra ret.
-      if (delta <= 7*DAY)  n7++;
-      if (delta <= 15*DAY) n15++;
-      if (delta <= 30*DAY) n30++;
-    }
-    if      (nOrd === 1) freq.f1++;
-    else if (nOrd === 2) freq.f2++;
-    else if (nOrd === 3) freq.f3++;
-    else if (nOrd <= 5)  freq.f45++;
-    else                 freq.f6++;
-    // Revenue del período aportado por este cliente, asignado a su segmento
-    let rev = 0;
-    list.forEach(o => { if (activeSet.has(MONTH_INDEX.get(monthKeyOf(o.date)))) rev += o.retRev; });
-    if      (nOrd === 1) segRev.s1  += rev;
-    else if (nOrd === 2) segRev.s2  += rev;
-    else if (nOrd <= 5)  segRev.s35 += rev;
-    else                 segRev.s6  += rev;
-  });
-  const noReuse   = newClients - reuseN;
-  const reuse7    = newClients ? (n7 /newClients*100).toFixed(1) : '0.0';
-  const reuse15   = newClients ? (n15/newClients*100).toFixed(1) : '0.0';
-  const reuse30   = newClients ? (n30/newClients*100).toFixed(1) : '0.0';
-  const reuseRate = newClients ? (reuseN/newClients*100).toFixed(1) : '0.0';
-
-  // Cross-sell exacto (nuevos del período con pedidos previos no-ret.)
-  const crossSellExact = newClientKeys.filter(k => RAW.hadPriorOrder.get(k)).length;
-
-  // ── Productos / mix / UTM del PERÍODO (exactos, no histórico completo) ──
-  const skuAgg = new Map();
-  const brandRevP = {}, sizeRevP = {}, sizeUnitsP = {};
-  RAW.retLines.forEach(l => {
-    if (!activeSet.has(l.mi)) return;
-    let s = skuAgg.get(l.skuName);
-    if (!s) { s = {name:l.skuName, units:0, revenue:0, ordersSet:new Set()}; skuAgg.set(l.skuName, s); }
-    s.units += l.qty; s.revenue += l.skuTotal; s.ordersSet.add(l.order);
-    const b = brandOf(l.skuName), sz = sizeOf(l.skuName);
-    brandRevP[b]  = (brandRevP[b] ||0) + l.skuTotal;
-    sizeRevP[sz]  = (sizeRevP[sz] ||0) + l.skuTotal;
-    sizeUnitsP[sz]= (sizeUnitsP[sz]||0) + l.qty;
-  });
-  const skusP = Array.from(skuAgg.values())
-    .map(s => ({ name:s.name, units:Math.round(s.units), revenue:Math.round(s.revenue), orders:s.ordersSet.size }))
-    .sort((a,b) => b.revenue - a.revenue).slice(0,10);
-
-  const utmSourceP = {};
-  RAW.orders.forEach(o => {
-    if (!activeSet.has(o.mi) || !o.hasRet) return;
-    utmSourceP[o.utmSource] = (utmSourceP[o.utmSource]||0) + 1;
-  });
-
-  // Distribución por ciudad — SOLO si la columna City existe en el Sheet
-  const cityRevP = {}, cityOrdP = {};
-  if (OPT.City) {
-    RAW.orders.forEach(o => {
-      if (!activeSet.has(o.mi) || !o.hasRet) return;
-      const c = o.city || 'Sin ciudad informada';
-      cityRevP[c] = (cityRevP[c]||0) + o.retRev;
-      cityOrdP[c] = (cityOrdP[c]||0) + 1;
-    });
-  }
-
-  // ── Ratios ──
-  const ticket       = ordRetTotal ? retRevTotal / ordRetTotal : 0;
-  const storeTicket  = ordTotal    ? totalRevTot / ordTotal    : 0;
-  const newTicket    = newClients  ? newRevTotal / newClients  : 0;
-  const pctRet       = ordTotal    ? (ordRetTotal/ordTotal*100).toFixed(1)+'%' : '—';
-  const pctRevPart   = totalRevTot ? (retRevTotal/totalRevTot*100).toFixed(1)+'%' : '—';
-  const pctNewOfAll  = uniqueStoreClients.size ? (uniqueRetClients.size/uniqueStoreClients.size*100).toFixed(0)+'%' : '—';
-
-  // Semana con más nuevos en rango activo
-  const filtWeeks = D.newByWeek.filter((_,i) => ACTIVE_IDX.includes(D.weekMonth[i]));
-  const filtWkLbl = D.weeks.filter((_,i)      => ACTIVE_IDX.includes(D.weekMonth[i]));
-  const maxWk     = filtWeeks.length ? Math.max(...filtWeeks) : 0;
-  const maxWkLbl  = filtWkLbl[filtWeeks.indexOf(maxWk)] || '—';
-
-  // Mes activo con más nuevos
-  const ncSlice    = sl(D.clients);
-  const maxNc      = Math.max(...ncSlice);
-  const maxNcMonth = D.months[ACTIVE_IDX[ncSlice.indexOf(maxNc)]];
-
-  // Último mes del rango (para "activos")
-  const lastI      = ACTIVE_IDX[ACTIVE_IDX.length - 1];
-  const lastMonth  = D.months[lastI];
-  const lastNew    = D.clients[lastI];
-  const prevI      = ACTIVE_IDX.length > 1 ? ACTIVE_IDX[ACTIVE_IDX.length - 2] : null;
-  const prevNew    = prevI !== null ? D.clients[prevI] : null;
-  const lastVsPrev = prevNew ? ((lastNew - prevNew)/prevNew*100).toFixed(1) : null;
-
-  // Frecuencia EXACTA (buckets de la UI: 1 / 2 / 3–5 / 6+)
-  const f1 = freq.f1;
-  const f2 = freq.f2;
-  const f3 = freq.f3 + freq.f45;
-  const f4 = freq.f6;
-
-  // Label del período
-  const periodLabel = ACTIVE_IDX.length === 1
-    ? D.months[ACTIVE_IDX[0]]
-    : `${D.months[ACTIVE_IDX[0]]} – ${D.months[ACTIVE_IDX[ACTIVE_IDX.length-1]]}`;
-
-  return {
-    retRevTotal, totalRevTot, ordRetTotal, ordTotal, ordNoRetTot, unitsTotal,
-    newClients, newRevTotal, recRevTotal, crossSellTot,
-    uniqueRetClients: uniqueRetClients.size,
-    uniqueStoreClients: uniqueStoreClients.size,
-    recurrentClients: recurrentClients.size,
-    crossSellExact,
-    ticket, storeTicket, newTicket, pctRet, pctRevPart, pctNewOfAll,
-    reuse30, reuse15, reuse7, n7, n15, n30, reuseN, noReuse, reuseRate,
-    freq, segRev, skusP, brandRevP, sizeRevP, sizeUnitsP, utmSourceP, cityRevP, cityOrdP,
-    filtWeeks, filtWkLbl, maxWk, maxWkLbl,
-    maxNc, maxNcMonth,
-    lastMonth, lastNew, lastVsPrev, prevNew,
-    f1, f2, f3, f4,
-    periodLabel,
-  };
-}
-
-// ═══════════════════════════════════
-// ACTUALIZAR TODOS LOS KPIs DEL DOM
-// ═══════════════════════════════════
-function flash(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.remove('kpi-animating');
-  void el.offsetWidth;
-  el.classList.add('kpi-animating');
-}
-
-function setText(id, val) {
-  const el = document.getElementById(id);
-  if (el) { el.textContent = val; flash(id); }
-}
-
-function updateKPIs(m) {
-  // ── S1 RESUMEN ──
-  setText('k1v', FMT(m.retRevTotal));
-  setText('k1s', `Gs. ${NUM(m.retRevTotal)} en el período`);
-  setText('k1b', `↑ Pico en ${m.maxNcMonth}`);
-
-  setText('k2v', NUM(m.ordRetTotal));
-  setText('k2s', `de ${NUM(m.ordTotal)} órdenes totales`);
-  setText('k2b', `${m.pctRet} del total`);
-
-  setText('k3v', NUM(m.unitsTotal));
-  setText('k3s', `SKUs retornables despachados`);
-
-  const ticket4 = FMTn(m.ticket);
-  setText('k4v', ticket4);
-  setText('k4s', 'Gs. por orden retornable');
-  const k4bEl = document.getElementById('k4b');
-  if (k4bEl) { k4bEl.textContent = `vs ${FMTn(m.storeTicket)} tienda`; flash('k4b'); }
-
-  setText('k5v', NUM(m.uniqueRetClients));
-  setText('k5s', 'compradores únicos en ret.');
-  setText('k5b', `${m.pctNewOfAll} del base total`);
-
-  setText('k6v', m.pctRevPart);
-  setText('k6s', `ret. sobre Gs. ${FMT(m.totalRevTot)} total`);
-
-  // Sec title S1
-  document.getElementById('s1Title').textContent = `KPIs principales · retornables · ${m.periodLabel}`;
-
-  // ── S2 NUEVOS ──
-  setText('n1v', NUM(m.newClients));
-  setText('n1s', 'compradores 1ª vez en ret.');
-  setText('n1b', `${m.maxNcMonth}: pico con ${m.maxNc}`);
-
-  setText('n2v', m.pctNewOfAll);
-  setText('n2s', `de ${NUM(m.uniqueStoreClients)} clientes únicos del período`);
-
-  setText('n3v', FMT(m.newRevTotal));
-  setText('n3s', `Gs. ${NUM(m.newRevTotal)} generados`);
-  setText('n3b', `${PCT(m.newRevTotal, m.retRevTotal)} del rev. ret.`);
-
-  const newTkt = FMTn(m.newTicket);
-  const tktDiff = m.ticket ? ((m.newTicket - m.ticket)/m.ticket*100).toFixed(1) : '—';
-  setText('n4v', newTkt);
-  setText('n4s', 'Gs. primer orden promedio');
-  setText('n4b', `${tktDiff > 0 ? '+' : ''}${tktDiff}% vs ticket ret.`);
-
-  setText('n5v', NUM(m.crossSellExact));
-  setText('n5s', 'ya compraban no-retornables');
-  setText('n5b', `${PCT(m.crossSellExact, m.newClients)} del total`);
-
-  setText('n6v', m.maxWk);
-  setText('n6s', `nuevos/semana (${m.maxWkLbl})`);
-
-  document.getElementById('s2Title').textContent = `Clientes que compran retornables por primera vez · ${m.periodLabel}`;
-
-  // ── S3 COHORTE ──
-  setText('c1v', `${m.reuseRate}%`);
-  setText('c1s', `${NUM(m.reuseN)} compraron 2+ veces en ret.`);
-  const noReuseRate = (100 - parseFloat(m.reuseRate)).toFixed(1);
-  setText('c2v', `${noReuseRate}%`);
-  setText('c2s', `${NUM(m.noReuse)} clientes · target reactivar`);
-  setText('c3v', NUM(m.reuseN));
-  setText('c3s', 'compraron ret. en 2+ ocasiones');
-
-  // Cohort boxes — ventanas reales de 7/15/30 días desde la 1ª compra ret.
-  const r7  = parseFloat(m.reuse7);
-  const r15 = parseFloat(m.reuse15);
-  const r30 = parseFloat(m.reuse30);
-  document.getElementById('ch7v').innerHTML  = `${m.reuse7}<span>%</span>`;
-  document.getElementById('ch15v').innerHTML = `${m.reuse15}<span>%</span>`;
-  document.getElementById('ch30v').innerHTML = `${m.reuse30}<span>%</span>`;
-  setText('ch7s',  `${NUM(m.n7)} clientes en la 1ª semana`);
-  setText('ch15s', `${NUM(m.n15)} clientes dentro de 2 semanas`);
-  setText('ch30s', `${NUM(m.n30)} clientes en el primer mes`);
-  document.getElementById('ch7bar').style.width  = `${r7}%`;
-  document.getElementById('ch15bar').style.width = `${r15}%`;
-  document.getElementById('ch30bar').style.width = `${r30}%`;
-
-  // Insights: SOLO hechos verificables contra el Sheet. Sin proyecciones de impacto
-  // ("puede duplicar", "puede llevar la tasa a X%") porque no hay datos que las respalden.
-  // Si la muestra es chica, se dice explícitamente que no alcanza para afirmar comportamientos.
-  const insuf = `No es posible determinar este comportamiento con los datos disponibles (solo ${NUM(m.newClients)} clientes nuevos en el período; se requieren al menos ${MIN_N_INSIGHT}).`;
-  if (m.newClients < MIN_N_INSIGHT) {
-    setText('ins1', insuf); setText('ins2', insuf); setText('ins3', insuf); setText('ins4', insuf);
-  } else {
-    const noReusePct = (100 - parseFloat(m.reuseRate)).toFixed(1);
-    setText('ins1', `${NUM(m.noReuse)} clientes (${noReusePct}% de los nuevos del período) hicieron 1 sola compra de retornables. Es la base más grande disponible para una campaña de 2ª compra. [Dato real: conteo de clientes con exactamente 1 orden ret.]`);
-    setText('ins2', `El ${m.reuse7}% de los nuevos (${NUM(m.n7)} clientes) recompró retornables dentro de los 7 días de su 1ª compra. [Dato real: diferencia de fechas entre 1ª y 2ª orden ret. del mismo cliente.]`);
-    setText('ins3', `El ${m.reuse30}% (${NUM(m.n30)} clientes) volvió a comprar dentro de los 30 días de su 1ª compra retornable. [Dato real: ventana de 30 días sobre Creation Date.]`);
-    const recRevTot = m.segRev.s2 + m.segRev.s35 + m.segRev.s6;
-    const segTot = m.segRev.s1 + recRevTot;
-    const recShare = segTot ? (recRevTot/segTot*100).toFixed(1) : '0.0';
-    setText('ins4', `Los ${NUM(m.reuseN)} clientes recurrentes (2+ compras) generaron el ${recShare}% del revenue retornable del período (Gs. ${NUM(recRevTot)}). [Dato real: SKU Total Price agrupado por frecuencia del cliente.]`);
-  }
-
-  document.getElementById('s3Title').textContent = `Recompra y comportamiento de los ${NUM(m.newClients)} compradores de retornables`;
-
-  // ── S4 PRODUCTOS ──
-  document.getElementById('s4Title').textContent = `Top SKUs retornables por revenue · ${m.periodLabel}`;
-
-  // ── S6 SEGMENTOS ──
-  setText('sg1v', NUM(m.noReuse));
-  setText('sg1s', `${noReuseRate}% de compradores ret.`);
-
-  setText('sg2v', NUM(m.reuseN));
-  setText('sg2s', `${m.reuseRate}% — compraron 2+ veces`);
-
-  setText('sg3v', NUM(m.lastNew));
-  setText('sg3s', `nuevos en ${m.lastMonth}`);
-  if (m.lastVsPrev !== null) {
-    const arrow = parseFloat(m.lastVsPrev) >= 0 ? '↑' : '↓';
-    setText('sg3b', `${arrow}${m.lastVsPrev}% vs ${m.prevNew ? D.months[ACTIVE_IDX[ACTIVE_IDX.length-2]] : '—'}`);
-    document.getElementById('sg3b').className = `kpi-badge ${parseFloat(m.lastVsPrev) >= 0 ? 'badge-green' : 'badge-red'}`;
-  }
-
-  setText('sg4v', NUM(m.crossSellExact));
-  setText('sg4s', `tenían compras no-ret previas`);
-
-  // Seg bars — frecuencia EXACTA de compra (histórico de los nuevos del período)
-  const totSeg = m.f1 + m.f2 + m.f3 + m.f4;
-  if (totSeg) {
-    document.getElementById('sb1fill').style.width = `${(m.f1/totSeg*100).toFixed(1)}%`;
-    document.getElementById('sb2fill').style.width = `${(m.f2/totSeg*100).toFixed(1)}%`;
-    document.getElementById('sb3fill').style.width = `${(m.f3/totSeg*100).toFixed(1)}%`;
-    document.getElementById('sb4fill').style.width = `${(m.f4/totSeg*100).toFixed(1)}%`;
-  }
-  setText('sb1val', NUM(m.f1));
-  setText('sb2val', NUM(m.f2));
-  setText('sb3val', NUM(m.f3));
-  setText('sb4val', NUM(m.f4));
-
-  document.getElementById('s6Title').textContent = `Nuevos vs recurrentes · ${m.periodLabel}`;
-
-  // Filter bar summary
-  setText('rangeLabel', m.periodLabel);
-  setText('rangeOrders', NUM(m.ordRetTotal));
-  setText('rangeRevenue', 'Gs. ' + FMT(m.retRevTotal));
-  document.getElementById('headerPeriodChip').textContent = m.periodLabel;
-
-  // Page sub
-  document.getElementById('pageSub').textContent =
-    `${NUM(m.ordTotal)} órdenes · Período: ${m.periodLabel}`;
-}
-
-// ═══════════════════════════════════
-// CHART HELPERS
-// ═══════════════════════════════════
-function baseOpts(extra={}) {
-  return {
-    responsive:true, maintainAspectRatio:false,
-    plugins:{
-      legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:14,font:{size:11}}},
-      tooltip:{backgroundColor:'#fff',borderColor:'#E0E0E0',borderWidth:1,
-               titleColor:'#1A1A1A',bodyColor:'#6B6B6B',padding:10,callbacks:{}}
-    },
-    scales:{
-      x:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#9A9A9A'}},
-      y:{grid:{color:'rgba(0,0,0,0.04)'},ticks:{color:'#9A9A9A'}}
-    }, ...extra
-  };
-}
-// Muestra "Sin datos disponibles" sobre un chart-wrap, explicando qué falta.
-// Nunca se rellenan gráficos con datos estimados o de ejemplo.
-function noData(wrapId, why) {
-  const wrap = document.getElementById(wrapId);
-  if (!wrap) return;
-  let nd = wrap.querySelector('.nodata');
-  if (!nd) {
-    nd = document.createElement('div');
-    nd.className = 'nodata';
-    wrap.appendChild(nd);
-  }
-  nd.innerHTML = `<div class="nodata-title">Sin datos disponibles</div><div class="nodata-sub">${why}</div>`;
-  nd.style.display = 'flex';
-  const cv = wrap.querySelector('canvas');
-  if (cv) cv.style.visibility = 'hidden';
-}
-function clearNoData(wrapId) {
-  const wrap = document.getElementById(wrapId);
-  if (!wrap) return;
-  const nd = wrap.querySelector('.nodata');
-  if (nd) nd.style.display = 'none';
-  const cv = wrap.querySelector('canvas');
-  if (cv) cv.style.visibility = 'visible';
-}
-
-function doughnutOpts(pos='bottom') {
-  return {
-    responsive:true, maintainAspectRatio:false, cutout:'60%',
-    plugins:{
-      legend:{position:pos,labels:{color:'#6B6B6B',boxWidth:10,padding:12,font:{size:11}}},
-      tooltip:{backgroundColor:'#fff',borderColor:'#E0E0E0',borderWidth:1,
-               titleColor:'#1A1A1A',bodyColor:'#6B6B6B',padding:10}
-    }
-  };
-}
-
-// ═══════════════════════════════════
-// REFRESH CHARTS (filtro activo) — recibe métricas exactas de compute()
-// ═══════════════════════════════════
-function refreshCharts(m) {
-  const months = ACTIVE_IDX.map(i => D.months[i]);
-
-  function upd(id, datasets, labels) {
-    const ch = charts[id]; if (!ch) return;
-    ch.data.labels = labels || months;
-    datasets.forEach((ds,i) => { if (ch.data.datasets[i]) ch.data.datasets[i].data = ds; });
-    ch.update('active');
-  }
-
-  const retSlice = ACTIVE_IDX.map(i => D.retRev[i]);
-
-  // S1
-  upd('c_revMonth', [retSlice, retSlice]);
-  if (charts['c_revMonth']) {
-    charts['c_revMonth'].data.datasets[0].backgroundColor =
-      retSlice.map((_,i) => i === retSlice.length-1 ? RED : 'rgba(232,36,27,0.4)');
-    charts['c_revMonth'].update('active');
-  }
-  upd('c_ordersVsTotal', [ACTIVE_IDX.map(i=>D.ordRet[i]), ACTIVE_IDX.map(i=>D.ordNoRet[i])]);
-  upd('c_newByMonth',   [ACTIVE_IDX.map(i=>D.clients[i])]);
-  if (charts['c_newByMonth']) {
-    const nc = ACTIVE_IDX.map(i=>D.clients[i]);
-    charts['c_newByMonth'].data.datasets[0].backgroundColor =
-      nc.map((_,i) => i === nc.indexOf(Math.max(...nc)) ? RED : 'rgba(232,36,27,0.4)');
-    charts['c_newByMonth'].update('active');
-  }
-
-  upd('c_newVsRet',  [ACTIVE_IDX.map(i=>D.newRev[i]), ACTIVE_IDX.map(i=>D.recRev[i])]);
-  upd('c_cohortPct', [
-    ACTIVE_IDX.map(i => {
-      const t = D.clients[i] + (D.retClients[i]||0);
-      return t ? Math.round(D.clients[i]/t*100) : 100;
-    }),
-    ACTIVE_IDX.map(i => {
-      const t = D.clients[i] + (D.retClients[i]||0);
-      return t ? 100 - Math.round(D.clients[i]/t*100) : 0;
-    }),
-  ]);
-
-  // Semanas filtradas
-  const wLabels = D.weeks.filter((_,i)    => ACTIVE_IDX.includes(D.weekMonth[i]));
-  const wData   = D.newByWeek.filter((_,i) => ACTIVE_IDX.includes(D.weekMonth[i]));
-  upd('c_newByWeek', [wData], wLabels);
-
-  // Acumulado
-  let acc = 0;
-  upd('c_newAccum', [ACTIVE_IDX.map(i => { acc += D.clients[i]; return acc; })]);
-
-  // ── Doughnuts de producto / mix — EXACTOS del período activo ──
-  function updDoughnut(id, obj) {
-    const ch = charts[id]; if (!ch) return;
-    const entries = Object.entries(obj).sort((a,b) => b[1] - a[1]);
-    ch.data.labels = entries.map(e => e[0]);
-    ch.data.datasets[0].data = entries.map(e => Math.round(e[1]));
-    ch.update('active');
-  }
-  updDoughnut('c_brandMix',  m.brandRevP);
-  updDoughnut('c_sizeMix',   m.sizeRevP);
-  updDoughnut('c_brandRev',  m.brandRevP);
-  updDoughnut('c_sizeRev',   m.sizeRevP);
-  updDoughnut('c_sizeUnits', m.sizeUnitsP);
-
-  // UTM Source: solo con la columna presente en el Sheet
-  if (OPT.UtmSource) {
-    clearNoData('wrap_utmSource');
-    updDoughnut('c_utmSource', m.utmSourceP);
-  } else {
-    noData('wrap_utmSource', 'La hoja no tiene la columna "UtmSource". No es posible atribuir canal de adquisición con los datos disponibles.');
-  }
-
-  // Distribución por ciudad (top 10 del período, dato real por orden)
-  if (OPT.City && charts['c_cityRev']) {
-    const topRev = Object.entries(m.cityRevP).sort((a,b)=>b[1]-a[1]).slice(0,10);
-    const topOrd = Object.entries(m.cityOrdP).sort((a,b)=>b[1]-a[1]).slice(0,10);
-    if (topRev.length) {
-      clearNoData('wrap_cityRev'); clearNoData('wrap_cityOrd');
-      charts['c_cityRev'].data.labels = topRev.map(e=>e[0]);
-      charts['c_cityRev'].data.datasets[0].data = topRev.map(e=>Math.round(e[1]));
-      charts['c_cityRev'].update('active');
-      charts['c_cityOrd'].data.labels = topOrd.map(e=>e[0]);
-      charts['c_cityOrd'].data.datasets[0].data = topOrd.map(e=>e[1]);
-      charts['c_cityOrd'].update('active');
-    } else {
-      noData('wrap_cityRev', 'No hay órdenes retornables con ciudad informada en el período seleccionado.');
-      noData('wrap_cityOrd', 'No hay órdenes retornables con ciudad informada en el período seleccionado.');
-    }
-  }
-
-  // Top SKUs del período (chart + tabla)
-  if (charts['c_topSku']) {
-    charts['c_topSku'].data.labels = m.skusP.map(s=>s.name.length>28?s.name.slice(0,28)+'…':s.name);
-    charts['c_topSku'].data.datasets[0].data = m.skusP.map(s=>s.units);
-    charts['c_topSku'].update('active');
-  }
-  buildTable(m.skusP);
-
-  // Seg doughnut — composición EXACTA de los compradores del período
-  if (charts['c_segDoughnut']) {
-    charts['c_segDoughnut'].data.datasets[0].data = [m.noReuse, m.reuseN, m.crossSellExact];
-    charts['c_segDoughnut'].update('active');
-  }
-
-  // Distribución de frecuencia EXACTA (1 / 2 / 3 / 4–5 / 6+ compras ret.)
-  if (charts['c_freqDist']) {
-    charts['c_freqDist'].data.datasets[0].data =
-      [m.freq.f1, m.freq.f2, m.freq.f3, m.freq.f45, m.freq.f6];
-    charts['c_freqDist'].update('active');
-  }
-
-  // Revenue por segmento — EXACTO (revenue ret. del período por frecuencia del cliente)
-  if (charts['c_segValue']) {
-    charts['c_segValue'].data.datasets[0].data =
-      [Math.round(m.segRev.s1), Math.round(m.segRev.s2), Math.round(m.segRev.s35), Math.round(m.segRev.s6)];
-    charts['c_segValue'].update('active');
-  }
-}
-
-// ═══════════════════════════════════
-// BUILD CHARTS (solo al inicio)
-// ═══════════════════════════════════
-function buildCharts() {
-  // S1 – Revenue mensual
-  charts['c_revMonth'] = new Chart('c_revMonth',{ type:'bar', data:{
-    labels: D.months,
-    datasets:[
-      {type:'bar',  label:'Revenue Ret.', data:D.retRev,
-        backgroundColor: D.retRev.map((_,i)=>i===D.retRev.length-1?RED:'rgba(232,36,27,0.4)'),
-        borderRadius:6, borderSkipped:false},
-      {type:'line', label:'Tendencia', data:D.retRev,
-        borderColor:PALETTE[2], backgroundColor:'transparent',
-        borderWidth:2, pointRadius:4, pointBackgroundColor:PALETTE[2], tension:.4}
-    ]},
-    options: baseOpts({plugins:{legend:{display:false},
-      tooltip:{callbacks:{label:ctx=>' Gs. '+ctx.parsed.y.toLocaleString()}}},
-      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
-              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}}}})
-  });
-
-  // S1 – Brand doughnut
-  charts['c_brandMix'] = new Chart('c_brandMix',{ type:'doughnut', data:{
-    labels:Object.keys(D.brandRev),
-    datasets:[{data:Object.values(D.brandRev),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
-    options:doughnutOpts()
-  });
-
-  // S1 – Órdenes stacked
-  charts['c_ordersVsTotal'] = new Chart('c_ordersVsTotal',{ type:'bar', data:{
-    labels:D.months,
-    datasets:[
-      {label:'Retornables', data:D.ordRet,   backgroundColor:RED,                 borderRadius:4,borderSkipped:false},
-      {label:'No-Retorn.',  data:D.ordNoRet, backgroundColor:'rgba(0,0,0,0.07)', borderRadius:4,borderSkipped:false}
-    ]},
-    options:baseOpts({
-      plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:14,font:{size:11}}}},
-      scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
-              y:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
-  });
-
-  // S1 – Size mix
-  charts['c_sizeMix'] = new Chart('c_sizeMix',{ type:'doughnut', data:{
-    labels:Object.keys(D.sizeRev),
-    datasets:[{data:Object.values(D.sizeRev),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
-    options:doughnutOpts()
-  });
-
-  // S2 – New by month
-  charts['c_newByMonth'] = new Chart('c_newByMonth',{ type:'bar', data:{
-    labels:D.months,
-    datasets:[{label:'Nuevos clientes',data:D.clients,
-      backgroundColor:D.clients.map((_,i)=>i===D.clients.indexOf(Math.max(...D.clients))?RED:'rgba(232,36,27,0.4)'),
-      borderRadius:6,borderSkipped:false}]},
-    options:baseOpts({plugins:{legend:{display:false}},
-      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
-              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
-  });
-
-  // S2 – New by week
-  charts['c_newByWeek'] = new Chart('c_newByWeek',{ type:'line', data:{
-    labels:D.weeks,
-    datasets:[{label:'Nuevos/semana',data:D.newByWeek,
-      borderColor:RED,backgroundColor:'rgba(232,36,27,0.08)',
-      fill:true,tension:.4,pointRadius:3,pointBackgroundColor:RED,borderWidth:2}]},
-    options:baseOpts({plugins:{legend:{display:false}},
-      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',maxRotation:45,font:{size:9}}},
-              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
-  });
-
-  // S2 – New vs returning
-  charts['c_newVsRet'] = new Chart('c_newVsRet',{ type:'bar', data:{
-    labels:D.months,
-    datasets:[
-      {label:'Revenue Nuevos',      data:D.newRev,backgroundColor:RED,       borderRadius:4,borderSkipped:false},
-      {label:'Revenue Recurrentes', data:D.recRev,backgroundColor:PALETTE[1],borderRadius:4,borderSkipped:false}
-    ]},
-    options:baseOpts({
-      plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:14,font:{size:11}}},
-               tooltip:{callbacks:{label:ctx=>' Gs. '+FMT(ctx.parsed.y)}}},
-      scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
-              y:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}}}})
-  });
-
-  // S2 – UTM Source
-  const utmK = Object.keys(D.utmSource), utmV = Object.values(D.utmSource);
-  charts['c_utmSource'] = new Chart('c_utmSource',{ type:'doughnut', data:{
-    labels:utmK,datasets:[{data:utmV,backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
-    options:doughnutOpts('right')
-  });
-
-  // S3 – Freq dist (data exacta se inyecta en refreshCharts)
-  charts['c_freqDist'] = new Chart('c_freqDist',{ type:'bar', data:{
-    labels:['1 compra','2 compras','3 compras','4-5 compras','6+ compras'],
-    datasets:[{label:'Clientes',data:[0,0,0,0,0],
-      backgroundColor:PALETTE.slice().reverse(),borderRadius:6,borderSkipped:false}]},
-    options:baseOpts({plugins:{legend:{display:false}},
-      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
-              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
-  });
-
-  // S3 – Cohort %
-  const pN = D.clients.map((n,i)=>{ const t=n+(D.retClients[i]||0); return t?Math.round(n/t*100):100; });
-  const pR = pN.map(p=>100-p);
-  charts['c_cohortPct'] = new Chart('c_cohortPct',{ type:'bar', data:{
-    labels:D.months,
-    datasets:[
-      {label:'% Nuevos',      data:pN,backgroundColor:RED,        borderRadius:4,borderSkipped:false},
-      {label:'% Recurrentes', data:pR,backgroundColor:PALETTE[1], borderRadius:4,borderSkipped:false}
-    ]},
-    options:baseOpts({
-      plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:14,font:{size:11}}},
-               tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ${ctx.parsed.y}%`}}},
-      scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
-              y:{stacked:true,max:100,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>v+'%'}}}})
-  });
-
-  // S4 – Top SKU
-  charts['c_topSku'] = new Chart('c_topSku',{ type:'bar', data:{
-    labels:D.skus.map(s=>s.name.length>28?s.name.slice(0,28)+'…':s.name),
-    datasets:[{label:'Unidades',data:D.skus.map(s=>s.units),
-      backgroundColor:PALETTE[0],borderRadius:4,borderSkipped:false}]},
-    options:baseOpts({indexAxis:'y',plugins:{legend:{display:false}},
-      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
-              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#6B6B6B',font:{size:10}}}}})
-  });
-
-  // S4 – Size / Brand (se refrescan por período en refreshCharts)
-  charts['c_sizeRev']   = new Chart('c_sizeRev',{type:'doughnut',data:{labels:Object.keys(D.sizeRev),datasets:[{data:Object.values(D.sizeRev),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
-  charts['c_sizeUnits'] = new Chart('c_sizeUnits',{type:'doughnut',data:{labels:Object.keys(D.sizeUnits),datasets:[{data:Object.values(D.sizeUnits),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
-  charts['c_brandRev']  = new Chart('c_brandRev',{type:'doughnut',data:{labels:Object.keys(D.brandRev),datasets:[{data:Object.values(D.brandRev),backgroundColor:PALETTE,borderColor:'#fff',borderWidth:3,hoverOffset:5}]},options:doughnutOpts()});
-
-  // S6 – Seg doughnut (data exacta se inyecta en refreshCharts)
-  charts['c_segDoughnut'] = new Chart('c_segDoughnut',{ type:'doughnut', data:{
-    labels:['Solo 1 compra','Recurrentes (2+)','Cross-sell'],
-    datasets:[{data:[0,0,0],backgroundColor:[RED,PALETTE[1],PALETTE[0]],borderColor:'#fff',borderWidth:3,hoverOffset:6}]},
-    options:doughnutOpts('right')
-  });
-
-  // S6 – Acumulado
-  let acc=0;
-  charts['c_newAccum'] = new Chart('c_newAccum',{ type:'line', data:{
-    labels:D.months,
-    datasets:[{label:'Acumulado',data:D.clients.map(v=>{acc+=v;return acc;}),
-      borderColor:PALETTE[2],backgroundColor:'rgba(255,180,0,0.08)',
-      fill:true,tension:.4,pointRadius:5,pointBackgroundColor:PALETTE[2],borderWidth:2}]},
-    options:baseOpts({plugins:{legend:{display:false}},
-      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
-              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}}}})
-  });
-
-  // S6 – Seg value (revenue ret. EXACTO del período por segmento de frecuencia)
-  charts['c_segValue'] = new Chart('c_segValue',{ type:'bar', data:{
-    labels:['Solo 1 compra','2 compras','3–5 compras','6+ compras'],
-    datasets:[{label:'Revenue (Gs.)',data:[0,0,0,0],
-      backgroundColor:PALETTE.slice(0,4).reverse(),borderRadius:6,borderSkipped:false}]},
-    options:baseOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' Gs. '+FMT(ctx.parsed.y)}}},
-      scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
-              y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}}}})
-  });
-
-  // S1 – Distribución por ciudad: SOLO si el Sheet tiene la columna City.
-  // Si falta, se declara explícitamente en lugar de estimar.
-  if (OPT.City) {
-    clearNoData('wrap_cityRev'); clearNoData('wrap_cityOrd');
-    charts['c_cityRev'] = new Chart('c_cityRev',{ type:'bar', data:{
-      labels:[], datasets:[{label:'Revenue Ret. (Gs.)',data:[],backgroundColor:RED,borderRadius:4,borderSkipped:false}]},
-      options:baseOpts({indexAxis:'y',plugins:{legend:{display:false},
-        tooltip:{callbacks:{label:ctx=>' Gs. '+ctx.parsed.x.toLocaleString('es-PY')}}},
-        scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}},
-                y:{grid:{display:false},ticks:{color:'#6B6B6B',font:{size:10}}}}})
-    });
-    charts['c_cityOrd'] = new Chart('c_cityOrd',{ type:'bar', data:{
-      labels:[], datasets:[{label:'Órdenes Ret.',data:[],backgroundColor:PALETTE[0],borderRadius:4,borderSkipped:false}]},
-      options:baseOpts({indexAxis:'y',plugins:{legend:{display:false}},
-        scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
-                y:{grid:{display:false},ticks:{color:'#6B6B6B',font:{size:10}}}}})
-    });
-  } else {
-    noData('wrap_cityRev', 'La hoja no tiene la columna "City". Agregala al export de VTEX para habilitar este gráfico.');
-    noData('wrap_cityOrd', 'La hoja no tiene la columna "City". Agregala al export de VTEX para habilitar este gráfico.');
-  }
-}
-
-// ═══════════════════════════════════
-// BUILD TABLE & PROMO CARDS
-// ═══════════════════════════════════
-function buildTable(skus) {
-  const table = document.getElementById('t_topSku');
-  const list = skus || D.skus;
-  table.innerHTML = `<thead><tr><th>#</th><th>Producto</th><th>Revenue</th><th>Unds.</th></tr></thead>`;
-  if (!list.length) return;
-  const maxR = list[0].revenue || 1;
-  const tb = document.createElement('tbody');
-  list.forEach((s,i)=>{
-    const pct = (s.revenue/maxR*100).toFixed(0);
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><span class="rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</span></td>
-      <td><div style="font-size:12px;font-weight:500;color:#1A1A1A;line-height:1.3">${s.name}</div>
-          <div class="bar-mini" style="width:${pct}%"></div></td>
-      <td class="val-primary">${FMT(s.revenue)}</td>
-      <td class="val-secondary">${s.units.toLocaleString()}</td>`;
-    tb.appendChild(tr);
-  });
-  table.appendChild(tb);
-}
-
-
-// ═══════════════════════════════════
-// CALIDAD DE DATOS · trazabilidad y auditoría
-// ═══════════════════════════════════
-const TRACE = [
-  ['Ventas retornables (Gs.)', 'SKU Total Price, SKU Name, Status, Order, Creation Date', 'Suma de SKU Total Price de las líneas cuyo SKU Name contiene "retorn" (sin distinguir mayúsculas), en órdenes con estado válido, dentro del período activo.'],
-  ['Órdenes con retornables', 'Order, SKU Name, Status', 'Conteo de órdenes únicas (deduplicadas por nro. de orden) con al menos 1 línea retornable.'],
-  ['Unidades vendidas', 'Quantity_SKU, SKU Name', 'Suma de Quantity_SKU de las líneas retornables del período.'],
-  ['Ticket promedio ret.', 'Derivado', 'Ventas retornables ÷ órdenes con retornables del período. Sin ajustes ni estimaciones.'],
-  ['Clientes únicos ret.', 'Client Document, Email, Order', 'Identidad del cliente: Client Document; si está vacío, Email; si ambos están vacíos, el nro. de orden (ver alerta si aplica). Conteo de identidades distintas con compra ret. en el período.'],
-  ['Nuevos clientes en ret.', 'Creation Date + identidad de cliente', 'Clientes cuya PRIMERA orden retornable dentro de la fuente del año activo cae en el período seleccionado. Limitación: no se ve el historial de otros años.'],
-  ['Clientes recurrentes', 'Creation Date + identidad de cliente', 'Clientes con una orden retornable en el período que NO es su primera (según la fuente del año activo).'],
-  ['Recompra 7/15/30 días', 'Creation Date', 'Días exactos entre la 1ª y la 2ª orden retornable del mismo cliente. Porcentaje sobre los nuevos del período.'],
-  ['Cross-sell a retornables', 'Order, Creation Date + identidad', 'Nuevos del período que tenían órdenes (necesariamente no-ret.) con fecha anterior a su 1ª compra retornable.'],
-  ['Frecuencia de compra', 'Order + identidad de cliente', 'Cantidad de órdenes retornables por cliente (histórico del año activo), agrupada en 1 / 2 / 3–5 / 6+.'],
-  ['Marca y tamaño', 'SKU Name', 'Clasificación por patrones de texto en SKU Name (ej. "zero", "sprite", "350 ml", "2 L"). Lo no reconocido queda en "Otros"/"Otro" — nunca se adivina.'],
-  ['Distribución por ciudad', 'City (opcional)', 'Revenue y órdenes retornables agrupados por el valor exacto de la columna City de cada orden. Si la columna falta, se muestra "Sin datos disponibles".'],
-  ['Canal de adquisición', 'UtmSource (opcional)', 'Conteo de órdenes retornables por UtmSource. Vacíos se agrupan como "Directo / sin dato". Si la columna falta, se muestra "Sin datos disponibles".'],
-  ['Comparativo 2026 vs 2025', 'Ambos Sheets anuales, mismas columnas', 'Mismo pipeline aplicado a cada fuente anual completa, con corte al mismo día/mes para comparar períodos equivalentes.'],
-  ['Proyección de cierre', '⚠️ ESTIMACIÓN — no es dato de la base', 'Estacionalidad mensual real de 2025 multiplicada por el ratio real acumulado 2026/2025 de meses completos. Está señalizada como estimación en su gráfico.'],
-];
-
-function fmtD(d){ return d ? String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear() : '—'; }
-function fmtHM(d){ return d ? String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0') : ''; }
-
-function renderQA(m) {
-  if (!DQ) return;
-
-  // ── KPIs de control ──
-  setText('qa1v', fmtD(LAST_ORDER_DATE));
-  setText('qa2v', NUM(DQ.rowsTotal));
-  setText('qa3v', NUM(DQ.validLines));
-  setText('qa3s', `${NUM(DQ.invalidStatusLines)} líneas excluidas por estado no facturable`);
-  setText('qa4v', NUM(RAW.orders.length));
-  setText('qa5v', `${fmtD(DATA_MIN_DATE)} – ${fmtD(DATA_MAX_DATE)}`);
-  setText('qa6v', `${fmtD(LOADED_AT)} ${fmtHM(LOADED_AT)}`);
-
-  // ── Columnas requeridas / opcionales ──
-  document.getElementById('qaColsReq').innerHTML =
-    REQUIRED_COLS.map(c => `<span class="col-chip ok">✓ ${c}</span>`).join('') +
-    `<div style="font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5">Las ${REQUIRED_COLS.length} columnas requeridas están presentes en la fuente. Si faltara alguna, el dashboard se detiene con error explícito en lugar de calcular con datos incompletos.</div>`;
-  document.getElementById('qaColsOpt').innerHTML =
-    OPTIONAL_COLS.map(c => OPT[c]
-      ? `<span class="col-chip ok">✓ ${c}</span>`
-      : `<span class="col-chip miss">✗ ${c} — no encontrada</span>`).join('');
-
-  // ── Filtros activos ──
-  const from = document.getElementById('dateFrom').value || '—';
-  const to   = document.getElementById('dateTo').value || '—';
-  document.getElementById('qaFilters').innerHTML = `
-    <div>📄 <strong>Fuente activa:</strong> Google Sheet ${YEAR} (link en el encabezado)</div>
-    <div>🗓️ <strong>Período seleccionado:</strong> ${m.periodLabel} (${from} → ${to})</div>
-    <div>✅ <strong>Estados incluidos:</strong> ${VALID_STATUS.join(' · ')} — todo otro estado se excluye</div>
-    <div>♻️ <strong>Definición de retornable:</strong> SKU Name contiene "retorn" (sin distinguir mayúsculas)</div>
-    <div>🔁 <strong>Deduplicación:</strong> a nivel de orden por columna Order (1 fila del Sheet = 1 SKU)</div>
-    <div>👤 <strong>Identidad de cliente:</strong> Client Document → Email → nro. de orden (en ese orden de prioridad)</div>`;
-
-  // ── Descartes del ETL ──
-  const stEntries = Object.entries(DQ.statusCounts)
-    .filter(([st]) => !VALID_STATUS.includes(st))
-    .sort((a,b)=>b[1]-a[1]).slice(0,8);
-  let dr = `<thead><tr><th>Motivo</th><th style="text-align:right">Filas</th></tr></thead><tbody>`;
-  dr += `<tr><td>Sin nro. de orden</td><td class="val-primary">${NUM(DQ.skippedNoOrder)}</td></tr>`;
-  dr += `<tr><td>Sin fecha válida (Creation Date)</td><td class="val-primary">${NUM(DQ.skippedNoDate)}</td></tr>`;
-  stEntries.forEach(([st,n]) => dr += `<tr><td>Estado excluido: "${st}"</td><td class="val-primary">${NUM(n)}</td></tr>`);
-  dr += `</tbody>`;
-  document.getElementById('qaDiscards').innerHTML = dr;
-
-  // ── Alertas de calidad ──
-  const alerts = [];
-  const add = (cls, ico, txt) => alerts.push(`<div class="dq-alert ${cls}"><span class="ico">${ico}</span><span>${txt}</span></div>`);
-  add('ok','✅',`Validación de columnas superada: las ${REQUIRED_COLS.length} columnas requeridas existen en el Sheet ${YEAR}.`);
-  add('warn','ℹ️',`<strong>Limitación estructural:</strong> la 1ª compra retornable se identifica solo dentro de la fuente del año activo (${YEAR}). Un cliente que ya compraba en años anteriores puede figurar como "nuevo". Interpretá "nuevos" como "nuevos en ${YEAR}".`);
-  if (DQ.skippedNoOrder || DQ.skippedNoDate)
-    add('warn','⚠️',`Se descartaron ${NUM(DQ.skippedNoOrder + DQ.skippedNoDate)} filas por datos faltantes (sin orden o sin fecha válida). Revisá el export si el número parece alto.`);
-  if (DQ.ordersNoClientId)
-    add('warn','⚠️',`${NUM(DQ.ordersNoClientId)} órdenes válidas no tienen ni Client Document ni Email: se cuentan como clientes distintos por nro. de orden, lo que puede sobreestimar levemente los "clientes únicos".`);
-  if (DQ.retLinesQtyZero)
-    add('warn','⚠️',`${NUM(DQ.retLinesQtyZero)} líneas retornables con cantidad 0 o inválida (Quantity_SKU). Suman Gs. 0 unidades pero podrían indicar un problema de formato en la fuente.`);
-  if (DQ.retLinesPriceZero)
-    add('warn','⚠️',`${NUM(DQ.retLinesPriceZero)} líneas retornables con precio 0 o inválido (SKU Total Price). Verificá si son bonificaciones reales o errores de carga.`);
-  const missOpt = OPTIONAL_COLS.filter(c => !OPT[c]);
-  if (missOpt.length)
-    add('warn','⚠️',`Columnas opcionales ausentes: ${missOpt.join(', ')}. Los gráficos que dependen de ellas muestran "Sin datos disponibles" (no se estima nada).`);
-  if (OPT.UtmSource && DQ.utmEmpty > 0) {
-    const pctU = DQ.rowsTotal ? (DQ.utmEmpty/DQ.rowsTotal*100).toFixed(1) : '0';
-    add(DQ.utmEmpty/DQ.rowsTotal > .5 ? 'warn':'ok', DQ.utmEmpty/DQ.rowsTotal > .5 ? '⚠️':'✅', `UtmSource vacío en ${NUM(DQ.utmEmpty)} filas (${pctU}%): esas órdenes se agrupan como "Directo / sin dato" en el gráfico de canal.`);
-  }
-  if (OPT.City && DQ.cityEmpty > 0) {
-    const pctC = DQ.rowsTotal ? (DQ.cityEmpty/DQ.rowsTotal*100).toFixed(1) : '0';
-    add(DQ.cityEmpty/DQ.rowsTotal > .5 ? 'warn':'ok', DQ.cityEmpty/DQ.rowsTotal > .5 ? '⚠️':'✅', `City vacío en ${NUM(DQ.cityEmpty)} filas (${pctC}%): esas órdenes figuran como "Sin ciudad informada".`);
-  }
-  if (m.newClients < MIN_N_INSIGHT)
-    add('err','🚫',`El período activo tiene solo ${NUM(m.newClients)} clientes nuevos: los porcentajes de recompra y las lecturas de cohorte no son concluyentes y se marcan como "No es posible determinar".`);
-  document.getElementById('qaAlerts').innerHTML = alerts.join('');
-
-  // ── Tabla de trazabilidad ──
-  let tr = `<thead><tr><th>Indicador</th><th>Columnas del Sheet</th><th>Método de cálculo</th></tr></thead><tbody>`;
-  TRACE.forEach(([n,c,mth]) => tr += `<tr><td style="font-weight:600;white-space:nowrap">${n}</td><td class="trace-cols">${c}</td><td style="font-size:11.5px;color:var(--muted);line-height:1.5">${mth}</td></tr>`);
-  tr += `</tbody>`;
-  document.getElementById('qaTrace').innerHTML = tr;
-
-  // ── Tooltips de trazabilidad sobre los KPIs principales ──
-  const tips = {
-    k1v:'Suma de SKU Total Price de líneas con "retorn" en SKU Name · estado válido · período activo',
-    k2v:'Órdenes únicas (dedup. por Order) con ≥1 línea retornable',
-    k3v:'Suma de Quantity_SKU de líneas retornables',
-    k4v:'Revenue ret. ÷ órdenes ret. (derivado, sin ajustes)',
-    k5v:'Identidades únicas (Client Document → Email → Order) con compra ret. en el período',
-    k6v:'Revenue ret. ÷ revenue total tienda (Total Value dedup. por orden)',
-    n1v:'Clientes cuya 1ª orden ret. del año cae en el período',
-    c1v:'Nuevos con 2+ órdenes ret. ÷ nuevos del período',
-  };
-  Object.entries(tips).forEach(([id,t]) => {
-    const el = document.getElementById(id)?.closest('.kpi');
-    if (el) { el.title = 'Trazabilidad: ' + t; el.setAttribute('data-trace','1'); }
-  });
-}
-
-// ═══════════════════════════════════
-// FILTRO DE PERÍODO
-// ═══════════════════════════════════
-function applyFilter() {
-  const m = compute();
-  updateKPIs(m);
-  refreshCharts(m);
-  renderQA(m);
-}
-
-function setPeriod(key, btn) {
-  const p = PRESETS[key]; if (!p) return;
-  ACTIVE_IDX = p.idx;
-  document.querySelectorAll('.ppill').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('dateFrom').value = p.from;
-  document.getElementById('dateTo').value   = p.to;
-  applyFilter();
-}
-
-function applyDateRange() {
-  const from = document.getElementById('dateFrom').value;
-  const to   = document.getElementById('dateTo').value;
-  if (!from || !to || from > to) return;
-  const fi = monthIdxForDate(from);
-  const ti = monthIdxForDate(to);
-  ACTIVE_IDX = [];
-  for (let i=fi; i<=ti; i++) ACTIVE_IDX.push(i);
-  document.querySelectorAll('.ppill').forEach(b=>b.classList.remove('active'));
-  // Marcar si coincide con preset
-  for (const [k,p] of Object.entries(PRESETS)) {
-    if (JSON.stringify(p.idx) === JSON.stringify(ACTIVE_IDX)) {
-      document.querySelector(`.ppill[onclick*="'${k}'"]`)?.classList.add('active');
-      break;
-    }
-  }
-  applyFilter();
-}
-
-function showTab(name, btn) {
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('sec-'+name).classList.add('active');
-}
-
-// ═══════════════════════════════════
-// EXPORTAR A EXCEL (respeta el período/filtro activo)
+// EXPORTAR A EXCEL (respeta TODOS los filtros activos)
 // ═══════════════════════════════════
 function exportExcel() {
   if (typeof XLSX === 'undefined') {
@@ -2173,29 +2557,68 @@ function exportExcel() {
   const wb = XLSX.utils.book_new();
   const fmtFull = d => d ? (String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()) : '—';
 
-  // Hoja 1 — Resumen mensual (según período activo)
+  // Hoja 1 — Resumen mensual (según filtros activos)
   const resumenRows = [[
     'Mes','Revenue Ret. (Gs.)','Revenue Total Tienda (Gs.)','Órdenes Ret.','Órdenes No-Ret.',
     'Unidades Ret.','Nuevos Clientes Ret.','Recurrentes Ret.','Revenue Nuevos (Gs.)','Revenue Recurrentes (Gs.)','Cross-sell'
   ]];
-  ACTIVE_IDX.forEach(i => {
+  m.months.forEach((mes,i) => {
     resumenRows.push([
-      D.months[i], Math.round(D.retRev[i]), Math.round(D.totalRev[i]), D.ordRet[i], D.ordNoRet[i],
-      D.units[i], D.clients[i], D.retClients[i], Math.round(D.newRev[i]), Math.round(D.recRev[i]), D.crossSell[i]
+      mes, Math.round(m.retRevM[i]), Math.round(m.totalRevM[i]), m.ordRetM[i], m.ordNoRetM[i],
+      Math.round(m.unitsM[i]), m.clientsM[i], m.retClientsM[i], Math.round(m.newRevM[i]), Math.round(m.recRevM[i]), m.crossM[i]
     ]);
   });
   const wsResumen = XLSX.utils.aoa_to_sheet(resumenRows);
   wsResumen['!cols'] = resumenRows[0].map(()=>({wch:16}));
   XLSX.utils.book_append_sheet(wb, wsResumen, 'Resumen mensual');
 
-  // Hoja 2 — Top SKUs del período activo (exacto)
-  const skuRows = [['#','Producto','Revenue (Gs.)','Unidades','Órdenes']];
-  m.skusP.forEach((s,i) => skuRows.push([i+1, s.name, Math.round(s.revenue), s.units, s.orders]));
+  // Hoja 2 — Starter vs Refill (mensual + conversión)
+  const srRows = [];
+  if (!m.srAvailable) {
+    srRows.push(['Starter vs Refill', NA_TXT]);
+    srRows.push(['Motivo', 'Ningún nombre de SKU retornable coincide con los patrones "con envase" / "sin envase". No se estima.']);
+    srRows.push(['SKUs retornables detectados', UNK_SKUS.map(u=>u.name).join(' | ')]);
+  } else {
+    srRows.push(['Mes','Rev Starter (Gs.)','Unds Starter','Órdenes Starter','Rev Refill (Gs.)','Unds Refill','Órdenes Refill','Rev Sin clasif. (Gs.)','% Starter','% Refill']);
+    m.months.forEach((mes,i) => {
+      const tot = m.stRevM[i] + m.rfRevM[i] + m.ukRevM[i];
+      srRows.push([
+        mes, Math.round(m.stRevM[i]), Math.round(m.stUnitsM[i]), m.ordStM[i],
+        Math.round(m.rfRevM[i]), Math.round(m.rfUnitsM[i]), m.ordRfM[i],
+        Math.round(m.ukRevM[i]),
+        tot ? +(m.stRevM[i]/tot*100).toFixed(1) : '',
+        tot ? +(m.rfRevM[i]/tot*100).toFixed(1) : ''
+      ]);
+    });
+    const totAll = m.stRev + m.rfRev + m.ukRev;
+    srRows.push(['TOTAL', Math.round(m.stRev), Math.round(m.stUnits), m.ordStarter,
+      Math.round(m.rfRev), Math.round(m.rfUnits), m.ordRefill, Math.round(m.ukRev),
+      totAll ? +(m.stRev/totAll*100).toFixed(1) : '', totAll ? +(m.rfRev/totAll*100).toFixed(1) : '']);
+    srRows.push([]);
+    srRows.push(['Conversión Starter → Refill','']);
+    srRows.push(['Clientes con 1ª compra Starter en el período', m.convBase]);
+    srRows.push(['Compraron Refill después (en la fuente)', m.converted]);
+    srRows.push(['% de conversión', m.convPct === null ? NA_TXT : +m.convPct.toFixed(1)]);
+    srRows.push(['Tiempo promedio Starter → 1er Refill (días)', m.avgDays === null ? NA_TXT : Math.round(m.avgDays)]);
+    srRows.push(['Clientes Starter aún sin Refill', m.convBase ? m.notConverted : NA_TXT]);
+    srRows.push(['Clientes nuevos Starter (período)', m.newStarterClients]);
+    srRows.push(['Clientes recurrentes Refill (período)', m.recRefillClients]);
+    srRows.push(['Frecuencia de compra ret. (compras/cliente, período)', m.avgFreq === null ? NA_TXT : +m.avgFreq.toFixed(2)]);
+    srRows.push(['Ticket promedio Starter (Gs./orden con Starter)', m.stTicket === null ? NA_TXT : Math.round(m.stTicket)]);
+    srRows.push(['Ticket promedio Refill (Gs./orden con Refill)', m.rfTicket === null ? NA_TXT : Math.round(m.rfTicket)]);
+  }
+  const wsSR = XLSX.utils.aoa_to_sheet(srRows);
+  wsSR['!cols'] = [{wch:44},{wch:16},{wch:12},{wch:14},{wch:16},{wch:12},{wch:14},{wch:18},{wch:10},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, wsSR, 'Starter vs Refill');
+
+  // Hoja 3 — Top SKUs del período (con tipo)
+  const skuRows = [['#','Producto','Tipo','Revenue (Gs.)','Unidades','Órdenes']];
+  m.skusP.forEach((s,i) => skuRows.push([i+1, s.name, CAT_LABEL[s.cat] || '', Math.round(s.revenue), s.units, s.orders]));
   const wsSkus = XLSX.utils.aoa_to_sheet(skuRows);
-  wsSkus['!cols'] = [{wch:4},{wch:55},{wch:16},{wch:12},{wch:10}];
+  wsSkus['!cols'] = [{wch:4},{wch:55},{wch:22},{wch:16},{wch:12},{wch:10}];
   XLSX.utils.book_append_sheet(wb, wsSkus, 'Top SKUs');
 
-  // Hoja 3 — Cohorte de recompra exacta (nuevos del período)
+  // Hoja 4 — Cohorte de recompra exacta (nuevos del período)
   const cohRows = [
     ['Métrica','Clientes','% de nuevos'],
     ['Nuevos en retornables (1ª compra en período)', m.newClients, '100%'],
@@ -2210,7 +2633,7 @@ function exportExcel() {
   wsCoh['!cols'] = [{wch:44},{wch:12},{wch:14}];
   XLSX.utils.book_append_sheet(wb, wsCoh, 'Cohorte recompra');
 
-  // Hoja 4 — Segmentos por frecuencia exacta + revenue del período
+  // Hoja 5 — Segmentos por frecuencia exacta + revenue del período
   const totSeg = m.f1 + m.f2 + m.f3 + m.f4;
   const pct = n => totSeg ? (n/totSeg*100).toFixed(1)+'%' : '—';
   const segRows = [
@@ -2224,7 +2647,7 @@ function exportExcel() {
   wsSeg['!cols'] = [{wch:16},{wch:12},{wch:12},{wch:22}];
   XLSX.utils.book_append_sheet(wb, wsSeg, 'Segmentos');
 
-  // Hoja 5 — Comparativo 2026 vs 2025 + proyección (año completo, independiente del filtro)
+  // Hoja 6 — Comparativo 2026 vs 2025 + proyección (año completo, independiente del filtro)
   if (YEARLY['2025'] && YEARLY['2026'] && window._RETPROJ) {
     const y25 = YEARLY['2025'], y26 = YEARLY['2026'], P = window._RETPROJ;
     const cmpRows = [['Mes','Revenue Ret. 2025 (Gs.)','Revenue Ret. 2026 (Gs.)','Variación (%)','Proyección 2026 (Gs.)','Total estimado 2026 (Gs.)']];
@@ -2239,33 +2662,28 @@ function exportExcel() {
     XLSX.utils.book_append_sheet(wb, wsCmp, 'Comparativo y proyección');
   }
 
-  // Hoja 6 — Info del reporte
+  // Hoja 7 — Info del reporte
   const infoRows = [
     ['Reporte', 'Dashboard Retornables · Mi Portal Coca-Cola'],
     ['Período exportado', m.periodLabel],
+    ['Filtros activos', m.filtersLabel || 'Ninguno (solo período)'],
     ['Órdenes retornables (período)', m.ordRetTotal],
     ['Revenue retornables (período, Gs.)', Math.round(m.retRevTotal)],
     ['Clientes únicos retornables (período)', m.uniqueRetClients],
     ['Clientes nuevos en ret. (1ª compra en período)', m.newClients],
+    ['Clasificación Starter/Refill', 'Por nombre de SKU: "con envase" → Starter · "sin envase" → Refill. Sin coincidencia → "Sin clasificar" (nunca se estima).'],
+    ['SKUs retornables sin clasificar (toda la fuente)', UNK_SKUS.length ? UNK_SKUS.length + ' — ' + UNK_SKUS.slice(0,10).map(u=>u.name).join(' | ') : 'Ninguno'],
+    ['Columna de ciudad en la fuente', HAS_CITY ? SRC_META.cityCol : 'No disponible'],
+    ['Columna de canal en la fuente', SRC_META.chanCol ? SRC_META.chanCol : (CHANNEL_IS_UTM ? 'UtmSource (canal de adquisición)' : 'No disponible')],
     ['Fuente (datos ' + YEAR + ')', `https://docs.google.com/spreadsheets/d/${sheetCfg().id}/edit?gid=${sheetCfg().gid}`],
     ['Datos al', fmtFull(LAST_ORDER_DATE)],
     ['Generado', fmtFull(new Date())],
-    ['— CONTROL DE CALIDAD —', ''],
-    ['Filas leídas del Sheet', DQ ? DQ.rowsTotal : '—'],
-    ['Filas válidas analizadas', DQ ? DQ.validLines : '—'],
-    ['Filas excluidas por estado', DQ ? DQ.invalidStatusLines : '—'],
-    ['Filas sin orden / sin fecha', DQ ? (DQ.skippedNoOrder + DQ.skippedNoDate) : '—'],
-    ['Órdenes sin identificador de cliente', DQ ? DQ.ordersNoClientId : '—'],
-    ['Estados incluidos', VALID_STATUS.join(' · ')],
-    ['Definición de retornable', 'SKU Name contiene "retorn" (case-insensitive)'],
-    ['Columnas opcionales ausentes', OPTIONAL_COLS.filter(c => !OPT[c]).join(', ') || 'ninguna'],
-    ['Nota', 'La 1ª compra ret. se identifica solo dentro de la fuente del año activo (' + YEAR + ').'],
   ];
   const wsInfo = XLSX.utils.aoa_to_sheet(infoRows);
-  wsInfo['!cols'] = [{wch:40},{wch:60}];
+  wsInfo['!cols'] = [{wch:44},{wch:80}];
   XLSX.utils.book_append_sheet(wb, wsInfo, 'Info');
 
-  const safeLabel = m.periodLabel.replace(/[^\w-]+/g, '_');
+  const safeLabel = (m.periodLabel + (m.filtersLabel ? '_filtrado' : '')).replace(/[^\w-]+/g, '_');
   XLSX.writeFile(wb, `Retornables_MiPortal_${safeLabel}.xlsx`);
 }
 
@@ -2276,20 +2694,25 @@ window.addEventListener('DOMContentLoaded', () => { init(); });
 
 async function init() {
   showOverlay('loading');
-  // Reset por si es un reintento o cambio de año: destruir instancias previas de Chart.js
   Object.values(charts).forEach(c => { try { c.destroy(); } catch(e){} });
   charts = {};
   document.getElementById('t_topSku').innerHTML = '';
   document.getElementById('btnExportExcel').disabled = true;
   try {
     const lines = await fetchSheetRows();
+    applyMeta(SRC_META);            // captura ciudad/canal ANTES de que el fetch YoY del otro año pise SRC_META
     buildDataset(lines);
     LOADED_AT = new Date();
 
     renderPeriodPills();
     setDateBounds();
+    populateFilterControls();
+    FILTER = {
+      from: startOfDay(DATA_MIN_DATE),
+      to:   endOfDay(DATA_MAX_DATE),
+      city:'', channel:'', sku:'', client:''
+    };
     buildCharts();
-    ACTIVE_IDX = PRESETS.all.idx;
     applyFilter();
     updateSourceChip();
     document.getElementById('btnExportExcel').disabled = false;
@@ -2321,7 +2744,7 @@ function buildYearlyAgg(lines) {
     let o = map.get(l.order);
     if (!o) { o = { order:l.order, date:l.date, doc:l.doc, email:l.email, retRev:0, retUnits:0, hasRet:false }; map.set(l.order, o); }
     if (l.date < o.date) o.date = l.date;
-    if (isRetornable(l.skuName)) { o.hasRet = true; o.retRev += l.skuTotal; o.retUnits += l.qty; }
+    if (isRetornable(l.skuName)) { o.hasRet = true; o.retRev += l.skuTotal; o.retUnits += (l.skuTotal > 0 ? l.qty : 0); }
   });
   const mRev = Array(12).fill(0), mOrd = Array(12).fill(0), mUnits = Array(12).fill(0);
   const retOrders = []; let maxD = null;
@@ -2452,8 +2875,6 @@ async function setYear(y) {
   YEAR = y;
   const ok = await init();
   if (!ok) {
-    // si el año nuevo falla (Sheet no compartido, columnas faltantes…): mostrar el
-    // error unos segundos y volver automáticamente al año anterior
     document.getElementById('ovSub').textContent =
       'No se pudo leer la fuente ' + y + '. Volviendo a ' + prev + '…';
     await new Promise(r => setTimeout(r, 3500));

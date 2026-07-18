@@ -36,13 +36,15 @@
   #syncDot{animation:syncPulse 2.4s infinite}
   #syncDot.busy{background:var(--g3)!important;animation:syncPulse 1s infinite}
   @media(max-width:760px){.h-vsep,.h-title{display:none}header{padding:0 16px}}
+
   /* ===== Filters ===== */
   .filters{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;
-    margin-top:22px;box-shadow:var(--shadow);display:flex;flex-wrap:wrap;gap:18px;align-items:flex-end}
+    margin-top:22px;box-shadow:var(--shadow);display:flex;flex-wrap:wrap;gap:14px 18px;align-items:flex-end}
   .fg{display:flex;flex-direction:column;gap:6px}
   .fg label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-  select,input[type=date]{font-family:inherit;font-size:13px;font-weight:500;padding:9px 11px;
+  select,input[type=date],input[list]{font-family:inherit;font-size:13px;font-weight:500;padding:9px 11px;
     border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);min-width:140px;cursor:pointer}
+  input[list]{cursor:text;min-width:180px}
   select:focus,input:focus{outline:2px solid var(--red);border-color:var(--red)}
   .presets{display:flex;gap:6px;flex-wrap:wrap}
   .chip{font-size:12px;font-weight:600;padding:7px 12px;border-radius:20px;border:1px solid var(--line);
@@ -59,32 +61,49 @@
   .delta.up{color:#1E9E5A}.delta.dn{color:#D8342E}
   .reset{margin-left:auto;font-size:12px;font-weight:700;color:var(--red);background:none;border:none;
     cursor:pointer;padding:9px 4px;text-decoration:underline}
+  .rule-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;width:100%}
+  .hint-chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;
+    color:var(--muted);background:var(--bg);border:1px solid var(--line);
+    border-radius:20px;padding:5px 11px;line-height:1.3}
+  .hint-chip b{color:var(--ink);font-weight:700}
+
+  /* ===== Aviso fatal / vacío ===== */
+  .fatal{display:none;background:#FDECEA;border:1px solid #F5C6C0;color:#B3261E;border-radius:12px;
+    padding:14px 16px;margin-top:14px;font-weight:600;font-size:13px}
+  .empty-note{display:none;background:#FFF8E6;border:1px solid #F2E2B3;color:#8A6D00;border-radius:12px;
+    padding:12px 16px;margin-top:14px;font-weight:600;font-size:13px}
+
+  /* ===== Overlay de carga ===== */
+  #loadOverlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
+    background:rgba(13,13,13,.45);backdrop-filter:blur(2px)}
+  .load-card{background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.25);
+    padding:28px 36px 26px;text-align:center;max-width:360px;position:relative;overflow:hidden}
+  .load-card::before{content:'';position:absolute;left:0;top:0;height:4px;width:100%;
+    background:linear-gradient(90deg,var(--g1),var(--g2),var(--g3),var(--g4),var(--g5))}
+  .spinner{width:38px;height:38px;border-radius:50%;border:4px solid #F0D9D8;border-top-color:var(--red);
+    margin:4px auto 14px;animation:spin .9s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .load-title{font-size:14px;font-weight:800;letter-spacing:-.01em}
+  .load-sub{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
+  @media (prefers-reduced-motion:reduce){.spinner,#syncDot{animation:none}}
+  @media(max-width:980px){#updTag{display:none!important}}
 
   /* ===== KPIs ===== */
-  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:18px}
   .kpi{background:var(--ink);border-radius:14px;padding:18px 18px 16px;color:#fff;position:relative;overflow:hidden}
   .kpi::after{content:'';position:absolute;left:0;bottom:0;height:3px;width:100%;
     background:linear-gradient(90deg,var(--g1),var(--g2),var(--g3),var(--g4),var(--g5));opacity:.85}
   .kpi .lab{font-size:11px;font-weight:600;color:#9aa0a6;text-transform:uppercase;letter-spacing:.06em}
-  .kpi .val{font-size:26px;font-weight:800;color:var(--amber);margin-top:8px;letter-spacing:-.02em;line-height:1}
-  .kpi .sub{font-size:12px;font-weight:600;margin-top:8px;color:#c8ccd0}
-  .delta{display:none}
+  .kpi .val{font-size:23px;font-weight:800;color:var(--amber);margin-top:8px;letter-spacing:-.02em;line-height:1}
+  .kpi .sub{font-size:11px;font-weight:600;margin-top:8px;color:#c8ccd0}
 
   /* ===== Layout ===== */
   .grid{display:grid;gap:16px;margin-top:16px}
   .g2{grid-template-columns:1.4fr 1fr}
-  .g2b{grid-template-columns:1fr 1fr}
   .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
   .panel h2{font-size:15px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
   .panel h2 .dot{width:8px;height:8px;border-radius:3px;background:var(--red)}
   .panel .hint{font-size:12px;color:var(--muted);margin-top:2px;margin-bottom:14px}
-  .hint-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;margin-bottom:14px}
-  .hint-chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;
-    color:var(--muted);background:var(--bg);border:1px solid var(--line);
-    border-radius:20px;padding:5px 11px;line-height:1}
-  .hint-chip svg{width:13px;height:13px;flex-shrink:0;color:var(--red)}
-  .hint-chip b{color:var(--ink);font-weight:700}
-  .hint-chip .op{color:var(--red);font-weight:800;font-size:12px}
   .ph{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
   .phr{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;
@@ -95,7 +114,6 @@
   .exp-btn{font-family:inherit;font-size:11px;font-weight:600;padding:6px 10px;border:1px solid var(--line);
     border-radius:7px;background:#fff;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:.15s}
   .exp-btn:hover{border-color:var(--red);color:var(--red)}
-  .exp-btn svg{width:12px;height:12px}
   .seg{display:flex;gap:4px;background:var(--bg);padding:3px;border-radius:9px}
   .seg button{border:none;background:none;font-family:inherit;font-size:12px;font-weight:600;
     padding:6px 11px;border-radius:7px;cursor:pointer;color:var(--muted)}
@@ -103,11 +121,12 @@
   .cwrap{position:relative;width:100%}
 
   /* ===== Table ===== */
-  table{width:100%;border-collapse:collapse;font-size:13px}
+  .tscroll{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:860px}
   th{text-align:right;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
-    color:var(--muted);padding:9px 10px;border-bottom:2px solid var(--line);cursor:pointer;user-select:none}
+    color:var(--muted);padding:9px 10px;border-bottom:2px solid var(--line);cursor:pointer;user-select:none;white-space:nowrap}
   th:first-child,td:first-child{text-align:left}
-  td{padding:10px;border-bottom:1px solid #F0F0F0;text-align:right;font-weight:500}
+  td{padding:10px;border-bottom:1px solid #F0F0F0;text-align:right;font-weight:500;white-space:nowrap}
   tbody tr:hover{background:#FAFAFA}
   .rank{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:6px;
     background:var(--bg);font-weight:800;font-size:11px;margin-right:8px}
@@ -116,12 +135,38 @@
     border-radius:4px;opacity:.16;z-index:0}
   .bar-cell span{position:relative;z-index:1}
   .pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+  th.sorted::after{content:' ▾';font-size:9px}
+  th.sorted.asc::after{content:' ▴'}
+
+  /* ===== Control de calidad ===== */
+  details.qcbox{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    box-shadow:var(--shadow);margin-top:16px;overflow:hidden}
+  details.qcbox summary{cursor:pointer;list-style:none;padding:14px 20px;font-size:14px;font-weight:800;
+    display:flex;align-items:center;gap:10px}
+  details.qcbox summary::-webkit-details-marker{display:none}
+  details.qcbox summary .badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+  .badge.ok{background:#E7F6EE;color:var(--ok)} .badge.warn{background:#FFF4D6;color:#8A6D00}
+  .qc-body{padding:0 20px 16px;display:grid;grid-template-columns:1fr 1fr;gap:4px 24px}
+  .qc-item{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;padding:5px 0;color:#3a3f45}
+  .qc-item .ic{width:16px;flex-shrink:0;font-weight:800;text-align:center}
+  .qc-item.ok .ic{color:var(--ok)} .qc-item.warn .ic{color:var(--warn)} .qc-item.bad .ic{color:var(--bad)}
+  .qc-item small{color:var(--muted)}
+  @media(max-width:900px){.qc-body{grid-template-columns:1fr}}
 
   .footnote{font-size:11px;color:var(--muted);margin-top:20px;text-align:center;line-height:1.6}
-  @media(max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}.g2,.g2b{grid-template-columns:1fr}}
+  @media(max-width:1300px){.kpis{grid-template-columns:repeat(3,1fr)}}
+  @media(max-width:1100px){.g2{grid-template-columns:1fr}}
+  @media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
+<div id="loadOverlay">
+  <div class="load-card">
+    <div class="spinner"></div>
+    <div class="load-title" id="loadTitle">Cargando datos del Google Sheet…</div>
+    <div class="load-sub">Leyendo la hoja en vivo. Con bases grandes puede tardar unos segundos.</div>
+  </div>
+</div>
 <div class="top-bar"></div>
 <header>
   <div class="h-left">
@@ -131,7 +176,10 @@
     <div class="h-vsep"></div>
     <div class="h-title">Análisis por <span>Ciudades</span></div>
   </div>
-  <div class="h-period" id="periodTag">—</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="h-period" id="updTag" style="display:none">—</div>
+    <div class="h-period" id="periodTag">—</div>
+  </div>
   <div style="display:flex;align-items:center;gap:10px;margin-left:14px">
     <span id="syncDot" title="Sincronización automática activa" style="width:8px;height:8px;border-radius:50%;background:#78E6A0;box-shadow:0 0 0 0 rgba(120,230,160,.6);flex-shrink:0"></span>
     <span id="uploadMsg" style="font-size:11px;color:#9aa0a6;opacity:0;transition:opacity .3s;max-width:320px"></span>
@@ -156,11 +204,31 @@
     <div class="fg"><label>Desde</label><input type="date" id="dFrom"></div>
     <div class="fg"><label>Hasta</label><input type="date" id="dTo"></div>
     <div class="fg"><label>Ciudad</label><select id="fCity"><option value="">Todas</option></select></div>
+    <div class="fg" id="fgDep"><label>Departamento</label><select id="fDep"><option value="">Todos</option></select></div>
+    <div class="fg" id="fgStatus"><label>Estado del pedido</label><select id="fStatus"></select></div>
     <div class="fg"><label>Tipo de cliente</label>
-      <select id="fType"><option value="">Todos</option><option value="1">Nuevos</option><option value="0">Recurrentes</option></select></div>
-    <div class="fg"><label>Marca / Categoría</label><select id="fBrand"><option value="">Todas</option></select></div>
+      <select id="fType"><option value="">Todos</option><option value="1">Nuevos (1ª compra del año)</option><option value="0">Recurrentes</option></select></div>
+    <div class="fg" id="fgBrand"><label>Marca</label><select id="fBrand"><option value="">Todas</option></select></div>
+    <div class="fg" id="fgCat"><label>Categoría</label><select id="fCat"><option value="">Todas</option></select></div>
+    <div class="fg" id="fgSku"><label>SKU / Producto</label><input list="skuDL" id="fSku" placeholder="Buscar producto…"><datalist id="skuDL"></datalist></div>
     <button class="reset" id="reset">↺ Limpiar filtros</button>
+    <div class="rule-chips">
+      <span class="hint-chip">Fuente: <b>Google Sheet en vivo</b> (solo lectura, sin datos externos)</span>
+      <span class="hint-chip"><b>1 pedido = 1 Order</b> · deduplicado por Nº de orden</span>
+      <span class="hint-chip">Facturables: <b>Faturado + Pronto para o manuseio</b> (cambiable en Estado)</span>
+      <span class="hint-chip">Ventas = <b>Total Value</b> del pedido · con filtro de Marca/Categoría/SKU: valor de los ítems coincidentes</span>
+      <span class="hint-chip">Ticket promedio = <b>Facturación ÷ Pedidos</b> (nunca promedio de promedios)</span>
+    </div>
   </div>
+
+  <div class="fatal" id="fatalErr"></div>
+
+  <!-- CONTROL DE CALIDAD -->
+  <details class="qcbox" id="qcBox">
+    <summary><span class="dot" style="width:8px;height:8px;border-radius:3px;background:var(--red)"></span>
+      Control de calidad de datos <span class="badge ok" id="qcBadge">cargando…</span></summary>
+    <div class="qc-body" id="qcList"></div>
+  </details>
 
   <!-- KPIs -->
   <div class="section-head">
@@ -171,14 +239,20 @@
     </div>
   </div>
   <div class="kpis" id="kpis"></div>
+  <div class="empty-note" id="emptyNote">Sin pedidos para los filtros seleccionados. Ajustá el rango de fechas o limpiá los filtros.</div>
 
   <!-- RANKING + SHARE -->
   <div class="grid g2">
     <div class="panel">
-      <div class="ph"><div><h2><span class="dot"></span>Ranking de ciudades por ventas</h2></div>
-        <div class="exp">
-          <button class="exp-btn" data-exp="ranking" data-fmt="csv">⬇ CSV</button>
-          <button class="exp-btn" data-exp="ranking" data-fmt="xlsx">⬇ Excel</button>
+      <div class="ph"><div><h2><span class="dot"></span>Ranking de ciudades</h2></div>
+        <div class="phr">
+          <div class="seg" id="rankSeg">
+            <button data-r="sales" class="on">Por ventas</button><button data-r="orders">Por pedidos</button>
+          </div>
+          <div class="exp">
+            <button class="exp-btn" data-exp="ranking" data-fmt="csv">⬇ CSV</button>
+            <button class="exp-btn" data-exp="ranking" data-fmt="xlsx">⬇ Excel</button>
+          </div>
         </div></div>
       <div class="cwrap"><canvas id="rankChart" height="360"></canvas></div>
     </div>
@@ -193,21 +267,36 @@
     </div>
   </div>
 
+  <!-- PARETO -->
+  <div class="grid">
+    <div class="panel">
+      <div class="ph"><div><h2><span class="dot"></span>Pareto 80/20 de ciudades</h2>
+        <p class="hint" id="paretoHint">Facturación por ciudad y % acumulado.</p></div>
+        <div class="exp">
+          <button class="exp-btn" data-exp="pareto" data-fmt="csv">⬇ CSV</button>
+          <button class="exp-btn" data-exp="pareto" data-fmt="xlsx">⬇ Excel</button>
+        </div></div>
+      <div class="cwrap"><canvas id="paretoChart" height="300"></canvas></div>
+    </div>
+  </div>
+
   <!-- DETALLE TABLA -->
   <div class="grid">
     <div class="panel">
-      <div class="ph"><div><h2><span class="dot"></span>Detalle por ciudad</h2></div>
+      <div class="ph"><div><h2><span class="dot"></span>Detalle por ciudad</h2>
+        <p class="hint" id="tblHint">Δ período: variación vs. el período anterior de igual duración, con los mismos filtros.</p></div>
         <div class="exp">
           <button class="exp-btn" data-exp="detalle" data-fmt="csv">⬇ CSV</button>
           <button class="exp-btn" data-exp="detalle" data-fmt="xlsx">⬇ Excel</button>
         </div></div>
-      <table id="cityTable">
+      <div class="tscroll"><table id="cityTable">
         <thead><tr>
-          <th data-k="city">Ciudad</th><th data-k="sales">Ventas ₲</th><th data-k="share">Part. %</th>
+          <th data-k="city">Ciudad</th><th data-k="sales" class="sorted">Ventas ₲</th><th data-k="share">Part. %</th>
           <th data-k="orders">Pedidos</th><th data-k="ticket">Ticket prom.</th>
-          <th data-k="clients">Clientes</th><th data-k="freq">Frecuencia</th><th data-k="newp">% Nuevos</th>
+          <th data-k="clients">Clientes</th><th data-k="units">Unidades</th>
+          <th data-k="freq">Frecuencia</th><th data-k="newp">% Nuevos</th><th data-k="delta">Δ período</th>
         </tr></thead><tbody></tbody>
-      </table>
+      </table></div>
     </div>
   </div>
 
@@ -234,7 +323,8 @@
   <!-- COMPARATIVO Y PROYECCION -->
   <div class="grid g2">
     <div class="panel">
-      <div class="ph"><div><h2><span class="dot"></span>Comparativo 2026 vs 2025</h2></div>
+      <div class="ph"><div><h2><span class="dot"></span>Comparativo 2026 vs 2025</h2>
+        <p class="hint">Toda la base anual con estados facturables, independiente de los filtros de arriba.</p></div>
         <div class="exp">
           <button class="exp-btn" data-exp="comparativo" data-fmt="csv">⬇ CSV</button>
           <button class="exp-btn" data-exp="comparativo" data-fmt="xlsx">⬇ Excel</button>
@@ -243,7 +333,8 @@
       <div class="cwrap"><canvas id="yoyChart" height="280"></canvas></div>
     </div>
     <div class="panel">
-      <div class="ph"><div><h2><span class="dot"></span>Proyección de cierre 2026</h2></div>
+      <div class="ph"><div><h2><span class="dot"></span>Proyección de cierre 2026</h2>
+        <p class="hint">Estacionalidad 2025 ajustada por el ritmo real 2026 (meses completos).</p></div>
         <div class="exp">
           <button class="exp-btn" data-exp="proyeccion" data-fmt="csv">⬇ CSV</button>
           <button class="exp-btn" data-exp="proyeccion" data-fmt="xlsx">⬇ Excel</button>
@@ -257,7 +348,7 @@
   <div class="grid">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Nuevos vs. recurrentes por ciudad</h2>
-        <p class="hint">Composición de la base de clientes en cada plaza.</p></div>
+        <p class="hint">Nuevo = primer pedido del cliente dentro del año activo.</p></div>
         <div class="exp">
           <button class="exp-btn" data-exp="segmentacion" data-fmt="csv">⬇ CSV</button>
           <button class="exp-btn" data-exp="segmentacion" data-fmt="xlsx">⬇ Excel</button>
@@ -270,305 +361,115 @@
 </div>
 
 <script>
-const DATA = {"cities": ["Asunción", "Caaguazú", "Capiatá", "Coronel Oviedo", "Encarnación", "Fernando de la Mora", "Itauguá", "Lambaré", "Limpio", "Luque", "Mariano Roque Alonso", "San Antonio", "San Lorenzo", "Villa Elisa", "Ypané", "Ñemby"], "deps": ["Asunción", "Caaguazú", "Central", "Itapúa"], "brands": ["Coca-Cola", "Schweppes", "Sprite", "Fanta", "Powerade", "Monster", "Agua/Dasani", "Jugos", "Otros"], "n_clients": 0, "date_min": "2026-01-01", "date_max": "2026-01-01", "orders": []};
-const CITIES=DATA.cities, DEPS=DATA.deps, BRANDS=DATA.brands;
-const RAMP=['#00B8D4','#3FBF6E','#FFD21E','#FF8F1F','#E31837'];
+/* ============================================================
+   CORE DE DATOS · Análisis por Ciudades · Mi Portal CC
+   Funciones puras (sin DOM). Testeadas en Node antes de integrar.
+   Regla de oro: todo se calcula desde las filas del Google Sheet,
+   sin estimar ni inventar valores. Deduplicación por Order.
+   ============================================================ */
 
-// ===== Helpers =====
-const fmtG = n => '₲ '+Math.round(n).toLocaleString('es-PY');
-const fmtShort = n => { n=Math.round(n);
-  if(n>=1e9)return (n/1e9).toFixed(2)+' MM'; if(n>=1e6)return (n/1e6).toFixed(1)+' M';
-  if(n>=1e3)return (n/1e3).toFixed(0)+' mil'; return n.toLocaleString('es-PY'); };
-const pct = (a,b)=> b===0?0:(a/b*100);
-const parseD = s => new Date(s+'T00:00:00');
-let DMIN=parseD(DATA.date_min), DMAX=parseD(DATA.date_max);
-
-// fill selects
-const fCity=document.getElementById('fCity'), fBrand=document.getElementById('fBrand');
-CITIES.forEach((c,i)=>fCity.add(new Option(c,i)));
-BRANDS.forEach((b,i)=>fBrand.add(new Option(b,i)));
-
-// state
-let state={from:DATA.date_min,to:DATA.date_max,city:'',type:'',brand:'',gran:'month',
-  sortK:'sales',sortDir:-1};
-const dFrom=document.getElementById('dFrom'), dTo=document.getElementById('dTo');
-dFrom.value=state.from; dTo.value=state.to; dFrom.min=DATA.date_min; dTo.max=DATA.date_max;
-
-// ===== Core filter =====
-function valOf(o){ // valor relevante según filtro de marca
-  if(state.brand==='') return o.v;
-  return o.b[state.brand]||0;
+/* ---------- Normalización de texto ---------- */
+function normKey(s){
+  return String(s==null?'':s).trim().replace(/\s+/g,' ')
+    .toLocaleUpperCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 }
-function passBrand(o){ return state.brand===''? true : (o.b[state.brand]>0); }
-
-function filterOrders(from,to){
-  const f=from||state.from, t=to||state.to;
-  return DATA.orders.filter(o=>{
-    if(o.d<f||o.d>t) return false;
-    if(state.city!==''&&o.c!=state.city) return false;
-    if(state.type!==''&&o.n!=state.type) return false;
-    if(!passBrand(o)) return false;
-    return true;
-  });
+function titleEs(s){
+  const MIN=new Set(['de','del','la','las','los','y','e','o']);
+  return String(s||'').trim().replace(/\s+/g,' ').toLocaleLowerCase('es')
+    .split(' ').map((w,i)=> (i>0&&MIN.has(w)) ? w : (w? w.charAt(0).toLocaleUpperCase('es')+w.slice(1):''))
+    .join(' ');
 }
+/* Nombres preferidos para claves conocidas (solo presentación; no altera la fuente) */
+const CITY_PREF = {
+  'ASUNCION':'Asunción','LAMBARE':'Lambaré','ITAUGUA':'Itauguá','ENCARNACION':'Encarnación',
+  'YPANE':'Ypané','CAPIATA':'Capiatá','NEMBY':'Ñemby','LUQUE':'Luque','SAN LORENZO':'San Lorenzo',
+  'FERNANDO DE LA MORA':'Fernando de la Mora','MARIANO ROQUE ALONSO':'Mariano Roque Alonso',
+  'VILLA ELISA':'Villa Elisa','SAN ANTONIO':'San Antonio','LIMPIO':'Limpio','CAAGUAZU':'Caaguazú',
+  'CORONEL OVIEDO':'Coronel Oviedo','AREGUA':'Areguá','ITA':'Itá','CIUDAD DEL ESTE':'Ciudad del Este',
+  'PEDRO JUAN CABALLERO':'Pedro Juan Caballero','VILLETA':'Villeta','GUARAMBARE':'Guarambaré',
+  'J. AUGUSTO SALDIVAR':'J. Augusto Saldívar','JULIAN AUGUSTO SALDIVAR':'Julián Augusto Saldívar',
+  'SAN BERNARDINO':'San Bernardino','CAACUPE':'Caacupé','PILAR':'Pilar','CONCEPCION':'Concepción',
+  'PARAGUARI':'Paraguarí','VILLARRICA':'Villarrica','HERNANDARIAS':'Hernandarias'
+};
+const DEP_PREF = {
+  'CENTRAL':'Central','ASUNCION':'Asunción','ITAPUA':'Itapúa','CAAGUAZU':'Caaguazú',
+  'ALTO PARANA':'Alto Paraná','CORDILLERA':'Cordillera','PARAGUARI':'Paraguarí',
+  'TETAVORE CENTRAL':'Central','TETAVORE KA\'AGUASU':'Caaguazú','TETAVORE ITAPUA':'Itapúa','PARAGUAY':'Central'
+};
 
-// ===== Aggregations =====
-function aggByCity(orders){
-  const m={};
-  orders.forEach(o=>{
-    const k=o.c; if(!m[k])m[k]={sales:0,orders:0,clients:new Set(),newO:0};
-    m[k].sales+=valOf(o); m[k].orders++; m[k].clients.add(o.u); if(o.n)m[k].newO++;
-  });
-  const tot=orders.reduce((s,o)=>s+valOf(o),0);
-  return Object.entries(m).map(([k,v])=>({
-    ci:+k,city:CITIES[+k],sales:v.sales,orders:v.orders,clients:v.clients.size,
-    ticket:v.orders?v.sales/v.orders:0,freq:v.clients.size?v.orders/v.clients.size:0,
-    share:pct(v.sales,tot),newp:v.orders?pct(v.newO,v.orders):0
-  })).sort((a,b)=>b.sales-a.sales);
-}
-
-// ===== Charts refs =====
-let rankChart,shareChart,timeChart,segChart;
-
-function render(){
-  state.from=dFrom.value; state.to=dTo.value;
-  const orders=filterOrders();
-  const rows=aggByCity(orders);
-
-  renderKPIs(orders);
-  renderRank(rows);
-  renderShare(rows);
-  renderTable(rows);
-  renderTime(orders);
-  renderSeg(rows);
-
-  document.getElementById('periodTag').textContent=
-    `${fmtDate(state.from)} – ${fmtDate(state.to)} · ${orders.length.toLocaleString('es-PY')} pedidos`;
-  document.getElementById('foot').textContent=
-    `Dataset: ${DATA.orders.length.toLocaleString('es-PY')} pedidos · ${DATA.n_clients.toLocaleString('es-PY')} clientes · ${CITIES.length} ciudades · ${fmtDate(DATA.date_min)} a ${fmtDate(DATA.date_max)}. `+
-    `Regla de actualización Mi Portal: la data nueva se acumula sobre la existente (deduplicar por pedido).`;
-}
-function fmtDate(s){const d=parseD(s);return d.toLocaleDateString('es-PY',{day:'2-digit',month:'short',year:'2-digit'});}
-
-// ===== KPIs =====
-function renderKPIs(orders){
-  const sales=orders.reduce((s,o)=>s+valOf(o),0);
-  const nOrd=orders.length, ticket=nOrd?sales/nOrd:0;
-  const clients=new Set(orders.map(o=>o.u)).size;
-  const k=document.getElementById('kpis');
-  k.innerHTML=`
-   <div class="kpi"><div class="lab">Ventas totales</div><div class="val">${fmtG(sales)}</div></div>
-   <div class="kpi"><div class="lab">Pedidos</div><div class="val">${nOrd.toLocaleString('es-PY')}</div></div>
-   <div class="kpi"><div class="lab">Ticket promedio</div><div class="val">${fmtG(ticket)}</div><div class="sub">por pedido</div></div>
-   <div class="kpi"><div class="lab">Clientes únicos</div><div class="val">${clients.toLocaleString('es-PY')}</div><div class="sub">${(nOrd/Math.max(clients,1)).toFixed(2)} pedidos/cliente</div></div>`;
+/* ---------- Números exactos (sin NaN) ---------- */
+function toNum(v, qc){
+  if(v==null || v==='') return 0;
+  if(typeof v==='number'){ if(isFinite(v)) return v; if(qc)qc.badNum++; return 0; }
+  let s=String(v).trim(); if(!s) return 0;
+  s=s.replace(/[^\d.,-]/g,'');
+  if(!s || s==='-' ){ if(qc)qc.badNum++; return 0; }
+  const lastDot=s.lastIndexOf('.'), lastCom=s.lastIndexOf(',');
+  if(lastDot>-1 && lastCom>-1){
+    if(lastDot>lastCom) s=s.replace(/,/g,'');                 // 1,234.56
+    else s=s.replace(/\./g,'').replace(/,/g,'.');             // 1.234,56
+  } else if(lastCom>-1){
+    s=/^-?\d{1,3}(,\d{3})+$/.test(s) ? s.replace(/,/g,'') : s.replace(/,/g,'.');
+  } else if(lastDot>-1){
+    if(/^-?\d{1,3}(\.\d{3})+$/.test(s)) s=s.replace(/\./g,'');
+  }
+  const n=parseFloat(s);
+  if(!isFinite(n)){ if(qc)qc.badNum++; return 0; }
+  return n;
 }
 
-// ===== Ranking bar =====
-function rampColor(i,n){ if(n<=1)return RAMP[4]; const t=i/(n-1)*4; const lo=Math.floor(t),hi=Math.min(lo+1,4),f=t-lo;
-  const a=hex(RAMP[lo]),b=hex(RAMP[hi]); return `rgb(${Math.round(a[0]+(b[0]-a[0])*f)},${Math.round(a[1]+(b[1]-a[1])*f)},${Math.round(a[2]+(b[2]-a[2])*f)})`; }
-function hex(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+/* ---------- Fechas ---------- */
+const isoLocal = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const parseD = s => new Date(String(s)+'T00:00:00');
+const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-function renderRank(rows){
-  const top=rows.slice(0,12);
-  const colors=top.map((_,i)=>rampColor(top.length-1-i,top.length));
-  const ctx=document.getElementById('rankChart');
-  const cfg={type:'bar',data:{labels:top.map(r=>r.city),
-    datasets:[{data:top.map(r=>r.sales),backgroundColor:colors,borderRadius:6,barThickness:'flex',maxBarThickness:26}]},
-    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>fmtG(c.raw)+'  ·  '+pct(c.raw,rows.reduce((s,r)=>s+r.sales,0)).toFixed(1)+'%'}}},
-      scales:{x:{ticks:{callback:v=>fmtShort(v),font:{size:11}},grid:{color:'#F0F0F0'}},
-              y:{ticks:{font:{size:12,weight:'600'}},grid:{display:false}}}}};
-  if(rankChart){rankChart.data=cfg.data;rankChart.update();}else rankChart=new Chart(ctx,cfg);
-}
-
-// ===== Share doughnut =====
-function renderShare(rows){
-  const top=rows.slice(0,6); const other=rows.slice(6).reduce((s,r)=>s+r.sales,0);
-  const labels=top.map(r=>r.city), vals=top.map(r=>r.sales);
-  if(other>0){labels.push('Resto');vals.push(other);}
-  const cols=['#E31837','#FF8F1F','#FFD21E','#3FBF6E','#00B8D4','#7C4DFF','#B0BEC5'];
-  const ctx=document.getElementById('shareChart');
-  const cfg={type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:cols,borderWidth:2,borderColor:'#fff'}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
-      plugins:{legend:{position:'bottom',labels:{font:{size:11,weight:'500'},padding:9,boxWidth:11,boxHeight:11}},
-        tooltip:{callbacks:{label:c=>c.label+': '+fmtShort(c.raw)+' ('+pct(c.raw,vals.reduce((a,b)=>a+b,0)).toFixed(1)+'%)'}}}}};
-  if(shareChart){shareChart.data=cfg.data;shareChart.update();}else shareChart=new Chart(ctx,cfg);
-}
-
-// ===== Table =====
-function renderTable(rows){
-  const totSales=rows.reduce((s,r)=>s+r.sales,0); const maxS=Math.max(...rows.map(r=>r.sales),1);
-  const k=state.sortK,dir=state.sortDir;
-  const sorted=[...rows].sort((a,b)=> k==='city'? a.city.localeCompare(b.city)*(-dir) : (a[k]-b[k])*dir);
-  const tb=document.querySelector('#cityTable tbody');
-  tb.innerHTML=sorted.map((r,i)=>`<tr>
-    <td class="bar-cell"><div class="fill" style="width:${r.sales/maxS*100}%;background:${rampColor(rows.findIndex(x=>x.ci===r.ci),rows.length)}"></div>
-      <span><span class="rank">${i+1}</span>${r.city}</span></td>
-    <td>${fmtG(r.sales)}</td>
-    <td><span class="pill" style="background:${r.share>=15?'#FDECEA':'#F2F2F2'};color:${r.share>=15?'#D8342E':'#555'}">${r.share.toFixed(1)}%</span></td>
-    <td>${r.orders.toLocaleString('es-PY')}</td><td>${fmtG(r.ticket)}</td>
-    <td>${r.clients.toLocaleString('es-PY')}</td><td>${r.freq.toFixed(2)}</td>
-    <td>${r.newp.toFixed(0)}%</td></tr>`).join('');
-}
-
-// ===== Time series =====
-function bucketKey(d,gran){
-  const dt=parseD(d);
-  if(gran==='day')return d;
-  if(gran==='week'){const o=new Date(dt);const day=(o.getDay()+6)%7;o.setDate(o.getDate()-day);return o.toISOString().slice(0,10);}
+function bucketKey(d, gran){
+  if(gran==='day') return d;
+  if(gran==='week'){
+    const o=parseD(d); const day=(o.getDay()+6)%7; o.setDate(o.getDate()-day);
+    return isoLocal(o);                                        // lunes de la semana, sin desfase UTC
+  }
   return d.slice(0,7);
 }
-function renderTime(orders){
-  const gran=state.gran;
-  const cityTot={}; orders.forEach(o=>cityTot[o.c]=(cityTot[o.c]||0)+valOf(o));
-  const top5=Object.entries(cityTot).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>+e[0]);
-  const buckets={};
-  orders.forEach(o=>{const bk=bucketKey(o.d,gran);if(!buckets[bk])buckets[bk]={};
-    const key=top5.includes(o.c)?o.c:'resto';buckets[bk][key]=(buckets[bk][key]||0)+valOf(o);});
-  const labels=Object.keys(buckets).sort();
-  const series=[...top5.map(c=>({name:CITIES[c],key:c})), {name:'Resto',key:'resto'}];
-  const cols=['#E31837','#FF8F1F','#FFD21E','#3FBF6E','#00B8D4','#B0BEC5'];
-  const datasets=series.map((s,i)=>({label:s.name,
-    data:labels.map(l=>buckets[l][s.key]||0),borderColor:cols[i],backgroundColor:cols[i]+'22',
-    borderWidth:s.key==='resto'?1.5:2.5,borderDash:s.key==='resto'?[5,4]:[],
-    tension:.3,pointRadius:labels.length>40?0:3,pointHoverRadius:5,fill:false}));
-  const labFmt=l=> gran==='month'? parseD(l+'-01').toLocaleDateString('es-PY',{month:'short',year:'2-digit'})
-    : parseD(l).toLocaleDateString('es-PY',{day:'2-digit',month:'short'});
-  const ctx=document.getElementById('timeChart');
-  const cfg={type:'line',data:{labels:labels.map(labFmt),datasets},
-    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{position:'top',labels:{font:{size:11,weight:'500'},boxWidth:14,padding:10,usePointStyle:true}},
-        tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmtG(c.raw)}}},
-      scales:{y:{ticks:{callback:v=>fmtShort(v),font:{size:11}},grid:{color:'#F0F0F0'}},x:{ticks:{font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:14},grid:{display:false}}}}};
-  if(timeChart){timeChart.data=cfg.data;timeChart.options=cfg.options;timeChart.update();}else timeChart=new Chart(ctx,cfg);
+function prevRange(from, to){
+  const f=parseD(from), t=parseD(to);
+  if(isNaN(f)||isNaN(t)||t<f) return null;
+  const days=Math.round((t-f)/86400000)+1;
+  const pt=new Date(f); pt.setDate(pt.getDate()-1);
+  const pf=new Date(pt); pf.setDate(pf.getDate()-days+1);
+  return {from:isoLocal(pf), to:isoLocal(pt), days};
 }
 
-// ===== Segmentation stacked =====
-function renderSeg(rows){
-  const top=rows.slice(0,9);
-  const ctx=document.getElementById('segChart');
-  const newC=top.map(r=>Math.round(r.orders*r.newp/100));
-  const recC=top.map(r=>r.orders-Math.round(r.orders*r.newp/100));
-  const cfg={type:'bar',data:{labels:top.map(r=>r.city),datasets:[
-    {label:'Nuevos',data:newC,backgroundColor:'#E31837',borderRadius:4},
-    {label:'Recurrentes',data:recC,backgroundColor:'#FFB300',borderRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12,usePointStyle:true}},
-        tooltip:{callbacks:{footer:items=>{const t=items.reduce((s,i)=>s+i.raw,0);return 'Total: '+t+' pedidos';}}}},
-      scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10},maxRotation:35,minRotation:0}},
-              y:{stacked:true,grid:{color:'#F0F0F0'},ticks:{font:{size:11}}}}}};
-  if(segChart){segChart.data=cfg.data;segChart.update();}else segChart=new Chart(ctx,cfg);
-}
-
-// ===== Exportación CSV / Excel =====
-function expData(kind){
-  const orders=filterOrders();
-  const rows=aggByCity(orders);
-  if(kind==='resumen'){
-    const sales=orders.reduce((s,o)=>s+valOf(o),0), n=orders.length;
-    const ticket=n?Math.round(sales/n):0, clients=new Set(orders.map(o=>o.u)).size;
-    return {name:'Resumen general',header:['Métrica','Valor'],rows:[
-      ['Ventas totales (Gs)',Math.round(sales)],['Pedidos',n],
-      ['Ticket promedio (Gs)',ticket],['Clientes únicos',clients],
-      ['Pedidos por cliente', clients? +(n/clients).toFixed(2):0]]};
+/* ---------- Detección de columnas (tolerante a cambios del Sheet) ---------- */
+const COLS = {
+  order:  ['Order','Order Id','Pedido','Nro Pedido','N° Pedido'],
+  date:   ['Creation Date','CreationDate','Fecha','Fecha de creacion','Fecha de creación'],
+  city:   ['City','Ciudad'],
+  dep:    ['UF','State','Departamento','Depto'],
+  status: ['Status','Estado','Status Description'],
+  total:  ['Total Value','TotalValue','Order Total','Total del pedido'],
+  lineVal:['SKU Total Price','Total Item Value','Precio Total SKU'],
+  qty:    ['Quantity_SKU','Quantity','SKU Quantity','Cantidad','Qty'],
+  sku:    ['SKU Name','SKU','Producto','Item Name'],
+  doc:    ['Client Document','Document','Documento','CI/RUC'],
+  coupon: ['Coupon','Cupon','Cupón'],
+  cat:    ['Category','Categoria','Categoría','Category Name']
+};
+function detectCols(headers){
+  const hmap={}; const dupHeaders=[];
+  headers.forEach(h=>{ const k=normKey(h); if(hmap[k]!==undefined && h) dupHeaders.push(h); hmap[k]=h; });
+  const found={};
+  for(const key in COLS){
+    found[key]=null;
+    for(const cand of COLS[key]){ const hit=hmap[normKey(cand)]; if(hit!==undefined){ found[key]=hit; break; } }
   }
-  if(kind==='ranking')
-    return {name:'Ranking de ciudades',header:['#','Ciudad','Ventas (Gs)'],
-      rows:rows.map((r,i)=>[i+1,r.city,Math.round(r.sales)])};
-  if(kind==='participacion')
-    return {name:'Participación en ventas',header:['Ciudad','Ventas (Gs)','Participación (%)'],
-      rows:rows.map(r=>[r.city,Math.round(r.sales),+r.share.toFixed(1)])};
-  if(kind==='detalle')
-    return {name:'Detalle por ciudad',
-      header:['Ciudad','Ventas (Gs)','Participación (%)','Pedidos','Ticket prom. (Gs)','Clientes','Frecuencia','% Nuevos'],
-      rows:rows.map(r=>[r.city,Math.round(r.sales),+r.share.toFixed(1),r.orders,Math.round(r.ticket),r.clients,+r.freq.toFixed(2),Math.round(r.newp)])};
-  if(kind==='segmentacion')
-    return {name:'Nuevos vs recurrentes',header:['Ciudad','Nuevos','Recurrentes','Total'],
-      rows:rows.map(r=>{const nv=Math.round(r.orders*r.newp/100);return [r.city,nv,r.orders-nv,r.orders];})};
+  return {found, dupHeaders};
 }
-function expTime(){
-  const orders=filterOrders(), gran=state.gran;
-  const cityTot={}; orders.forEach(o=>cityTot[o.c]=(cityTot[o.c]||0)+valOf(o));
-  const top5=Object.entries(cityTot).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>+e[0]);
-  const buckets={};
-  orders.forEach(o=>{const bk=bucketKey(o.d,gran);if(!buckets[bk])buckets[bk]={};
-    const key=top5.includes(o.c)?o.c:'resto';buckets[bk][key]=(buckets[bk][key]||0)+valOf(o);});
-  const labels=Object.keys(buckets).sort();
-  const cols=[...top5.map(c=>({name:CITIES[c],key:c})),{name:'Resto',key:'resto'}];
-  return {name:'Evolución temporal',
-    header:['Período',...cols.map(c=>c.name+' (Gs)')],
-    rows:labels.map(l=>[l,...cols.map(c=>Math.round(buckets[l][c.key]||0))])};
-}
-function slug(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');}
-function fname(name,ext){return 'analisis_ciudades_'+slug(name)+'_'+state.from+'_a_'+state.to+'.'+ext;}
-function dl(blob,fn){const u=URL.createObjectURL(blob);const a=document.createElement('a');
-  a.href=u;a.download=fn;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);}
-function csvCell(v){ if(typeof v==='number') return String(v).replace('.',',');
-  const s=String(v); return /[;"\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }
-function exportCSV(d){
-  const lines=[d.header.join(';'),...d.rows.map(r=>r.map(csvCell).join(';'))];
-  dl(new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'}), fname(d.name,'csv'));
-}
-function exportXLSX(d){
-  if(typeof XLSX==='undefined'){alert('No se pudo cargar el módulo de Excel (revisá la conexión). Podés usar el botón CSV, que también abre en Excel.');return;}
-  const ws=XLSX.utils.aoa_to_sheet([d.header,...d.rows]);
-  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,d.name.slice(0,31));
-  XLSX.writeFile(wb, fname(d.name,'xlsx'));
-}
-document.addEventListener('click',e=>{
-  const b=e.target.closest('.exp-btn'); if(!b)return;
-  const kind=b.dataset.exp;
-  const d = kind==='evolucion'? expTime()
-          : kind==='comparativo'? expYoY()
-          : kind==='proyeccion'? expProj()
-          : expData(kind);
-  if(b.dataset.fmt==='xlsx') exportXLSX(d); else exportCSV(d);
-});
 
-// ===== Events =====
-document.getElementById('presets').addEventListener('click',e=>{
-  const b=e.target.closest('.chip'); if(!b)return;
-  if(b.dataset.y){ setYear(b.dataset.y); return; }   // chips de año → cambio de fuente
-  document.querySelectorAll('#presets .chip:not(.chip-year)').forEach(c=>c.classList.remove('active'));
-  b.classList.add('active'); const p=b.dataset.p;
-  if(p==='all'){dFrom.value=DATA.date_min;dTo.value=DATA.date_max;}
-  else if(p==='month'){const d=new Date(DMAX);const f=new Date(d.getFullYear(),d.getMonth(),1);
-    dFrom.value=f.toISOString().slice(0,10);dTo.value=DATA.date_max;}
-  else{const d=new Date(DMAX);const f=new Date(d);f.setDate(f.getDate()-(+p-1));
-    dFrom.value=f.toISOString().slice(0,10);dTo.value=DATA.date_max;}
-  render();
-});
-[dFrom,dTo].forEach(el=>el.addEventListener('change',()=>{
-  document.querySelectorAll('#presets .chip').forEach(c=>c.classList.remove('active'));render();}));
-fCity.addEventListener('change',e=>{state.city=e.target.value;render();});
-document.getElementById('fType').addEventListener('change',e=>{state.type=e.target.value;render();});
-fBrand.addEventListener('change',e=>{state.brand=e.target.value;render();});
-document.getElementById('granSeg').addEventListener('click',e=>{
-  const b=e.target.closest('button'); if(!b)return;
-  document.querySelectorAll('#granSeg button').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on'); state.gran=b.dataset.g; render();});
-document.querySelectorAll('#cityTable th').forEach(th=>th.addEventListener('click',()=>{
-  const k=th.dataset.k; if(state.sortK===k)state.sortDir*=-1; else{state.sortK=k;state.sortDir=k==='city'?1:-1;}
-  render();}));
-document.getElementById('reset').addEventListener('click',()=>{
-  state={from:DATA.date_min,to:DATA.date_max,city:'',type:'',brand:'',gran:'month',sortK:'sales',sortDir:-1};
-  dFrom.value=DATA.date_min;dTo.value=DATA.date_max;fCity.value='';document.getElementById('fType').value='';fBrand.value='';
-  document.querySelectorAll('#presets .chip').forEach(c=>c.classList.remove('active'));
-  document.querySelector('#presets [data-p=all]').classList.add('active');
-  document.querySelectorAll('#granSeg button').forEach(x=>x.classList.remove('on'));
-  document.querySelector('#granSeg [data-g=month]').classList.add('on');
-  render();});
-window.addEventListener('resize',()=>{clearTimeout(window._rt);window._rt=setTimeout(render,200);});
-
-// ===== Carga dinámica de nuevos reportes (CSV/XLSX VTEX) =====
-const CITY_FIX = {'Lambare':'Lambaré','Itagua':'Itauguá','Encarnacion':'Encarnación','Ypane':'Ypané',
-  'Capiata':'Capiatá','Fernando De La Mora':'Fernando de la Mora'};
-const DEP_FIX = {'Tetãvore Central':'Central',"Tetãvore Ka'Aguasu":'Caaguazú','Tetãvore Itapúa':'Itapúa','Paraguay':'Central'};
-function normCity(s){ s=(s||'').trim(); return CITY_FIX[s]||s; }
-function titleCase(s){ return (s||'').trim().replace(/\w\S*/g, t=>t.charAt(0).toUpperCase()+t.substr(1).toLowerCase()); }
-function normDep(s){ const t=titleCase(s); return DEP_FIX[t]||t; }
+/* ---------- Marca heurística por nombre de producto ---------- */
+const BRANDS=['Coca-Cola','Schweppes','Sprite','Fanta','Powerade','Monster','Agua/Dasani','Jugos','Otros'];
 function classifyBrand(sku){
-  const s=(sku||'').toLowerCase();
+  const s=String(sku||'').toLowerCase();
   if(s.includes('coca-cola')||s.includes('coca cola')) return 0;
   if(s.includes('schweppes')) return 1;
   if(s.includes('sprite')) return 2;
@@ -579,79 +480,316 @@ function classifyBrand(sku){
   if(s.includes('del valle')||s.includes('kapo')||s.includes('ades')||s.includes('jugo')) return 7;
   return 8;
 }
-function isRetornable(sku){ const s=(sku||'').toLowerCase(); return s.includes('retornable')||s.trim().endsWith('rf')||s.includes('- rf'); }
 
-function parseVtexRows(rawRows){
-  // rawRows: array of objects with VTEX column names (from XLSX.utils.sheet_to_json or CSV parse)
-  const ordersMap = {};
-  rawRows.forEach(r=>{
-    const orderId = r['Order'];
-    if(!orderId) return;
-    if(!ordersMap[orderId]) ordersMap[orderId]=[];
-    ordersMap[orderId].push(r);
+/* ---------- Estados válidos (convención Mi Portal) ---------- */
+const VALID_STATUS_KEYS = new Set(['FATURADO','PRONTO PARA O MANUSEIO']);
+
+/* ============================================================
+   CONSTRUCCIÓN DEL MODELO desde filas crudas del Sheet
+   rows: [{Header: value, ...}] · headers: [String]
+   - Ignora filas vacías (contadas)
+   - Deduplica líneas exactas (contadas)
+   - Agrupa por Order (1 pedido = 1 unidad de facturación)
+   - Normaliza ciudad/departamento SOLO para el análisis
+   - No estima nada: columnas ausentes ⇒ métrica deshabilitada
+   ============================================================ */
+function buildModel(rows, headers){
+  const {found:C, dupHeaders}=detectCols(headers||[]);
+  const qc={ rowsRead:rows.length, emptyRows:0, dupLines:0, noOrder:0, badDate:0, badDateOrders:0,
+    noDoc:0, noCity:0, multiCity:0, badNum:0, fallbackTotal:0, cityMerges:[], dupHeaders,
+    missingCols:[], statusValues:{} };
+
+  const missingReq=[];
+  if(!C.order) missingReq.push('Order');
+  if(!C.date)  missingReq.push('Creation Date');
+  if(!C.city)  missingReq.push('City');
+  if(!C.total && !C.lineVal) missingReq.push('Total Value / SKU Total Price');
+  if(missingReq.length) return {fatal:'Faltan columnas obligatorias en el Sheet: '+missingReq.join(', '), qc};
+
+  [['qty','Cantidad (Quantity_SKU)'],['sku','SKU Name'],['doc','Client Document'],
+   ['status','Status'],['dep','UF/Departamento'],['cat','Category'],['coupon','Coupon'],['total','Total Value']]
+   .forEach(([k,label])=>{ if(!C[k]) qc.missingCols.push(label); });
+
+  /* --- Paso 1: filas → líneas limpias agrupadas por Order --- */
+  const ordersMap=new Map(); const seenLine=new Set();
+  rows.forEach(r=>{
+    if(!r) return;
+    let allEmpty=true;
+    for(const k in r){ if(r[k]!==''&&r[k]!=null){ allEmpty=false; break; } }
+    if(allEmpty){ qc.emptyRows++; return; }
+    const oid=String(r[C.order]==null?'':r[C.order]).trim();
+    if(!oid){ qc.noOrder++; return; }
+    const fp=oid+'\u0001'+String(r[C.sku]||'')+'\u0001'+String(r[C.qty]||'')+'\u0001'+
+             String(r[C.lineVal]||'')+'\u0001'+String(r[C.date]||'');
+    if(seenLine.has(fp)){ qc.dupLines++; return; }
+    seenLine.add(fp);
+    if(!ordersMap.has(oid)) ordersMap.set(oid,[]);
+    ordersMap.get(oid).push(r);
   });
-  return ordersMap;
-}
 
-function buildCiudadesDelta(ordersMap, existingDateMax, existingNClients){
-  let nextIdx = existingNClients;
-  const docToIdx = {};
-  const newOrders = [];
-  Object.entries(ordersMap).forEach(([orderId, lines])=>{
-    const creationDate = (lines[0]['Creation Date']||'').slice(0,10);
-    if(!creationDate || creationDate <= existingDateMax) return; // ya cubierto
-    const city = normCity(lines[0]['City']);
-    const dep = normDep(lines[0]['UF']);
-    const cIdx = CITIES.indexOf(city);
-    const pIdx = DEPS.indexOf(dep);
-    if(cIdx<0||pIdx<0) return; // ciudad/depto desconocido, se omite con seguridad
+  /* --- Paso 2: interning de ciudades / deptos / estados / skus / categorías --- */
+  const cityVariants=new Map();  // key -> Map(raw -> count)
+  const depVariants=new Map();
+  const statusIdx=new Map(), statuses=[];
+  const skuIdx=new Map(), skus=[];
+  const catIdx=new Map(), cats=[];
+  const intern=(map,arr,name)=>{ if(!map.has(name)){ map.set(name,arr.length); arr.push(name); } return map.get(name); };
 
-    const doc = lines[0]['Client Document']||('anon-'+orderId);
-    let isNew = 0;
-    if(!(doc in docToIdx)){ docToIdx[doc]=nextIdx++; isNew=1; }
+  /* --- Paso 3: pedidos ordenados cronológicamente (para 1ª compra) --- */
+  const rawOrders=[];
+  ordersMap.forEach((lines,oid)=>{
+    const rawDate=String(lines[0][C.date]||'');
+    const d=rawDate.slice(0,10);
+    if(!ISO_RE.test(d)){ qc.badDateOrders++; qc.badDate+=lines.length; return; }
+    rawOrders.push({oid, lines, d, ts:rawDate});
+  });
+  rawOrders.sort((a,b)=> a.ts<b.ts?-1:a.ts>b.ts?1:0);
 
-    let totalValue=0, retornableValue=0, hasCoupon=0;
-    const breakdown={};
+  const docFirst=new Map(); let anonSeq=0;
+  const orders=[];
+  let dateMin=null, dateMax=null;
+
+  rawOrders.forEach(({oid,lines,d,ts})=>{
+    if(!dateMin||d<dateMin)dateMin=d; if(!dateMax||d>dateMax)dateMax=d;
+
+    /* ciudad / departamento */
+    const cKeys=new Set();
+    lines.forEach(l=>{ const k=normKey(l[C.city]); if(k)cKeys.add(k); });
+    if(cKeys.size>1) qc.multiCity++;
+    let cKey=cKeys.size?cKeys.values().next().value:'';
+    if(!cKey){ cKey='(SIN CIUDAD)'; qc.noCity++; }
+    const rawCity=String(lines[0][C.city]||'').trim();
+    if(!cityVariants.has(cKey)) cityVariants.set(cKey,new Map());
+    if(rawCity) cityVariants.get(cKey).set(rawCity,(cityVariants.get(cKey).get(rawCity)||0)+1);
+
+    let pKey='(SIN DATO)';
+    if(C.dep){ const k=normKey(lines[0][C.dep]); if(k){ pKey=k;
+      if(!depVariants.has(pKey)) depVariants.set(pKey,new Map());
+      const rd=String(lines[0][C.dep]).trim();
+      depVariants.get(pKey).set(rd,(depVariants.get(pKey).get(rd)||0)+1);
+    }}
+
+    /* estado */
+    let st=-1;
+    if(C.status){ const sName=String(lines[0][C.status]==null?'':lines[0][C.status]).trim()||'(sin estado)';
+      st=intern(statusIdx,statuses,sName);
+      qc.statusValues[sName]=(qc.statusValues[sName]||0)+1;
+    }
+
+    /* cliente */
+    let docRaw = C.doc ? String(lines[0][C.doc]==null?'':lines[0][C.doc]).trim() : '';
+    let docKey;
+    if(docRaw){ const digits=docRaw.replace(/\D/g,''); docKey = digits.length>=4 ? '#'+digits : '#'+docRaw.toLocaleLowerCase(); }
+    else { docKey='#anon:'+(++anonSeq); qc.noDoc++; }
+    let isNew=0;
+    if(!docFirst.has(docKey)){ docFirst.set(docKey,oid); isNew=1; }
+
+    /* líneas: valor / cantidad / marca / categoría / sku */
+    let lineSum=0, q= C.qty ? 0 : null; let cp=0;
+    const L=[];
     lines.forEach(line=>{
-      const sku=line['SKU Name']||'';
-      const totalPrice=parseFloat(line['SKU Total Price']||0)||0;
-      const b=classifyBrand(sku);
-      breakdown[b]=(breakdown[b]||0)+totalPrice;
-      if(isRetornable(sku)) retornableValue+=totalPrice;
-      if(line['Coupon']) hasCoupon=1;
-      totalValue+=totalPrice;
+      const skuName=C.sku?String(line[C.sku]||''):''; 
+      const v=C.lineVal?toNum(line[C.lineVal],qc):0;
+      const lq=C.qty?toNum(line[C.qty],qc):null;
+      lineSum+=v; if(q!=null&&lq!=null)q+=lq;
+      if(C.coupon && String(line[C.coupon]||'').trim()) cp=1;
+      L.push({
+        k: C.sku? intern(skuIdx,skus,skuName) : -1,
+        b: classifyBrand(skuName),
+        c: C.cat? intern(catIdx,cats,String(line[C.cat]||'').trim()||'(sin categoría)') : -1,
+        v: v, q: lq
+      });
     });
-    const orderTotal=parseFloat(lines[0]['Total Value']||0)||0;
-    if(orderTotal>0) totalValue=orderTotal;
+    let v = C.total ? toNum(lines[0][C.total],qc) : 0;
+    if(!(v>0) && lineSum>0){ v=lineSum; if(C.total) qc.fallbackTotal++; }
 
-    const bClean={};
-    Object.entries(breakdown).forEach(([k,v])=>{ if(v>0) bClean[k]=Math.round(v); });
-
-    newOrders.push({d:creationDate,c:cIdx,p:pIdx,u:docToIdx[doc],v:Math.round(totalValue),
-      n:isNew,cp:hasCoupon,b:bClean,rf:Math.round(retornableValue)});
+    orders.push({id:oid, d, c:cKey, p:pKey, u:docKey, n:isNew, st, v, q, cp, lines:L});
   });
-  return {newOrders, newClientsCount:Object.keys(docToIdx).length};
-}
 
-function showUploadMsg(msg, kind){
-  const el=document.getElementById('uploadMsg');
-  if(!el) return;
-  el.textContent=msg;
-  el.style.color = kind==='ok' ? '#1E9E5A' : '#D8342E';
-  el.style.opacity=1;
-  clearTimeout(window._um);
-  window._um=setTimeout(()=>{el.style.opacity=0;},6000);
+  /* --- Paso 4: nombres de presentación + índices finales --- */
+  const pickDisplay=(key,variants,pref)=>{
+    if(pref[key]) return pref[key];
+    let best=null,bestN=-1,merged=0;
+    if(variants){ variants.forEach((n,raw)=>{ merged++; 
+      const score=n + (/[áéíóúñÁÉÍÓÚÑ]/.test(raw)?0.5:0) + (raw!==raw.toUpperCase()&&raw!==raw.toLowerCase()?0.25:0);
+      if(score>bestN){bestN=score;best=raw;} }); }
+    return best? (best===best.toUpperCase()||best===best.toLowerCase()? titleEs(best):best) : titleEs(key);
+  };
+  const cityKeys=[...new Set(orders.map(o=>o.c))];
+  const cities=cityKeys.map(k=>({key:k,name: k==='(SIN CIUDAD)'?'(Sin ciudad)':pickDisplay(k,cityVariants.get(k),CITY_PREF)}))
+    .sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  const cityToIdx=new Map(cities.map((c,i)=>[c.key,i]));
+  cityVariants.forEach((vars,k)=>{ if(vars.size>1) qc.cityMerges.push({key:k, shown:cityToIdx.has(k)?cities[cityToIdx.get(k)].name:k, variants:[...vars.keys()]}); });
+
+  const depKeys=[...new Set(orders.map(o=>o.p))];
+  const deps=depKeys.map(k=>({key:k,name:k==='(SIN DATO)'?'(Sin dato)':pickDisplay(k,depVariants.get(k),DEP_PREF)}))
+    .sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  const depToIdx=new Map(deps.map((d,i)=>[d.key,i]));
+
+  orders.forEach(o=>{ o.c=cityToIdx.get(o.c); o.p=depToIdx.get(o.p); });
+
+  const validSet=new Set();
+  statuses.forEach((s,i)=>{ if(VALID_STATUS_KEYS.has(normKey(s))) validSet.add(i); });
+
+  const skuNorm=skus.map(s=>normKey(s));
+  return {
+    orders, cities, deps, statuses, validSet, skus, skuNorm, cats,
+    has:{ qty:!!C.qty, sku:!!C.sku, doc:!!C.doc, status:!!C.status, dep:!!C.dep, cat:!!C.cat, coupon:!!C.coupon, total:!!C.total },
+    cols:C, nClients:docFirst.size, dateMin, dateMax, qc
+  };
 }
 
 /* ============================================================
-   CONEXIÓN GOOGLE SHEET (gviz)  ·  Mi Portal CC
-   Lee la hoja en vivo y la pasa al MISMO ETL del botón de subida
-   (parseVtexRows + buildCiudadesDelta). No reemplaza la base
-   embebida: agrega solo los días nuevos (delta por fecha).
+   FILTRADO Y AGREGACIÓN
+   F = {from,to,city,dep,status,type,brand,cat,sku,skuNorm}
+   status: 'valid' | '' (todos) | índice de estado
+   Regla: ticket promedio = facturación / pedidos (nunca promedio
+   de promedios). Con filtros de producto activos, la facturación
+   corresponde a los ítems coincidentes (valor de líneas).
    ============================================================ */
-/* Una fuente por año. La config 2026 queda exactamente como estaba (no se toca).
-   Para 2025: pegar el ID del Google Sheet de datos VTEX 2025 en `id`
-   (y ajustar `gid` si la pestaña no es la primera; la primera pestaña siempre es gid '0'). */
+function lineFilterActive(F){ return F.brand!=='' || F.cat!=='' || F.sku!==''; }
+function lineMatch(l,F,model){
+  if(F.brand!=='' && l.b!==+F.brand) return false;
+  if(F.cat!==''   && l.c!==+F.cat)   return false;
+  if(F.sku!==''   && (l.k<0 || model.skuNorm[l.k].indexOf(F.skuNorm)===-1)) return false;
+  return true;
+}
+function statusPass(o,F,model){
+  if(!model.has.status) return true;
+  if(F.status==='valid') return model.validSet.size? model.validSet.has(o.st) : true;
+  if(F.status!=='') return o.st===+F.status;
+  return true;
+}
+function orderPasses(o,F,model,ignoreStatus){
+  if(o.d<F.from || o.d>F.to) return false;
+  if(F.city!=='' && o.c!==+F.city) return false;
+  if(F.dep!==''  && o.p!==+F.dep)  return false;
+  if(!ignoreStatus && !statusPass(o,F,model)) return false;
+  if(F.type!=='' && o.n!==+F.type) return false;
+  if(lineFilterActive(F) && !o.lines.some(l=>lineMatch(l,F,model))) return false;
+  return true;
+}
+function filterOrders(model,F){ return model.orders.filter(o=>orderPasses(o,F,model,false)); }
+function countStatusExcluded(model,F){
+  if(!model.has.status || F.status==='') return 0;
+  let n=0; model.orders.forEach(o=>{ if(orderPasses(o,F,model,true) && !statusPass(o,F,model)) n++; });
+  return n;
+}
+function valOf(o,F,model){
+  if(!lineFilterActive(F)) return o.v;
+  let s=0; o.lines.forEach(l=>{ if(lineMatch(l,F,model)) s+=l.v; }); return s;
+}
+function qtyOf(o,F,model){
+  if(o.q==null) return null;
+  if(!lineFilterActive(F)) return o.q;
+  let s=0; o.lines.forEach(l=>{ if(lineMatch(l,F,model)&&l.q!=null) s+=l.q; }); return s;
+}
+
+function aggTotals(orders,F,model){
+  let sales=0, units= model.has.qty?0:null; const cl=new Set(); const citySet=new Set();
+  orders.forEach(o=>{ sales+=valOf(o,F,model); const q=qtyOf(o,F,model); if(units!=null&&q!=null)units+=q;
+    cl.add(o.u); citySet.add(o.c); });
+  const n=orders.length;
+  return {sales, orders:n, clients:cl.size, ticket:n?sales/n:0, units, activeCities:citySet.size};
+}
+function aggByCity(orders,F,model){
+  const m=new Map();
+  orders.forEach(o=>{
+    let a=m.get(o.c);
+    if(!a){ a={sales:0,orders:0,units:model.has.qty?0:null,clients:new Set(),newO:0}; m.set(o.c,a); }
+    a.sales+=valOf(o,F,model); a.orders++; const q=qtyOf(o,F,model);
+    if(a.units!=null&&q!=null)a.units+=q; a.clients.add(o.u); if(o.n)a.newO++;
+  });
+  let tot=0; m.forEach(a=>tot+=a.sales);
+  const rows=[...m.entries()].map(([ci,a])=>({
+    ci, city:model.cities[ci].name, sales:a.sales, orders:a.orders, newO:a.newO,
+    clients:a.clients.size, units:a.units,
+    ticket:a.orders? a.sales/a.orders : 0,
+    freq:a.clients.size? a.orders/a.clients.size : 0,
+    share: tot>0? a.sales/tot*100 : 0,
+    newp: a.orders? a.newO/a.orders*100 : 0
+  })).sort((a,b)=>b.sales-a.sales);
+  return {rows, total:tot};
+}
+
+/* Pareto 80/20 sobre ciudades ordenadas por facturación */
+function paretoData(rows){
+  const tot=rows.reduce((s,r)=>s+r.sales,0);
+  let cum=0, n80=0, hit=false;
+  const out=rows.map(r=>{ cum+=r.sales; const cp= tot>0? cum/tot*100 : 0;
+    if(!hit){ n80++; if(cp>=80) hit=true; }
+    return {city:r.city, sales:r.sales, cumPct:cp}; });
+  return {items:out, n80: hit? n80 : rows.length, total:tot};
+}
+
+/* Comprobaciones de consistencia (se ejecutan en cada render) */
+function consistencyChecks(totals, cityAgg){
+  const sumCities=cityAgg.rows.reduce((s,r)=>s+r.sales,0);
+  const sumShare=cityAgg.rows.reduce((s,r)=>s+r.share,0);
+  const expectTicket = totals.orders? totals.sales/totals.orders : 0;
+  return {
+    citiesMatchTotal: Math.abs(sumCities-totals.sales) < 0.5,
+    citiesDiff: sumCities-totals.sales,
+    sharesOk: cityAgg.rows.length===0 || Math.abs(sumShare-100) < 0.05,
+    shareSum: sumShare,
+    ticketOk: Math.abs(expectTicket-totals.ticket) < 1e-6,
+    noBadValues: [totals.sales,totals.ticket].every(x=>isFinite(x)) &&
+                 cityAgg.rows.every(r=>[r.sales,r.ticket,r.share,r.freq,r.newp].every(x=>isFinite(x))),
+    shareOver100: cityAgg.rows.some(r=>r.share>100.0001)
+  };
+}
+
+/* ---------- Series temporales / YoY / proyección ---------- */
+function monthlySales(orders, year){
+  const m=new Array(12).fill(0);
+  orders.forEach(o=>{ if(year && o.d.slice(0,4)!==year) return; m[+o.d.slice(5,7)-1]+=o.v; });
+  return m;
+}
+function periodStats(orders, upTo, year){
+  let sales=0,n=0; const cl=new Set();
+  orders.forEach(o=>{ if(year&&o.d.slice(0,4)!==year) return; if(o.d>upTo) return;
+    sales+=o.v; n++; cl.add(o.u); });
+  return {sales,n,ticket:n?sales/n:0,clients:cl.size};
+}
+function computeProjection(y25,y26){
+  if(!y26||!y26.maxD||!y26.orders.length) return null;
+  const m25=monthlySales(y25?y25.orders:[], '2025'), m26=monthlySales(y26.orders,'2026');
+  const dt=parseD(y26.maxD); if(isNaN(dt)) return null;
+  const nx=new Date(dt); nx.setDate(nx.getDate()+1);
+  const lastM=dt.getMonth();
+  const partial = nx.getMonth()===dt.getMonth();
+  const lastComplete = partial? lastM-1 : lastM;
+  let s26=0,s25=0;
+  for(let m=0;m<=lastComplete;m++){ if(m25[m]>0){ s26+=m26[m]; s25+=m25[m]; } }
+  const ratio = s25>0? s26/s25 : 1;
+  const real=new Array(12).fill(0), proy=new Array(12).fill(0);
+  for(let m=0;m<12;m++){
+    if(m<=lastComplete) real[m]=m26[m];
+    else if(m===lastM && partial){
+      real[m]=m26[m];
+      const dia=dt.getDate(); let rest25=0;
+      (y25?y25.orders:[]).forEach(o=>{ if(o.d.slice(0,4)==='2025' && +o.d.slice(5,7)-1===m && +o.d.slice(8,10)>dia) rest25+=o.v; });
+      proy[m]=Math.round(rest25*ratio);
+    } else proy[m]=Math.round(m25[m]*ratio);
+  }
+  const total25=m25.reduce((a,b)=>a+b,0);
+  const cierre=real.reduce((a,b)=>a+b,0)+proy.reduce((a,b)=>a+b,0);
+  return {m25,m26,real,proy,ratio,cierre,total25,lastM,partial};
+}
+
+/* ---------- Export para tests en Node ---------- */
+if (typeof module!=='undefined' && module.exports){
+  module.exports={ normKey,titleEs,toNum,isoLocal,parseD,bucketKey,prevRange,detectCols,classifyBrand,
+    buildModel,filterOrders,countStatusExcluded,valOf,qtyOf,aggTotals,aggByCity,paretoData,
+    consistencyChecks,monthlySales,periodStats,computeProjection,BRANDS,VALID_STATUS_KEYS,CITY_PREF };
+}
+
+/* ============================================================
+   UI · Análisis por Ciudades · Mi Portal CC
+   Requiere el CORE (arriba). El Google Sheet es la ÚNICA fuente.
+   ============================================================ */
+
+/* ===== CONEXIÓN GOOGLE SHEET (gviz) · NO MODIFICAR IDs ===== */
 const GSHEETS = {
   '2026': {
     id:  '1oDuPtSdspEqvoo_0RDWg2eku2zrejNhrp711oqBgUp8',   // Fuente General VTEX (2026) — NO MODIFICAR
@@ -662,12 +800,10 @@ const GSHEETS = {
     gid: '1013977220'
   }
 };
-let YEAR = '2026';                       // año activo al abrir
-function GSHEET(){ return GSHEETS[YEAR]; }
+let YEAR = '2026';
 
-/* --- Normalización precisa de valores gviz --- */
-// Fecha gviz "Date(YYYY,M,D[,h,m,s])" (mes 0-indexado) -> "YYYY-MM-DD[ HH:MM:SS]" ISO exacto,
-// independiente del locale del Sheet (nunca usar cell.f: en locale es-PY sale "13/6/2026" y rompe slice/orden).
+/* Fecha gviz "Date(YYYY,M,D[,h,m,s])" (mes 0-indexado) → ISO exacto,
+   independiente del locale del Sheet (nunca usar cell.f). */
 function gvizNormDate(v){
   const m = /^Date\((\d+),(\d+),(\d+)(?:,(\d+))?(?:,(\d+))?(?:,(\d+))?/.exec(v);
   if(!m) return v;
@@ -676,7 +812,7 @@ function gvizNormDate(v){
   if(m[4] != null) out += ' ' + p(+m[4]) + ':' + p((+m[5])||0) + ':' + p((+m[6])||0);
   return out;
 }
-// Si la fecha llegó como texto "DD/MM/YYYY[ hh:mm]" la convierte a ISO; si ya es ISO la deja igual.
+/* Fallback: si la fecha llegó como texto "DD/MM/YYYY[ hh:mm]" la pasa a ISO. */
 function normCreationDate(s){
   s = String(s).trim();
   const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})(.*)$/.exec(s);
@@ -698,9 +834,10 @@ async function gvizFetchRows(year){
   const s = txt.indexOf('{'), e = txt.lastIndexOf('}');
   if(s<0 || e<0) throw new Error('Respuesta gviz inesperada');
   const obj = JSON.parse(txt.slice(s, e+1));
-  const cols = (obj.table.cols||[]).map((c,i)=>
-    (c.label && c.label.trim()) ? c.label.trim() : (c.id || ('col'+i)));
-  const out = [];
+  if(obj.status==='error') throw new Error((obj.errors&&obj.errors[0]&&(obj.errors[0].detailed_message||obj.errors[0].message))||'Error gviz');
+  const headers = (obj.table.cols||[]).map((c,i)=>
+    (c.label && String(c.label).trim()) ? String(c.label).trim() : (c.id || ('col'+i)));
+  const rows = [];
   (obj.table.rows||[]).forEach(r=>{
     if(!r || !r.c) return;
     const o = {};
@@ -710,80 +847,652 @@ async function gvizFetchRows(year){
         v = (cell.v != null) ? cell.v : (cell.f != null ? cell.f : '');
         if(typeof v==='string' && v.indexOf('Date(')===0) v = gvizNormDate(v);
       }
-      o[cols[idx]] = v;
+      o[headers[idx]] = v;
     });
-    // Precisión: Order siempre como string (dedup consistente) y Creation Date siempre ISO
-    if(o['Order'] != null && o['Order'] !== '') o['Order'] = String(o['Order']).trim();
-    if(o['Creation Date'] != null && o['Creation Date'] !== '') o['Creation Date'] = normCreationDate(o['Creation Date']);
-    out.push(o);
+    rows.push(o);
   });
-  return out;
+  /* Precisión sobre las columnas detectadas: Order como texto, fecha en ISO */
+  const det = detectCols(headers).found;
+  if(det.order || det.date){
+    rows.forEach(o=>{
+      if(det.order && o[det.order]!=null && o[det.order]!=='') o[det.order]=String(o[det.order]).trim();
+      if(det.date  && o[det.date]!=null  && o[det.date]!=='')  o[det.date]=normCreationDate(o[det.date]);
+    });
+  }
+  return {headers, rows};
 }
 
+/* ===== Estado y referencias ===== */
+let MODEL=null, QC_STATIC=[], lastSyncAt=null;
+let state={from:'',to:'',city:'',dep:'',status:'valid',type:'',brand:'',cat:'',sku:'',skuNorm:'',
+  gran:'month',rankBy:'sales',sortK:'sales',sortDir:-1};
+
+const $=id=>document.getElementById(id);
+const dFrom=$('dFrom'), dTo=$('dTo'), fCity=$('fCity'), fDep=$('fDep'),
+      fStatus=$('fStatus'), fType=$('fType'), fBrand=$('fBrand'), fCat=$('fCat'), fSku=$('fSku');
+
+/* ===== Formato ===== */
+const fmtG = n => '₲ '+Math.round(n).toLocaleString('es-PY');
+const fmtInt = n => Math.round(n).toLocaleString('es-PY');
+const fmtShort = n => { n=Math.round(n);
+  if(n>=1e9)return (n/1e9).toFixed(2)+' MM'; if(n>=1e6)return (n/1e6).toFixed(1)+' M';
+  if(n>=1e3)return (n/1e3).toFixed(0)+' mil'; return n.toLocaleString('es-PY'); };
+function fmtDate(s){ if(!s) return '—'; const d=parseD(s); return isNaN(d)?String(s):d.toLocaleDateString('es-PY',{day:'2-digit',month:'short',year:'2-digit'}); }
+const pctEs=(x,d)=> (isFinite(x)?x:0).toFixed(d==null?1:d).replace('.',',');
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const chartsOK=()=> typeof Chart!=='undefined';
+
+const RAMP=['#00B8D4','#3FBF6E','#FFD21E','#FF8F1F','#E31837'];
+function hex(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+function rampColor(i,n){ if(n<=1)return RAMP[4]; const t=i/(n-1)*4; const lo=Math.floor(t),hi=Math.min(lo+1,4),f=t-lo;
+  const a=hex(RAMP[lo]),b=hex(RAMP[hi]); return `rgb(${Math.round(a[0]+(b[0]-a[0])*f)},${Math.round(a[1]+(b[1]-a[1])*f)},${Math.round(a[2]+(b[2]-a[2])*f)})`; }
+
+function showUploadMsg(msg, kind){
+  const el=$('uploadMsg'); if(!el) return;
+  el.textContent=msg;
+  el.style.color = kind==='ok' ? '#78E6A0' : '#FF8A80';
+  el.style.opacity=1;
+  clearTimeout(window._um);
+  window._um=setTimeout(()=>{el.style.opacity=0;},7000);
+}
+function showFatal(msg, canRetry){
+  const el=$('fatalErr');
+  el.innerHTML='⚠ '+esc(msg)+(canRetry
+    ? ' <button id="fatalRetry" style="margin-left:10px;font-family:inherit;font-size:12px;font-weight:700;padding:6px 12px;border:1px solid #B3261E;border-radius:8px;background:#fff;color:#B3261E;cursor:pointer">↻ Reintentar</button>'
+    : '');
+  el.style.display='block';
+}
+function hideFatal(){ $('fatalErr').style.display='none'; }
+
+/* ===== Overlay de carga (visible hasta la primera sincronización) ===== */
+function showLoading(msg){ const o=$('loadOverlay'); if(!o) return; if(msg) $('loadTitle').textContent=msg; o.style.display='flex'; }
+function hideLoading(){ const o=$('loadOverlay'); if(o) o.style.display='none'; }
+
+/* ===== Indicador de última actualización (header) ===== */
+function updateUpdTag(model){
+  const el=$('updTag'); if(!el||!model) return;
+  const hhmm = lastSyncAt? lastSyncAt.toLocaleTimeString('es-PY',{hour:'2-digit',minute:'2-digit'}) : '—';
+  el.textContent='Datos al '+fmtDate(model.dateMax)+' · Actualizado '+hhmm;
+  el.title='Última fecha con pedidos en el Sheet '+YEAR+': '+model.dateMax+
+    '\nÚltima sincronización: '+(lastSyncAt? lastSyncAt.toLocaleString('es-PY') : '—')+
+    '\nSe actualiza solo cada '+AUTO_MIN+' minutos y al volver a la pestaña.';
+  el.style.display='';
+  const dot=$('syncDot');
+  if(dot) dot.title='Sincronización automática cada '+AUTO_MIN+' min · última: '+
+    (lastSyncAt? lastSyncAt.toLocaleTimeString('es-PY') : '—');
+}
+
+/* ===== Guardar/restaurar filtros entre sincronizaciones ===== */
+function captureSel(){
+  if(!MODEL) return null;
+  return {
+    fullRange: state.from===MODEL.dateMin && state.to===MODEL.dateMax,
+    from:state.from, to:state.to,
+    cityKey: state.city!==''&&MODEL.cities[+state.city]? MODEL.cities[+state.city].key : '',
+    depKey:  state.dep!==''&&MODEL.deps[+state.dep]?  MODEL.deps[+state.dep].key  : '',
+    status:  state.status,
+    statusName: (state.status!==''&&state.status!=='valid'&&MODEL.statuses[+state.status]!=null)? MODEL.statuses[+state.status] : '',
+    type: state.type, brand: state.brand,
+    catName: (state.cat!==''&&MODEL.cats[+state.cat]!=null)? MODEL.cats[+state.cat] : '',
+    sku: state.sku, gran: state.gran, rankBy: state.rankBy, sortK: state.sortK, sortDir: state.sortDir
+  };
+}
+
+function rebuildFilterUI(model, saved){
+  fCity.innerHTML=''; fCity.add(new Option('Todas',''));
+  model.cities.forEach((c,i)=>fCity.add(new Option(c.name,String(i))));
+  state.city=''; if(saved&&saved.cityKey){ const i=model.cities.findIndex(c=>c.key===saved.cityKey); if(i>=0) state.city=String(i); }
+  fCity.value=state.city;
+
+  const gDep=$('fgDep');
+  if(model.has.dep){ gDep.style.display='';
+    fDep.innerHTML=''; fDep.add(new Option('Todos',''));
+    model.deps.forEach((d,i)=>fDep.add(new Option(d.name,String(i))));
+    state.dep=''; if(saved&&saved.depKey){ const i=model.deps.findIndex(d=>d.key===saved.depKey); if(i>=0) state.dep=String(i); }
+    fDep.value=state.dep;
+  } else { gDep.style.display='none'; state.dep=''; }
+
+  const gSt=$('fgStatus');
+  if(model.has.status){ gSt.style.display='';
+    fStatus.innerHTML='';
+    fStatus.add(new Option('Facturables (Faturado + Listo p/ manejo)','valid'));
+    fStatus.add(new Option('Todos los estados',''));
+    model.statuses.forEach((s,i)=>fStatus.add(new Option(s+' ('+fmtInt(model.qc.statusValues[s]||0)+')',String(i))));
+    state.status='valid';
+    if(saved){
+      if(saved.status===''||saved.status==='valid') state.status=saved.status;
+      else if(saved.statusName){ const i=model.statuses.indexOf(saved.statusName); if(i>=0) state.status=String(i); }
+    }
+    if(model.validSet.size===0 && state.status==='valid') state.status='';
+    fStatus.value=state.status;
+  } else { gSt.style.display='none'; state.status=''; }
+
+  const gBr=$('fgBrand');
+  if(model.has.sku){ gBr.style.display='';
+    fBrand.innerHTML=''; fBrand.add(new Option('Todas',''));
+    BRANDS.forEach((b,i)=>fBrand.add(new Option(b,String(i))));
+    state.brand=(saved&&saved.brand)||''; fBrand.value=state.brand;
+    if(fBrand.value!==state.brand){ state.brand=''; fBrand.value=''; }
+  } else { gBr.style.display='none'; state.brand=''; }
+
+  const gCat=$('fgCat');
+  if(model.has.cat){ gCat.style.display='';
+    fCat.innerHTML=''; fCat.add(new Option('Todas',''));
+    model.cats.forEach((c,i)=>fCat.add(new Option(c,String(i))));
+    state.cat=''; if(saved&&saved.catName){ const i=model.cats.indexOf(saved.catName); if(i>=0) state.cat=String(i); }
+    fCat.value=state.cat;
+  } else { gCat.style.display='none'; state.cat=''; }
+
+  const gSku=$('fgSku');
+  if(model.has.sku){ gSku.style.display='';
+    const dl=$('skuDL'); dl.innerHTML='';
+    const names=[...model.skus].sort((a,b)=>a.localeCompare(b,'es')).slice(0,5000);
+    const frag=document.createDocumentFragment();
+    names.forEach(n=>{ const o=document.createElement('option'); o.value=n; frag.appendChild(o); });
+    dl.appendChild(frag);
+    state.sku=(saved&&saved.sku)||''; fSku.value=state.sku;
+  } else { gSku.style.display='none'; state.sku=''; fSku.value=''; }
+
+  state.type=(saved&&saved.type)||''; fType.value=state.type;
+  if(saved){ state.gran=saved.gran||state.gran; state.rankBy=saved.rankBy||state.rankBy;
+    state.sortK=saved.sortK||state.sortK; state.sortDir=saved.sortDir||state.sortDir; }
+  document.querySelectorAll('#granSeg button').forEach(b=>b.classList.toggle('on',b.dataset.g===state.gran));
+  document.querySelectorAll('#rankSeg button').forEach(b=>b.classList.toggle('on',b.dataset.r===state.rankBy));
+}
+
+function applyDateRange(model, saved){
+  const min=model.dateMin, max=model.dateMax;
+  dFrom.min=min; dFrom.max=max; dTo.min=min; dTo.max=max;
+  let f=min, t=max;
+  if(saved && !saved.fullRange && saved.from && saved.to){
+    const cl=(v)=> v<min?min : (v>max?max:v);
+    f=cl(saved.from); t=cl(saved.to);
+    if(f>t){ f=min; t=max; }
+  } else {
+    document.querySelectorAll('#presets .chip:not(.chip-year)').forEach(c=>c.classList.remove('active'));
+    const all=document.querySelector('#presets [data-p=all]'); if(all) all.classList.add('active');
+  }
+  dFrom.value=f; dTo.value=t; state.from=f; state.to=t;
+}
+
+/* ===== Render principal ===== */
+let rankChart,shareChart,paretoChart,timeChart,segChart;
+
+function render(){
+  if(!MODEL) return;
+  if(dFrom.value && dTo.value && dFrom.value>dTo.value){ const t=dFrom.value; dFrom.value=dTo.value; dTo.value=t; }
+  state.from=dFrom.value||MODEL.dateMin; state.to=dTo.value||MODEL.dateMax;
+  state.skuNorm = state.sku? normKey(state.sku) : '';
+  const F=state;
+  const orders=filterOrders(MODEL,F);
+  const totals=aggTotals(orders,F,MODEL);
+  const cityAgg=aggByCity(orders,F,MODEL);
+  const checks=consistencyChecks(totals,cityAgg);
+  const excl=countStatusExcluded(MODEL,F);
+
+  $('emptyNote').style.display = orders.length? 'none':'block';
+  renderKPIs(totals,excl,F);
+  renderRank(cityAgg.rows,totals);
+  renderShare(cityAgg.rows);
+  renderPareto(cityAgg.rows);
+  renderTable(cityAgg.rows,F);
+  renderTime(orders,F);
+  renderSeg(cityAgg.rows);
+  renderQC(checks,excl,F);
+
+  $('periodTag').textContent =
+    fmtDate(state.from)+' – '+fmtDate(state.to)+' · '+fmtInt(orders.length)+' pedidos';
+  $('foot').textContent =
+    'Fuente '+YEAR+': Google Sheet en vivo · '+fmtInt(MODEL.orders.length)+' pedidos con fecha válida · '+
+    fmtInt(MODEL.nClients)+' clientes · '+MODEL.cities.length+' ciudades · '+fmtDate(MODEL.dateMin)+' a '+fmtDate(MODEL.dateMax)+
+    (lastSyncAt? ' · Última sincronización '+lastSyncAt.toLocaleTimeString('es-PY') : '')+
+    '. Deduplicado por Order · estados facturables por defecto · ninguna métrica se estima.';
+}
+
+/* ===== KPIs (6) ===== */
+function renderKPIs(t,excl,F){
+  const lf=lineFilterActive(F);
+  const unitsVal = MODEL.has.qty ? fmtInt(t.units) : 'N/D';
+  const unitsSub = MODEL.has.qty ? 'ítems vendidos' : 'columna de cantidad no encontrada';
+  const salesSub = lf ? 'valor de ítems filtrados (sin envío)' : 'Total Value por pedido';
+  const pedSub = (MODEL.has.status && F.status==='valid' && excl>0)
+      ? fmtInt(excl)+' excluidos por estado'
+      : (MODEL.has.status ? (F.status===''?'todos los estados':'según filtro de estado') : 'sin columna de estado');
+  $('kpis').innerHTML=`
+   <div class="kpi"><div class="lab">Facturación total</div><div class="val">${fmtG(t.sales)}</div><div class="sub">${salesSub}</div></div>
+   <div class="kpi"><div class="lab">Pedidos totales</div><div class="val">${fmtInt(t.orders)}</div><div class="sub">${pedSub}</div></div>
+   <div class="kpi"><div class="lab">Ticket promedio</div><div class="val">${fmtG(t.ticket)}</div><div class="sub">facturación ÷ pedidos</div></div>
+   <div class="kpi"><div class="lab">Clientes únicos</div><div class="val">${fmtInt(t.clients)}</div><div class="sub">${(t.orders/Math.max(t.clients,1)).toFixed(2)} pedidos/cliente</div></div>
+   <div class="kpi"><div class="lab">Unidades vendidas</div><div class="val">${unitsVal}</div><div class="sub">${unitsSub}</div></div>
+   <div class="kpi"><div class="lab">Ciudades activas</div><div class="val">${fmtInt(t.activeCities)}</div><div class="sub">con ≥1 pedido en el filtro</div></div>`;
+}
+
+/* ===== Ranking (ventas | pedidos) ===== */
+function renderRank(rows,totals){
+  if(!chartsOK()) return;
+  const by=state.rankBy;
+  const sorted=[...rows].sort((a,b)=>b[by]-a[by]);
+  const top=sorted.slice(0,12);
+  const colors=top.map((_,i)=>rampColor(top.length-1-i,top.length));
+  const tot = by==='sales'? totals.sales : totals.orders;
+  const cfg={type:'bar',data:{labels:top.map(r=>r.city),
+    datasets:[{data:top.map(r=>r[by]),backgroundColor:colors,borderRadius:6,barThickness:'flex',maxBarThickness:26}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{
+        const r=top[c.dataIndex];
+        return by==='sales'
+          ? fmtG(r.sales)+'  ·  '+pctEs(tot>0?r.sales/tot*100:0,1)+'%  ·  '+fmtInt(r.orders)+' pedidos'
+          : fmtInt(r.orders)+' pedidos  ·  '+pctEs(tot>0?r.orders/tot*100:0,1)+'%  ·  '+fmtG(r.sales);
+      }}}},
+      scales:{x:{ticks:{callback:v=> by==='sales'? fmtShort(v): fmtInt(v),font:{size:11}},grid:{color:'#F0F0F0'}},
+              y:{ticks:{font:{size:12,weight:'600'}},grid:{display:false}}}}};
+  if(rankChart){rankChart.data=cfg.data;rankChart.options=cfg.options;rankChart.update();}else rankChart=new Chart($('rankChart'),cfg);
+}
+
+/* ===== Participación (doughnut) ===== */
+function renderShare(rows){
+  if(!chartsOK()) return;
+  const top=rows.slice(0,6); const other=rows.slice(6).reduce((s,r)=>s+r.sales,0);
+  const labels=top.map(r=>r.city), vals=top.map(r=>r.sales);
+  if(other>0){labels.push('Resto');vals.push(other);}
+  const cols=['#E31837','#FF8F1F','#FFD21E','#3FBF6E','#00B8D4','#7C4DFF','#B0BEC5'];
+  const cfg={type:'doughnut',data:{labels,datasets:[{data:vals,backgroundColor:cols,borderWidth:2,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{legend:{position:'bottom',labels:{font:{size:11,weight:'500'},padding:9,boxWidth:11,boxHeight:11}},
+        tooltip:{callbacks:{label:c=>{const t=vals.reduce((a,b)=>a+b,0);
+          return c.label+': '+fmtShort(c.raw)+' ('+pctEs(t>0?c.raw/t*100:0,1)+'%)';}}}}}};
+  if(shareChart){shareChart.data=cfg.data;shareChart.update();}else shareChart=new Chart($('shareChart'),cfg);
+}
+
+/* ===== Pareto 80/20 ===== */
+function renderPareto(rows){
+  const P=paretoData(rows);
+  $('paretoHint').textContent = rows.length
+    ? P.n80+' de '+rows.length+' ciudades concentran el 80% de la facturación del período filtrado.'
+    : 'Sin datos para el filtro actual.';
+  if(!chartsOK()) return;
+  const labels=P.items.map(i=>i.city);
+  const cfg={data:{labels,datasets:[
+      {type:'bar',label:'Ventas',data:P.items.map(i=>i.sales),
+        backgroundColor:P.items.map((_,i)=> i<P.n80 ? '#E31837' : '#B0BEC5'),borderRadius:4,yAxisID:'y',order:2},
+      {type:'line',label:'% acumulado',data:P.items.map(i=>i.cumPct),borderColor:'#0D0D0D',borderWidth:2,
+        pointRadius:2,pointHoverRadius:4,tension:.2,yAxisID:'y1',order:1},
+      {type:'line',label:'Regla 80%',data:P.items.map(()=>80),borderColor:'#8A939B',borderWidth:1.5,
+        borderDash:[6,5],pointRadius:0,pointHoverRadius:0,yAxisID:'y1',order:0}]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12,usePointStyle:true}},
+        tooltip:{callbacks:{label:c=> c.dataset.type==='bar'
+          ? 'Ventas: '+fmtG(c.raw)
+          : (c.datasetIndex===1 ? '% acumulado: '+pctEs(c.raw,1)+'%' : 'Regla 80%')}}},
+      scales:{x:{grid:{display:false},ticks:{font:{size:10},maxRotation:45,autoSkip:labels.length>24}},
+              y:{grid:{color:'#F0F0F0'},ticks:{callback:v=>fmtShort(v),font:{size:11}}},
+              y1:{position:'right',min:0,max:100,grid:{display:false},ticks:{callback:v=>v+'%',font:{size:11}}}}}};
+  if(paretoChart){paretoChart.data=cfg.data;paretoChart.options=cfg.options;paretoChart.update();}else paretoChart=new Chart($('paretoChart'),cfg);
+}
+
+/* ===== Tabla de detalle (con Δ vs período anterior) ===== */
+function attachDeltas(rows,F){
+  const prev=prevRange(state.from,state.to);
+  let full=false, map=null;
+  if(prev && prev.from>=MODEL.dateMin){
+    const F2=Object.assign({},F,{from:prev.from,to:prev.to});
+    const pAgg=aggByCity(filterOrders(MODEL,F2),F2,MODEL);
+    map=new Map(pAgg.rows.map(r=>[r.ci,r.sales])); full=true;
+  }
+  rows.forEach(r=>{
+    if(full){ const pv=map.get(r.ci)||0; r.delta = pv>0 ? (r.sales/pv-1)*100 : null; }
+    else r.delta=null;
+  });
+  $('tblHint').textContent = full
+    ? 'Δ período: ventas vs. '+fmtDate(prev.from)+' – '+fmtDate(prev.to)+' (mismos filtros). "—" = sin base comparable.'
+    : 'Δ período: no disponible (el período anterior de igual duración cae fuera del rango de datos).';
+  return rows;
+}
+function renderTable(rows,F){
+  attachDeltas(rows,F);
+  const k=state.sortK, dir=state.sortDir;
+  const sorted=[...rows].sort((a,b)=>{
+    if(k==='city') return a.city.localeCompare(b.city,'es')*dir;
+    const av=a[k], bv=b[k], an=av==null, bn=bv==null;
+    if(an&&bn) return 0; if(an) return 1; if(bn) return -1;
+    return (av-bv)*dir;
+  });
+  document.querySelectorAll('#cityTable th').forEach(th=>{
+    th.classList.toggle('sorted',th.dataset.k===k);
+    th.classList.toggle('asc',th.dataset.k===k && dir===1);
+  });
+  const maxS=Math.max(...rows.map(r=>r.sales),1);
+  const rankIdx=new Map(rows.map((r,i)=>[r.ci,i]));   // rows ya viene ordenado por ventas desc
+  const tb=document.querySelector('#cityTable tbody');
+  tb.innerHTML=sorted.map((r,i)=>{
+    const dTxt = r.delta==null ? '—'
+      : '<span class="'+(r.delta>=0?'delta up':'delta dn')+'" style="display:inline">'+(r.delta>=0?'+':'')+r.delta.toFixed(1).replace('.',',')+'%</span>';
+    return `<tr>
+    <td class="bar-cell"><div class="fill" style="width:${(r.sales/maxS*100).toFixed(2)}%;background:${rampColor(rankIdx.get(r.ci),rows.length)}"></div>
+      <span><span class="rank">${i+1}</span>${esc(r.city)}</span></td>
+    <td>${fmtG(r.sales)}</td>
+    <td><span class="pill" style="background:${r.share>=15?'#FDECEA':'#F2F2F2'};color:${r.share>=15?'#D8342E':'#555'}">${pctEs(r.share,1)}%</span></td>
+    <td>${fmtInt(r.orders)}</td><td>${fmtG(r.ticket)}</td>
+    <td>${fmtInt(r.clients)}</td><td>${MODEL.has.qty? fmtInt(r.units):'—'}</td>
+    <td>${pctEs(r.freq,2)}</td>
+    <td>${r.newp.toFixed(0)}%</td>
+    <td>${dTxt}</td></tr>`;}).join('');
+}
+
+/* ===== Serie temporal ===== */
+function buildTimeBuckets(orders,F){
+  const gran=state.gran;
+  const cityTot=new Map();
+  orders.forEach(o=>cityTot.set(o.c,(cityTot.get(o.c)||0)+valOf(o,F,MODEL)));
+  const top5=[...cityTot.entries()].sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>e[0]);
+  const topSet=new Set(top5);
+  const buckets={};
+  orders.forEach(o=>{
+    const bk=bucketKey(o.d,gran);
+    if(!buckets[bk])buckets[bk]={};
+    const key=topSet.has(o.c)?o.c:'resto';
+    buckets[bk][key]=(buckets[bk][key]||0)+valOf(o,F,MODEL);
+  });
+  const labels=Object.keys(buckets).sort();
+  const series=[...top5.map(c=>({name:MODEL.cities[c].name,key:c})),{name:'Resto',key:'resto'}];
+  return {labels,series,buckets,gran};
+}
+function renderTime(orders,F){
+  if(!chartsOK()) return;
+  const {labels,series,buckets,gran}=buildTimeBuckets(orders,F);
+  const cols=['#E31837','#FF8F1F','#FFD21E','#3FBF6E','#00B8D4','#B0BEC5'];
+  const datasets=series.map((s,i)=>({label:s.name,
+    data:labels.map(l=>buckets[l][s.key]||0),borderColor:cols[i],backgroundColor:cols[i]+'22',
+    borderWidth:s.key==='resto'?1.5:2.5,borderDash:s.key==='resto'?[5,4]:[],
+    tension:.3,pointRadius:labels.length>40?0:3,pointHoverRadius:5,fill:false}));
+  const labFmt=l=> gran==='month'? parseD(l+'-01').toLocaleDateString('es-PY',{month:'short',year:'2-digit'})
+    : parseD(l).toLocaleDateString('es-PY',{day:'2-digit',month:'short'});
+  const cfg={type:'line',data:{labels:labels.map(labFmt),datasets},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{position:'top',labels:{font:{size:11,weight:'500'},boxWidth:14,padding:10,usePointStyle:true}},
+        tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmtG(c.raw)}}},
+      scales:{y:{ticks:{callback:v=>fmtShort(v),font:{size:11}},grid:{color:'#F0F0F0'}},
+              x:{ticks:{font:{size:10},maxRotation:0,autoSkip:true,maxTicksLimit:14},grid:{display:false}}}}};
+  if(timeChart){timeChart.data=cfg.data;timeChart.options=cfg.options;timeChart.update();}else timeChart=new Chart($('timeChart'),cfg);
+}
+
+/* ===== Nuevos vs recurrentes ===== */
+function renderSeg(rows){
+  if(!chartsOK()) return;
+  const top=rows.slice(0,9);
+  const cfg={type:'bar',data:{labels:top.map(r=>r.city),datasets:[
+    {label:'Nuevos',data:top.map(r=>r.newO),backgroundColor:'#E31837',borderRadius:4},
+    {label:'Recurrentes',data:top.map(r=>r.orders-r.newO),backgroundColor:'#FFB300',borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12,usePointStyle:true}},
+        tooltip:{callbacks:{footer:items=>{const t=items.reduce((s,i)=>s+i.raw,0);return 'Total: '+fmtInt(t)+' pedidos';}}}},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10},maxRotation:35,minRotation:0}},
+              y:{stacked:true,grid:{color:'#F0F0F0'},ticks:{font:{size:11}}}}}};
+  if(segChart){segChart.data=cfg.data;segChart.update();}else segChart=new Chart($('segChart'),cfg);
+}
+
+/* ===== Control de calidad ===== */
+function qcItem(cls,txt,sub){ return {cls,txt,sub:sub||''}; }
+function buildQCStatic(model){
+  const q=model.qc, out=[];
+  out.push(qcItem('ok','Conexión al Google Sheet '+YEAR+' establecida', fmtInt(q.rowsRead)+' filas leídas · '+model.orders.length+' pedidos construidos'));
+  out.push(qcItem('ok','Encabezados obligatorios presentes','Order · Creation Date · City · Total'));
+  q.missingCols.forEach(c=>out.push(qcItem('warn','Columna no encontrada: '+c,'la métrica asociada queda deshabilitada (no se estima)')));
+  if(q.dupHeaders.length) out.push(qcItem('warn','Encabezados duplicados en el Sheet: '+q.dupHeaders.join(', '),'se usa la última columna con ese nombre'));
+  out.push(q.dupLines>0
+    ? qcItem('warn',fmtInt(q.dupLines)+' líneas duplicadas exactas ignoradas','mismo pedido + producto + importe + fecha')
+    : qcItem('ok','Sin líneas duplicadas en la base',''));
+  if(q.emptyRows>0) out.push(qcItem('warn',fmtInt(q.emptyRows)+' filas totalmente vacías ignoradas',''));
+  if(q.noOrder>0) out.push(qcItem('warn',fmtInt(q.noOrder)+' filas sin Nº de orden ignoradas',''));
+  if(q.badDateOrders>0) out.push(qcItem('warn',fmtInt(q.badDateOrders)+' pedidos con fecha inválida excluidos','no pueden ubicarse en el tiempo'));
+  if(q.noDoc>0) out.push(qcItem('warn',fmtInt(q.noDoc)+' pedidos sin documento de cliente','cada uno cuenta como cliente distinto'));
+  if(q.multiCity>0) out.push(qcItem('warn',fmtInt(q.multiCity)+' pedidos con más de una ciudad','se usa la primera línea del pedido'));
+  if(q.noCity>0) out.push(qcItem('warn',fmtInt(q.noCity)+' pedidos sin ciudad','agrupados como "(Sin ciudad)" para no perder el total'));
+  if(q.badNum>0) out.push(qcItem('warn',fmtInt(q.badNum)+' valores no numéricos tomados como 0',''));
+  if(q.fallbackTotal>0) out.push(qcItem('warn',fmtInt(q.fallbackTotal)+' pedidos sin Total Value','se usó la suma de sus líneas'));
+  if(q.cityMerges.length){
+    const ej=q.cityMerges[0];
+    out.push(qcItem('ok',fmtInt(q.cityMerges.length)+' ciudades con escrituras distintas unificadas',
+      'ej.: '+ej.variants.slice(0,3).join(' / ')+' → '+ej.shown+' (la fuente no se modifica)'));
+  } else {
+    out.push(qcItem('ok','Nombres de ciudad consistentes en la base',''));
+  }
+  if(!chartsOK()) out.push(qcItem('warn','No se pudo cargar Chart.js (CDN)','los gráficos no se muestran; KPIs y tabla siguen operativos'));
+  return out;
+}
+function renderQC(checks,excl,F){
+  const dyn=[];
+  if(MODEL.has.status && F.status==='valid' && excl>0)
+    dyn.push(qcItem('ok',fmtInt(excl)+' pedidos excluidos por estado no facturable en el período','cambiá el filtro "Estado" para incluirlos'));
+  dyn.push(checks.citiesMatchTotal
+    ? qcItem('ok','Suma de ciudades = total general','diferencia ₲ '+Math.round(Math.abs(checks.citiesDiff)))
+    : qcItem('bad','La suma de ciudades NO coincide con el total','diferencia ₲ '+Math.round(checks.citiesDiff)));
+  dyn.push(checks.sharesOk
+    ? qcItem('ok','Participaciones suman 100%','Σ = '+pctEs(checks.shareSum,2)+'%')
+    : qcItem('bad','Las participaciones no suman 100%','Σ = '+pctEs(checks.shareSum,2)+'%'));
+  dyn.push(checks.ticketOk
+    ? qcItem('ok','Ticket promedio = facturación ÷ pedidos','sin promedios de promedios')
+    : qcItem('bad','Inconsistencia en ticket promedio',''));
+  dyn.push((checks.noBadValues && !checks.shareOver100)
+    ? qcItem('ok','Sin NaN, indefinidos, divisiones por cero ni % > 100','')
+    : qcItem('bad','Se detectaron valores inválidos en los cálculos',''));
+
+  const all=QC_STATIC.concat(dyn);
+  const nWarn=all.filter(i=>i.cls==='warn').length, nBad=all.filter(i=>i.cls==='bad').length;
+  const badge=$('qcBadge');
+  if(nBad){ badge.className='badge warn'; badge.style.background='#FDECEA'; badge.style.color='#B3261E';
+    badge.textContent=nBad+' error'+(nBad>1?'es':'')+' · '+nWarn+' avisos'; $('qcBox').open=true; }
+  else if(nWarn){ badge.className='badge warn'; badge.style.background=''; badge.style.color='';
+    badge.textContent=nWarn+' aviso'+(nWarn>1?'s':''); }
+  else { badge.className='badge ok'; badge.style.background=''; badge.style.color=''; badge.textContent='✓ sin advertencias'; }
+  const ic={ok:'✓',warn:'⚠',bad:'✗'};
+  $('qcList').innerHTML=all.map(i=>
+    `<div class="qc-item ${i.cls}"><span class="ic">${ic[i.cls]}</span><div>${esc(i.txt)}${i.sub?' <small>· '+esc(i.sub)+'</small>':''}</div></div>`).join('');
+}
+
+/* ===== Exportación CSV / Excel ===== */
+function scopeLabel(F){
+  if(!MODEL.has.status) return 'Sin columna de estado';
+  if(F.status==='valid') return 'Facturables (Faturado + Pronto para o manuseio)';
+  if(F.status==='') return 'Todos los estados';
+  return 'Estado: '+(MODEL.statuses[+F.status]||'');
+}
+function expData(kind){
+  const F=state;
+  const orders=filterOrders(MODEL,F);
+  const t=aggTotals(orders,F,MODEL);
+  const agg=aggByCity(orders,F,MODEL);
+  const rows=attachDeltas(agg.rows,F);
+  if(kind==='resumen'){
+    return {name:'Resumen general',header:['Métrica','Valor'],rows:[
+      ['Facturación total (Gs)',Math.round(t.sales)],['Pedidos totales',t.orders],
+      ['Ticket promedio (Gs)',Math.round(t.ticket)],['Clientes únicos',t.clients],
+      ['Unidades vendidas', MODEL.has.qty? Math.round(t.units):'N/D'],
+      ['Ciudades activas',t.activeCities],
+      ['Pedidos por cliente', t.clients? +(t.orders/t.clients).toFixed(2):0],
+      ['Alcance de estados',scopeLabel(F)],
+      ['Período',state.from+' a '+state.to]]};
+  }
+  if(kind==='ranking'){
+    const by=state.rankBy;
+    const sorted=[...rows].sort((a,b)=>b[by]-a[by]);
+    return by==='sales'
+      ? {name:'Ranking por ventas',header:['#','Ciudad','Ventas (Gs)','Pedidos'],rows:sorted.map((r,i)=>[i+1,r.city,Math.round(r.sales),r.orders])}
+      : {name:'Ranking por pedidos',header:['#','Ciudad','Pedidos','Ventas (Gs)'],rows:sorted.map((r,i)=>[i+1,r.city,r.orders,Math.round(r.sales)])};
+  }
+  if(kind==='participacion')
+    return {name:'Participación en ventas',header:['Ciudad','Ventas (Gs)','Participación (%)'],
+      rows:rows.map(r=>[r.city,Math.round(r.sales),+r.share.toFixed(2)])};
+  if(kind==='pareto'){
+    const P=paretoData(rows);
+    return {name:'Pareto de ciudades',header:['#','Ciudad','Ventas (Gs)','% acumulado'],
+      rows:P.items.map((it,i)=>[i+1,it.city,Math.round(it.sales),+it.cumPct.toFixed(2)])};
+  }
+  if(kind==='detalle')
+    return {name:'Detalle por ciudad',
+      header:['Ciudad','Ventas (Gs)','Participación (%)','Pedidos','Ticket prom. (Gs)','Clientes',
+              'Unidades','Frecuencia','% Nuevos','Δ período (%)'],
+      rows:rows.map(r=>[r.city,Math.round(r.sales),+r.share.toFixed(2),r.orders,Math.round(r.ticket),
+        r.clients, MODEL.has.qty? Math.round(r.units):'N/D', +r.freq.toFixed(2), +r.newp.toFixed(1),
+        r.delta==null? '' : +r.delta.toFixed(1)])};
+  if(kind==='segmentacion')
+    return {name:'Nuevos vs recurrentes',header:['Ciudad','Nuevos','Recurrentes','Total'],
+      rows:rows.map(r=>[r.city,r.newO,r.orders-r.newO,r.orders])};
+}
+function expTime(){
+  const F=state;
+  const orders=filterOrders(MODEL,F);
+  const {labels,series,buckets}=buildTimeBuckets(orders,F);
+  return {name:'Evolución temporal',
+    header:['Período',...series.map(s=>s.name+' (Gs)')],
+    rows:labels.map(l=>[l,...series.map(s=>Math.round(buckets[l][s.key]||0))])};
+}
+function slug(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');}
+function fname(name,ext){return 'analisis_ciudades_'+slug(name)+'_'+state.from+'_a_'+state.to+'.'+ext;}
+function dl(blob,fn){const u=URL.createObjectURL(blob);const a=document.createElement('a');
+  a.href=u;a.download=fn;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),1500);}
+function csvCell(v){ if(typeof v==='number') return String(v).replace('.',',');
+  const s=String(v); return /[;"\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }
+function exportCSV(d){
+  const lines=[d.header.join(';'),...d.rows.map(r=>r.map(csvCell).join(';'))];
+  dl(new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'}), fname(d.name,'csv'));
+}
+function exportXLSX(d){
+  if(typeof XLSX==='undefined'){alert('No se pudo cargar el módulo de Excel (revisá la conexión). Podés usar el botón CSV, que también abre en Excel.');return;}
+  const ws=XLSX.utils.aoa_to_sheet([d.header,...d.rows]);
+  const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,d.name.slice(0,31));
+  XLSX.writeFile(wb, fname(d.name,'xlsx'));
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.exp-btn'); if(!b||!MODEL)return;
+  const kind=b.dataset.exp;
+  const d = kind==='evolucion'? expTime()
+          : kind==='comparativo'? expYoY()
+          : kind==='proyeccion'? expProj()
+          : expData(kind);
+  if(!d) return;
+  if(b.dataset.fmt==='xlsx') exportXLSX(d); else exportCSV(d);
+});
+
+/* ===== Eventos ===== */
+$('presets').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b)return;
+  if(b.dataset.y){ setYear(b.dataset.y); return; }
+  if(!MODEL) return;
+  document.querySelectorAll('#presets .chip:not(.chip-year)').forEach(c=>c.classList.remove('active'));
+  b.classList.add('active'); const p=b.dataset.p;
+  const DMAX=parseD(MODEL.dateMax);
+  if(p==='all'){dFrom.value=MODEL.dateMin;dTo.value=MODEL.dateMax;}
+  else if(p==='month'){const f=new Date(DMAX.getFullYear(),DMAX.getMonth(),1);
+    dFrom.value=isoLocal(f)<MODEL.dateMin?MODEL.dateMin:isoLocal(f);dTo.value=MODEL.dateMax;}
+  else{const f=new Date(DMAX);f.setDate(f.getDate()-(+p-1));
+    dFrom.value=isoLocal(f)<MODEL.dateMin?MODEL.dateMin:isoLocal(f);dTo.value=MODEL.dateMax;}
+  render();
+});
+[dFrom,dTo].forEach(el=>el.addEventListener('change',()=>{
+  document.querySelectorAll('#presets .chip:not(.chip-year)').forEach(c=>c.classList.remove('active'));render();}));
+fCity.addEventListener('change',e=>{state.city=e.target.value;render();});
+fDep.addEventListener('change',e=>{state.dep=e.target.value;render();});
+fStatus.addEventListener('change',e=>{state.status=e.target.value;render();});
+fType.addEventListener('change',e=>{state.type=e.target.value;render();});
+fBrand.addEventListener('change',e=>{state.brand=e.target.value;render();});
+fCat.addEventListener('change',e=>{state.cat=e.target.value;render();});
+fSku.addEventListener('input',e=>{clearTimeout(window._skuT);
+  window._skuT=setTimeout(()=>{state.sku=e.target.value.trim();render();},250);});
+$('granSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  document.querySelectorAll('#granSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); state.gran=b.dataset.g; render();});
+$('rankSeg').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  document.querySelectorAll('#rankSeg button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); state.rankBy=b.dataset.r; render();});
+document.querySelectorAll('#cityTable th').forEach(th=>th.addEventListener('click',()=>{
+  const k=th.dataset.k; if(state.sortK===k)state.sortDir*=-1; else{state.sortK=k;state.sortDir=k==='city'?1:-1;}
+  render();}));
+$('reset').addEventListener('click',()=>{
+  if(!MODEL) return;
+  state.city='';state.dep='';state.type='';state.brand='';state.cat='';state.sku='';state.skuNorm='';
+  state.status = MODEL.has.status && MODEL.validSet.size ? 'valid':'';
+  state.gran='month';state.rankBy='sales';state.sortK='sales';state.sortDir=-1;
+  fCity.value='';fDep.value='';fType.value='';fBrand.value='';fCat.value='';fSku.value='';
+  if(MODEL.has.status) fStatus.value=state.status;
+  dFrom.value=MODEL.dateMin;dTo.value=MODEL.dateMax;
+  document.querySelectorAll('#presets .chip:not(.chip-year)').forEach(c=>c.classList.remove('active'));
+  document.querySelector('#presets [data-p=all]').classList.add('active');
+  document.querySelectorAll('#granSeg button').forEach(x=>x.classList.toggle('on',x.dataset.g==='month'));
+  document.querySelectorAll('#rankSeg button').forEach(x=>x.classList.toggle('on',x.dataset.r==='sales'));
+  render();});
+window.addEventListener('resize',()=>{clearTimeout(window._rt);window._rt=setTimeout(render,200);});
+
+/* ===== Carga desde el Sheet (única fuente de datos) ===== */
 async function loadFromSheet(){
   try{
     showUploadMsg('⏳ Cargando desde Google Sheet…','ok');
-    let rows = await gvizFetchRows();
-    // orden cronológico ascendente => detección correcta de cliente nuevo
-    rows.sort((a,b)=> String(a['Creation Date']||'').localeCompare(String(b['Creation Date']||'')));
-    const ordersMap = parseVtexRows(rows);
-    // build COMPLETO desde cero (el Sheet es la única fuente)
-    const {newOrders, newClientsCount} = buildCiudadesDelta(ordersMap, '', 0);
-    DATA.orders = newOrders;
-    DATA.n_clients = newClientsCount;
-    // fechas según la base REAL del Google Sheet (todas las filas)
-    let smin=null, smax=null;
-    rows.forEach(r=>{ const d=String(r['Creation Date']||'').slice(0,10); if(!d)return; if(!smin||d<smin)smin=d; if(!smax||d>smax)smax=d; });
-    window.SHEET_RANGE = (smin&&smax)?{min:smin,max:smax}:null;
-    let minD=smin, maxD=smax;
-    if(minD===null){ newOrders.forEach(o=>{ if(minD===null||o.d<minD)minD=o.d; if(maxD===null||o.d>maxD)maxD=o.d; }); }
-    if(minD){ DATA.date_min=minD; DATA.date_max=maxD;
-      DMIN=parseD(minD); DMAX=parseD(maxD);
-      dFrom.min=minD; dFrom.value=minD; dTo.max=maxD; dTo.value=maxD;
-      state.from=minD; state.to=maxD;
+    const saved = MODEL? captureSel() : null;
+    const {headers, rows} = await gvizFetchRows();
+    const model = buildModel(rows, headers);
+    if(model.fatal){
+      showFatal(model.fatal+' — Revisá la fila de encabezados de la pestaña conectada.');
+      showUploadMsg('✗ '+model.fatal,'err');
+      return false;
     }
+    if(!model.orders.length){
+      showFatal('El Sheet '+YEAR+' no contiene pedidos con Nº de orden y fecha válida.');
+      showUploadMsg('✗ Sheet '+YEAR+' sin pedidos válidos','err');
+      return false;
+    }
+    hideFatal();
+    MODEL=model;
+    QC_STATIC=buildQCStatic(model);
+    rebuildFilterUI(model, saved);
+    applyDateRange(model, saved);
+    lastSyncAt=new Date();
+    updateUpdTag(model);
     render();
-    YEARLY[YEAR] = {orders:newOrders, minD:(smin||minD), maxD:(smax||maxD)};
-    renderYoYProj();   // comparativo y proyección (usa ambas fuentes, no bloquea)
-    showUploadMsg('✓ Sheet '+YEAR+' sincronizado: '+DATA.orders.length+' pedidos · '+DATA.n_clients+' clientes · '+(minD||'?')+' a '+(maxD||'?')+'.','ok');
+    const validOrders = (model.has.status && model.validSet.size)
+      ? model.orders.filter(o=>model.validSet.has(o.st)) : model.orders;
+    let vmin=null,vmax=null;
+    validOrders.forEach(o=>{ if(!vmin||o.d<vmin)vmin=o.d; if(!vmax||o.d>vmax)vmax=o.d; });
+    YEARLY[YEAR]={orders:validOrders,minD:vmin,maxD:vmax};
+    renderYoYProj();
+    showUploadMsg('✓ Sheet '+YEAR+' sincronizado: '+fmtInt(model.orders.length)+' pedidos · '+
+      fmtInt(model.nClients)+' clientes · '+model.dateMin+' a '+model.dateMax,'ok');
     return true;
   }catch(err){
     console.error(err);
-    showUploadMsg('✗ No se pudo leer el Sheet '+YEAR+': '+err.message+'  (verificá que esté compartido como "Cualquiera con el enlace · Lector")','err');
+    if(!MODEL){
+      showFatal('No se pudo conectar con el Google Sheet '+YEAR+': '+err.message+
+        '. Verificá tu conexión y que la hoja esté compartida como "Cualquiera con el enlace · Lector".', true);
+    }
+    showUploadMsg('✗ No se pudo leer el Sheet '+YEAR+': '+err.message+
+      '  (verificá que esté compartido como "Cualquiera con el enlace · Lector")','err');
     return false;
   }
 }
 
-(function injectSheetBtn(){ /* botón manual eliminado · la sincronización ahora es automática */ })();
-
 /* ============================================================
    COMPARATIVO 2026 vs 2025 + PROYECCIÓN DE CIERRE 2026
-   Ambos paneles leen las DOS fuentes anuales (independiente del
-   año activo en el selector y de los filtros del dashboard).
-   Proyección: estacionalidad mensual 2025 ajustada por el ritmo
-   real 2026 (ratio de meses ya transcurridos).
+   Base anual completa con estados facturables; independiente
+   de los filtros del dashboard. Cada año lee SOLO su Sheet.
    ============================================================ */
-const YEARLY = {};   // cache por año: {orders, minD, maxD}
+const YEARLY = {};
 const MESES = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
 let yoyChart, projChart;
 
 async function ensureYearCache(year){
   if(YEARLY[year]) return YEARLY[year];
-  const rows = await gvizFetchRows(year);
-  rows.sort((a,b)=> String(a['Creation Date']||'').localeCompare(String(b['Creation Date']||'')));
-  const {newOrders} = buildCiudadesDelta(parseVtexRows(rows), '', 0);
-  let minD=null, maxD=null;
-  newOrders.forEach(o=>{ if(!minD||o.d<minD)minD=o.d; if(!maxD||o.d>maxD)maxD=o.d; });
-  YEARLY[year] = {orders:newOrders, minD, maxD};
+  const {headers, rows} = await gvizFetchRows(year);
+  const model=buildModel(rows,headers);
+  if(model.fatal) throw new Error(model.fatal);
+  const validOrders=(model.has.status&&model.validSet.size)
+    ? model.orders.filter(o=>model.validSet.has(o.st)) : model.orders;
+  let minD=null,maxD=null;
+  validOrders.forEach(o=>{ if(!minD||o.d<minD)minD=o.d; if(!maxD||o.d>maxD)maxD=o.d; });
+  YEARLY[year]={orders:validOrders,minD,maxD};
   return YEARLY[year];
 }
 
-function monthlySales(orders){ const m=new Array(12).fill(0); orders.forEach(o=>{ m[+o.d.slice(5,7)-1]+=o.v; }); return m; }
-function periodStats(orders, upTo){
-  let sales=0, n=0; const cl=new Set();
-  orders.forEach(o=>{ if(o.d>upTo) return; sales+=o.v; n++; cl.add(o.u); });
-  return {sales, n, ticket:n?sales/n:0, clients:cl.size};
-}
 const fmtPct1 = x => (x>=0?'+':'')+x.toFixed(1).replace('.',',')+'%';
 function deltaHTML(v26,v25){
   if(!v25) return '';
@@ -791,46 +1500,19 @@ function deltaHTML(v26,v25){
   return `<div class="delta ${d>=0?'up':'dn'}">${fmtPct1(d)} vs 2025</div>`;
 }
 
-/* --- Cálculo de proyección --- */
-function computeProjection(y25, y26){
-  const m25=monthlySales(y25.orders), m26=monthlySales(y26.orders);
-  const dt=parseD(y26.maxD), nx=new Date(dt); nx.setDate(nx.getDate()+1);
-  const lastM=dt.getMonth();                        // 0-11, mes del último dato 2026
-  const partial = nx.getMonth()===dt.getMonth();    // true si el último mes está incompleto
-  const lastComplete = partial ? lastM-1 : lastM;   // último mes 2026 completo
-  // ritmo 2026 vs 2025 sobre meses completos comparables
-  let s26=0, s25=0;
-  for(let m=0;m<=lastComplete;m++){ if(m25[m]>0){ s26+=m26[m]; s25+=m25[m]; } }
-  const ratio = s25>0 ? s26/s25 : 1;
-  // resto del mes parcial: ventas 2025 de ese mes desde el día siguiente en adelante
-  const real=new Array(12).fill(0), proy=new Array(12).fill(0);
-  for(let m=0;m<12;m++){
-    if(m<=lastComplete){ real[m]=m26[m]; }
-    else if(m===lastM && partial){
-      real[m]=m26[m];
-      const dia=dt.getDate();
-      let rest25=0;
-      y25.orders.forEach(o=>{ if(+o.d.slice(5,7)-1===m && +o.d.slice(8,10)>dia) rest25+=o.v; });
-      proy[m]=Math.round(rest25*ratio);
-    }
-    else{ proy[m]=Math.round(m25[m]*ratio); }
+function renderYoY(y25,y26){
+  if(!y26||!y26.orders.length||!y26.maxD){
+    $('yoyKpis').innerHTML='<div class="mk"><div class="lab">Aún no hay pedidos facturables 2026.</div></div>'; return;
   }
-  const total25=m25.reduce((a,b)=>a+b,0);
-  const cierre=real.reduce((a,b)=>a+b,0)+proy.reduce((a,b)=>a+b,0);
-  return {m25, m26, real, proy, ratio, cierre, total25, lastM, partial};
-}
-
-/* --- Render de los dos paneles --- */
-function renderYoY(y25, y26){
-  const m25=monthlySales(y25.orders), m26=monthlySales(y26.orders);
+  const m25=monthlySales(y25?y25.orders:[],'2025'), m26=monthlySales(y26.orders,'2026');
   const upTo26=y26.maxD, upTo25='2025'+upTo26.slice(4);
-  const a=periodStats(y26.orders, upTo26), b=periodStats(y25.orders, upTo25);
-  document.getElementById('yoyKpis').innerHTML=`
+  const a=periodStats(y26.orders,upTo26,'2026'), b=periodStats(y25?y25.orders:[],upTo25,'2025');
+  $('yoyKpis').innerHTML=`
     <div class="mk"><div class="lab">Ventas al ${fmtDate(upTo26)}</div><div class="val">${fmtShort(a.sales)}</div>${deltaHTML(a.sales,b.sales)}</div>
-    <div class="mk"><div class="lab">Pedidos</div><div class="val">${a.n.toLocaleString('es-PY')}</div>${deltaHTML(a.n,b.n)}</div>
+    <div class="mk"><div class="lab">Pedidos</div><div class="val">${fmtInt(a.n)}</div>${deltaHTML(a.n,b.n)}</div>
     <div class="mk"><div class="lab">Ticket promedio</div><div class="val">${fmtG(a.ticket)}</div>${deltaHTML(a.ticket,b.ticket)}</div>
-    <div class="mk"><div class="lab">Clientes únicos</div><div class="val">${a.clients.toLocaleString('es-PY')}</div>${deltaHTML(a.clients,b.clients)}</div>`;
-  const ctx=document.getElementById('yoyChart');
+    <div class="mk"><div class="lab">Clientes únicos</div><div class="val">${fmtInt(a.clients)}</div>${deltaHTML(a.clients,b.clients)}</div>`;
+  if(!chartsOK()) return;
   const cfg={type:'bar',data:{labels:MESES,datasets:[
       {label:'2025',data:m25.map(Math.round),backgroundColor:'#B0BEC5',borderRadius:4},
       {label:'2026',data:m26.map(v=>Math.round(v)||null),backgroundColor:'#E31837',borderRadius:4}]},
@@ -841,17 +1523,20 @@ function renderYoY(y25, y26){
             return (v25>0&&v26>0)?'Variación: '+fmtPct1((v26/v25-1)*100):'';}}}},
       scales:{x:{grid:{display:false},ticks:{font:{size:10}}},
               y:{grid:{color:'#F0F0F0'},ticks:{callback:v=>fmtShort(v),font:{size:11}}}}}};
-  if(yoyChart){yoyChart.data=cfg.data;yoyChart.update();}else yoyChart=new Chart(ctx,cfg);
+  if(yoyChart){yoyChart.data=cfg.data;yoyChart.update();}else yoyChart=new Chart($('yoyChart'),cfg);
 }
 
-function renderProj(y25, y26){
+function renderProj(y25,y26){
   const P=computeProjection(y25,y26);
-  window._PROJ=P;   // para exportación
-  document.getElementById('projKpis').innerHTML=`
+  window._PROJ=P;
+  if(!P){
+    $('projKpis').innerHTML='<div class="mk"><div class="lab">Datos 2026 insuficientes para proyectar.</div></div>'; return;
+  }
+  $('projKpis').innerHTML=`
     <div class="mk"><div class="lab">Cierre proyectado 2026</div><div class="val">${fmtShort(P.cierre)}</div>${deltaHTML(P.cierre,P.total25)}</div>
     <div class="mk"><div class="lab">Ritmo actual vs 2025</div><div class="val">${fmtPct1((P.ratio-1)*100)}</div></div>
     <div class="mk"><div class="lab">Cierre 2025</div><div class="val">${fmtShort(P.total25)}</div></div>`;
-  const ctx=document.getElementById('projChart');
+  if(!chartsOK()) return;
   const cfg={data:{labels:MESES,datasets:[
       {type:'bar',label:'Real 2026',data:P.real.map(Math.round),backgroundColor:'#E31837',borderRadius:4,stack:'s'},
       {type:'bar',label:'Proyección',data:P.proy,backgroundColor:'#FBC0BA',borderRadius:4,stack:'s'},
@@ -864,27 +1549,26 @@ function renderProj(y25, y26){
             return P.proy[i]>0?'Total estimado: '+fmtG(t):'';}}}},
       scales:{x:{stacked:true,grid:{display:false},ticks:{font:{size:10}}},
               y:{stacked:true,grid:{color:'#F0F0F0'},ticks:{callback:v=>fmtShort(v),font:{size:11}}}}}};
-  if(projChart){projChart.data=cfg.data;projChart.update();}else projChart=new Chart(ctx,cfg);
+  if(projChart){projChart.data=cfg.data;projChart.update();}else projChart=new Chart($('projChart'),cfg);
 }
 
 async function renderYoYProj(){
   try{
-    const [y25, y26] = await Promise.all([ensureYearCache('2025'), ensureYearCache('2026')]);
-    renderYoY(y25, y26);
-    renderProj(y25, y26);
+    const [y25,y26]=await Promise.all([ensureYearCache('2025'),ensureYearCache('2026')]);
+    renderYoY(y25,y26);
+    renderProj(y25,y26);
   }catch(err){
     console.error(err);
-    const msg='<div class="mk"><div class="lab" style="color:#D8342E">No se pudo cargar el otro año: '+err.message+'</div></div>';
-    document.getElementById('yoyKpis').innerHTML=msg;
-    document.getElementById('projKpis').innerHTML=msg;
+    const msg='<div class="mk"><div class="lab" style="color:#D8342E">No se pudo cargar el otro año: '+esc(err.message)+'</div></div>';
+    $('yoyKpis').innerHTML=msg;
+    $('projKpis').innerHTML=msg;
   }
 }
 
-/* --- Exportación de los nuevos paneles --- */
 function expYoY(){
   const y25=YEARLY['2025'], y26=YEARLY['2026'];
   if(!y25||!y26) return {name:'Comparativo 2026 vs 2025',header:['Aviso'],rows:[['Datos aún no cargados']]};
-  const m25=monthlySales(y25.orders), m26=monthlySales(y26.orders);
+  const m25=monthlySales(y25.orders,'2025'), m26=monthlySales(y26.orders,'2026');
   return {name:'Comparativo 2026 vs 2025',
     header:['Mes','Ventas 2025 (Gs)','Ventas 2026 (Gs)','Variación (%)'],
     rows:MESES.map((m,i)=>[m,Math.round(m25[i]),Math.round(m26[i]),
@@ -899,11 +1583,7 @@ function expProj(){
 }
 
 /* ============================================================
-   SELECTOR DE AÑO (2025 / 2026)
-   Disponible en el header y como chips en el filtro de fechas.
-   Cambia la fuente activa y reconstruye todo el dashboard
-   desde el Sheet del año elegido. Cada año lee SOLO su Sheet:
-   cambiar de año nunca escribe ni modifica el otro archivo.
+   SELECTOR DE AÑO (2025 / 2026) — cada año lee SOLO su Sheet.
    ============================================================ */
 function syncYearUI(){
   document.querySelectorAll('#presets .chip-year').forEach(x=>x.classList.toggle('year-on', x.dataset.y===YEAR));
@@ -913,48 +1593,49 @@ async function setYear(y){
   const prev = YEAR;
   YEAR = y;
   syncYearUI();
+  delete YEARLY[y];                 // fuerza relectura fresca del año elegido
   const ok = await autoSync('year');
   if(!ok){
-    // si el año nuevo falla (p. ej. ID sin configurar o Sheet no compartido), volver al anterior
     YEAR = prev;
     syncYearUI();
     await autoSync('rollback');
   } else {
-    // el año nuevo carga con su rango completo → preset "Todo"
     document.querySelectorAll('#presets .chip:not(.chip-year)').forEach(c=>c.classList.remove('active'));
     const all = document.querySelector('#presets [data-p=all]'); if(all) all.classList.add('active');
+    if(MODEL){ dFrom.value=MODEL.dateMin; dTo.value=MODEL.dateMax; render(); }
   }
 }
 
-
 /* ============================================================
    SINCRONIZACIÓN AUTOMÁTICA
-   - Carga al abrir
-   - Refresca cada AUTO_MIN minutos
-   - Refresca al volver a la pestaña (si pasó > 60s desde la última)
+   - Carga al abrir · refresco cada AUTO_MIN min · al volver a la pestaña
+   - Siempre lee los datos más recientes (cache no-store + timestamp)
    ============================================================ */
-const AUTO_MIN = 5;            // intervalo de auto-refresco (minutos)
+const AUTO_MIN = 5;
 let _lastSync = 0;
 
 async function autoSync(reason){
-  const dot = document.getElementById('syncDot');
+  const dot = $('syncDot');
+  const fg = reason!=='interval' && reason!=='focus';   // primer plano: init / year / rollback / retry
   if(dot) dot.classList.add('busy');
+  if(fg) showLoading('Cargando datos del Google Sheet '+YEAR+'…');
   try{
+    if(reason==='interval'||reason==='focus') delete YEARLY[YEAR];  // refresco real del año activo
     const ok = await loadFromSheet();
     _lastSync = Date.now();
     return ok;
   } finally {
     if(dot) dot.classList.remove('busy');
+    if(fg) hideLoading();
   }
 }
 
-// 1) Primera carga
+document.addEventListener('click',e=>{
+  if(e.target && e.target.id==='fatalRetry') autoSync('retry');
+});
+
 autoSync('init');
-
-// 2) Refresco periódico
 setInterval(()=>autoSync('interval'), AUTO_MIN*60*1000);
-
-// 3) Refresco al recuperar el foco de la pestaña
 document.addEventListener('visibilitychange', ()=>{
   if(document.visibilityState==='visible' && (Date.now()-_lastSync) > 60*1000){
     autoSync('focus');

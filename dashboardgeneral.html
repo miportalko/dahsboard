@@ -59,7 +59,7 @@
   .hint-chip b{color:var(--ink);font-weight:700}
 
   /* ===== KPIs ===== */
-  .kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-top:18px}
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
   .kpi{background:var(--ink);border-radius:14px;padding:18px 18px 16px;color:#fff;position:relative;overflow:hidden}
   .kpi::after{content:'';position:absolute;left:0;bottom:0;height:3px;width:100%;
     background:linear-gradient(90deg,var(--g1),var(--g2),var(--g3),var(--g4),var(--g5));opacity:.85}
@@ -108,16 +108,11 @@
   .bar-cell span{position:relative;z-index:1}
   .pill{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
 
-  /* ===== Hallazgos ===== */
-  .hallazgos{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));margin-top:16px}
-  .hz{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--amber);
-    border-radius:14px;padding:14px 16px;font-size:13px;line-height:1.55;box-shadow:var(--shadow)}
-  .hz b{display:block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;
-    color:var(--muted);margin-bottom:5px;font-weight:700}
-  .hz.riesgo{border-left-color:var(--bad)}
-  .hz.retencion{border-left-color:var(--ok)}
-  .hz.ticket{border-left-color:var(--g2)}
-  .hz.ritmo{border-left-color:var(--g1)}
+  /* ===== Fila de totales en tablas ===== */
+  tfoot td{border-top:2px solid var(--line);border-bottom:none;font-weight:800;
+    background:#FAFAFA;font-variant-numeric:tabular-nums}
+  tfoot td:first-child{text-align:left}
+  tfoot .tt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
 
   /* ===== Control de calidad ===== */
   details.qcbox{background:var(--card);border:1px solid var(--line);border-radius:14px;
@@ -135,8 +130,7 @@
   .qc-item small{color:var(--muted)}
 
   .footnote{font-size:11px;color:var(--muted);margin-top:20px;text-align:center;line-height:1.6}
-  @media(max-width:1300px){.kpis{grid-template-columns:repeat(3,1fr)}}
-  @media(max-width:1100px){.g2,.g2e{grid-template-columns:1fr}}
+  @media(max-width:1100px){.kpis{grid-template-columns:repeat(2,1fr)}.g2,.g2e{grid-template-columns:1fr}}
   @media(max-width:900px){.qc-body{grid-template-columns:1fr}}
   @media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}.wrap{padding:0 14px 60px}}
   @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
@@ -238,11 +232,13 @@
   <div class="grid g2">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Facturación y ticket por mes</h2>
-        <p class="hint">Barras = facturación · línea = ticket promedio</p></div></div>
+        <p class="hint">Barras = facturación · línea = ticket promedio</p></div>
+        <button class="exp-btn" onclick="bajar('mensual')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cEvol"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Ritmo semanal</h2>
-        <p class="hint">Detecta quiebres que el corte mensual esconde</p></div></div>
+        <p class="hint">Detecta quiebres que el corte mensual esconde</p></div>
+        <button class="exp-btn" onclick="bajar('semanal')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cSem"></canvas></div></div>
   </div>
 
@@ -250,7 +246,8 @@
   <div class="grid g2">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Canales</h2>
-        <p class="hint">Origen UTM del pedido · el resto entra como “Sin UTM”</p></div></div>
+        <p class="hint">Origen UTM del pedido · el resto entra como “Sin UTM”</p></div>
+        <button class="exp-btn" onclick="bajar('canales')">&#8681; Excel</button></div>
       <div class="tscroll" id="tCanal"></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Participación por canal</h2>
@@ -260,11 +257,13 @@
   <div class="grid g2e">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Ciudades</h2>
-        <p class="hint">Facturación por ciudad normalizada</p></div></div>
+        <p class="hint">Facturación por ciudad normalizada</p></div>
+        <button class="exp-btn" onclick="bajar('ciudades')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cCiudad"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Medio de pago</h2>
-        <p class="hint">Define cuándo se cobra realmente</p></div></div>
+        <p class="hint">Define cuándo se cobra realmente</p></div>
+        <button class="exp-btn" onclick="bajar('pagos')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cPago"></canvas></div></div>
   </div>
 
@@ -276,23 +275,22 @@
   <div class="grid g2">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span><span id="tituloProd">Top SKUs por facturación</span></h2>
-        <p class="hint" id="hintProd">Solo líneas con precio &gt; 0 · excluye componentes de combo</p></div></div>
+        <p class="hint" id="hintProd">Solo líneas con precio &gt; 0 · excluye componentes de combo</p></div>
+        <button class="exp-btn" onclick="bajar('productos')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cSku"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Retornable vs. no retornable</h2>
-        <p class="hint">Participación en facturación de producto</p></div></div>
+        <p class="hint">Participación en facturación de producto</p></div>
+        <button class="exp-btn" onclick="bajar('retornables')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cRet"></canvas></div></div>
   </div>
 
   <div class="section-head"><h2><span class="dot"></span>Cuánto cuesta vender</h2></div>
-  <div class="grid g2e">
-    <div class="panel">
-      <div class="ph"><div><h2><span class="dot"></span>Mecánicas promocionales</h2>
-        <p class="hint">Descuento nominal acumulado por mecánica</p></div></div>
-      <div class="tscroll" id="tPromo"></div></div>
+  <div class="grid">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Cupones más usados</h2>
-        <p class="hint" id="cupTot">—</p></div></div>
+        <p class="hint" id="cupTot">—</p></div>
+        <button class="exp-btn" onclick="bajar('cupones')">&#8681; Excel</button></div>
       <div class="tscroll" id="tCupon"></div></div>
   </div>
 
@@ -303,16 +301,15 @@
   <div class="grid g2e">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Nuevos vs. recurrentes</h2>
-        <p class="hint">Pedidos por tipo de cliente y mes</p></div></div>
+        <p class="hint">Pedidos por tipo de cliente y mes</p></div>
+        <button class="exp-btn" onclick="bajar('clientes')">&#8681; Excel</button></div>
       <div class="cwrap"><canvas id="cClientes"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Frecuencia de compra</h2>
-        <p class="hint">Clientes según cantidad de pedidos en el período</p></div></div>
+        <p class="hint">Clientes según cantidad de pedidos en el período</p></div>
+        <button class="exp-btn" onclick="bajar('frecuencia')">&#8681; Excel</button></div>
       <div class="cwrap"><canvas id="cFreq"></canvas></div></div>
   </div>
-
-  <div class="section-head"><h2><span class="dot"></span>Qué mirar esta semana</h2></div>
-  <div class="hallazgos" id="hallazgos"></div>
 
   <p class="footnote" id="foot">—</p>
 </div>
@@ -526,17 +523,12 @@ function kpis(){
   const prev=hay?conVenta(sel(pa,pb)):[];
   const f=suma(cur,p=>p.facturacion), p=cur.length;
   const fp=suma(prev,x=>x.facturacion), pp=prev.length;
-  const desc=-suma(sel(),x=>x.descuento), bruta=f+desc;
-  const descP=-suma(hay?sel(pa,pb):[],x=>x.descuento), brutaP=fp+descP;
-  const rec=cur.filter(x=>!x.nuevo).length, recP=prev.filter(x=>!x.nuevo).length;
   const cl=new Set(cur.map(x=>x.email)).size, clP=new Set(prev.map(x=>x.email)).size;
   const items=[
     ['Facturación',fmt(f),fp?f/fp-1:null],
     ['Pedidos',num(p),pp?p/pp-1:null],
     ['Ticket promedio',fmt(p?f/p:0),pp&&p?(f/p)/(fp/pp)-1:null],
-    ['Clientes únicos',num(cl),clP?cl/clP-1:null],
-    ['% descuento',(bruta?desc/bruta*100:0).toFixed(1)+'%',brutaP&&descP?(desc/bruta)/(descP/brutaP)-1:null],
-    ['% recurrentes',(p?rec/p*100:0).toFixed(1)+'%',pp?(rec/p)/(recP/pp)-1:null]];
+    ['Clientes únicos',num(cl),clP?cl/clP-1:null]];
   document.getElementById('kpis').innerHTML=items.map(([l,v,d])=>{
     let s='<div class="sub flat">Sin período previo</div>';
     if(d!==null&&isFinite(d)){const c=Math.abs(d)<.005?'flat':d>0?'up':'dn';
@@ -675,69 +667,211 @@ function render(){
     scales:{...BASE.scales,y:{...BASE.scales.y,ticks:{font:F11,callback:num}}}}});
 
   tablasPeriodo(cur,todos);
-  hallazgos(cur,todos);
+  armarBloques(cur,todos,mesesSel,lin,conPrecio);
+  notaParcial();
+}
+
+/* aviso de mes incompleto, lo único que se rescata del bloque de hallazgos */
+function notaParcial(){
+  const e=document.getElementById('notaParcial');
+  if(!e) return;
+  if(B===MESES.length-1&&QC.fechaMax){
+    e.textContent=`${nomMes(MESES[B])} está incompleto: la fuente corta el ${QC.fechaMax.slice(8,10)}/${QC.fechaMax.slice(5,7)}. No lo compares en bruto contra el mes anterior.`;
+  }else e.textContent='';
 }
 
 /* ===== tablas que dependen del período ===== */
 function tablasPeriodo(cur,todos){
-  const pr=new Map();
-  todos.forEach(p=>p.promos.forEach(k=>{const v=pr.get(k)||{p:0,d:0};v.p++;v.d+=-p.descuento;pr.set(k,v)}));
-  const promos=[...pr.entries()].sort((a,b)=>b[1].p-a[1].p).slice(0,15);
-  const mxD=promos.length?Math.max(...promos.map(x=>x[1].d)):1;
-  document.getElementById('tPromo').innerHTML=promos.length?
-    '<table><thead><tr><th>Mecánica</th><th>Pedidos</th><th>Descuento</th></tr></thead><tbody>'+
-    promos.map(([k,v],i)=>`<tr><td><span class="rank">${i+1}</span><span class="nm" title="${k}">${corta(k,60)}</span></td>`+
-    `<td>${num(v.p)}</td><td class="bar-cell"><div class="fill" style="width:${v.d/mxD*100}%"></div>`+
-    `<span>${fmt(v.d)}</span></td></tr>`).join('')+'</tbody></table>'
-    :'<p class="hint">Sin promociones en el período seleccionado.</p>';
-
   const cu=new Map();
   cur.filter(p=>p.cupon).forEach(p=>{const v=cu.get(p.cupon)||{p:0,f:0};v.p++;v.f+=p.facturacion;cu.set(p.cupon,v)});
-  const cup=[...cu.entries()].sort((a,b)=>b[1].p-a[1].p).slice(0,12);
+  const orden=[...cu.entries()].sort((a,b)=>b[1].p-a[1].p);
+  const cup=orden.slice(0,12);
   const mxP=cup.length?cup[0][1].p:1;
+
+  /* totales de TODOS los cupones del período, no solo del top visible */
+  const totP=suma(orden,x=>x[1].p), totF=suma(orden,x=>x[1].f);
+  const pedTot=cur.length, facTot=suma(cur,p=>p.facturacion);
+  /* subtotal de lo que se ve en pantalla */
+  const visP=suma(cup,x=>x[1].p), visF=suma(cup,x=>x[1].f);
+
   document.getElementById('tCupon').innerHTML=cup.length?
-    '<table><thead><tr><th>Cupón</th><th>Pedidos</th><th>Facturación</th><th>Ticket</th></tr></thead><tbody>'+
+    '<table><thead><tr><th>Cupón</th><th>Pedidos</th><th>Facturación</th><th>Ticket</th>'+
+    '<th>% de pedidos con cupón</th></tr></thead><tbody>'+
     cup.map(([k,v],i)=>`<tr><td><span class="rank">${i+1}</span>${corta(k,30)}</td>`+
     `<td class="bar-cell"><div class="fill" style="width:${v.p/mxP*100}%"></div><span>${num(v.p)}</span></td>`+
-    `<td>${fmt(v.f)}</td><td>${fmt(v.f/v.p)}</td></tr>`).join('')+'</tbody></table>'
+    `<td>${fmt(v.f)}</td><td>${fmt(v.f/v.p)}</td>`+
+    `<td>${totP?(v.p/totP*100).toFixed(1):'0.0'}%</td></tr>`).join('')+'</tbody>'+
+    (orden.length>cup.length?
+      `<tfoot><tr><td class="tt">Subtotal top ${cup.length}</td><td>${num(visP)}</td>`+
+      `<td>${fmt(visF)}</td><td>${fmt(visP?visF/visP:0)}</td>`+
+      `<td>${totP?(visP/totP*100).toFixed(1):'0.0'}%</td></tr>`:'<tfoot>')+
+    `<tr><td class="tt">Total ${num(orden.length)} cupones</td><td>${num(totP)}</td>`+
+    `<td>${fmt(totF)}</td><td>${fmt(totP?totF/totP:0)}</td><td>100.0%</td></tr></tfoot></table>`
     :'<p class="hint">Sin cupones usados en el período seleccionado.</p>';
-  document.getElementById('cupTot').textContent=cu.size+' códigos distintos en el período';
+
+  document.getElementById('cupTot').innerHTML=
+    `<b>${num(orden.length)}</b> códigos distintos · <b>${num(totP)}</b> pedidos con cupón `+
+    `(${pedTot?(totP/pedTot*100).toFixed(1):'0.0'}% del total) · <b>${fmt(totF)}</b> facturados `+
+    `(${facTot?(totF/facTot*100).toFixed(1):'0.0'}% de la facturación)`;
+
+  BLOQUES.cupones={arch:'Cupones',hoja:'Cupones',anchos:[34,12,18,16,20,14],
+    aoa:[['Cupón','Pedidos','Facturación','Ticket promedio','% de pedidos con cupón','% de la facturación total']]
+      .concat(orden.map(([k,v])=>[k,v.p,v.f,v.p?v.f/v.p:0,totP?v.p/totP:0,facTot?v.f/facTot:0]))
+      .concat([['TOTAL',totP,totF,totP?totF/totP:0,1,facTot?totF/facTot:0],
+               [],['Pedidos del período (con venta)',pedTot],
+               ['Facturación del período',facTot],
+               ['% de pedidos que usaron cupón',pedTot?totP/pedTot:0]])};
 }
 
-/* ===== hallazgos ===== */
-function hallazgos(cur,todos){
-  const H=[];
-  const ult=MESES[MESES.length-1];
-  if(B===MESES.length-1){
-    const dia=+QC.fechaMax.slice(8,10);
-    H.push(['parcial','Contexto',`${nomMes(ult)} está incompleto: la fuente corta el día ${dia}. No lo compares en bruto contra el mes anterior.`]);
-    if(MESES.length>1){
-      const prevM=MESES[MESES.length-2];
-      const fU=suma(cur.filter(p=>p.mes===ult),p=>p.facturacion)/dia;
-      const fP=suma(conVenta(sel(0,MESES.length-1)).filter(p=>p.mes===prevM),p=>p.facturacion)/30;
-      if(fP) H.push(['ritmo','Ritmo',`Ritmo diario de ${nomMes(ult)}: ${fmt(fU)}/día contra ${fmt(fP)}/día en ${nomMes(prevM)} (${pct((fU/fP-1)*100)}).`]);
-    }
-  }
-  const t0=cur.filter(p=>p.mes===MESES[A]), t1=cur.filter(p=>p.mes===MESES[B]);
-  if(t0.length&&t1.length&&A!==B){
-    const k0=suma(t0,p=>p.facturacion)/t0.length, k1=suma(t1,p=>p.facturacion)/t1.length;
-    H.push(['ticket','Tendencia',`El ticket promedio pasó de ${fmt(k0)} en ${nomMes(MESES[A])} a ${fmt(k1)} en ${nomMes(MESES[B])} (${pct((k1/k0-1)*100)}).`]);
-  }
-  const lin=lineasDe(cur).filter(o=>o._precio>0);
-  const rk=rank(lin,o=>o['SKU Name'],o=>o._precio);
-  const totSku=suma(rk,x=>x[1]);
-  if(totSku) H.push(['riesgo','Riesgo',`Los 5 SKUs top concentran el ${(suma(rk.slice(0,5),x=>x[1])/totSku*100).toFixed(0)}% de la facturación de producto. Un quiebre de stock ahí define el mes.`]);
-  const sinUtm=todos.filter(p=>p.canal==='Sin UTM').length;
-  if(todos.length) H.push(['dato','Límite del dato',`El ${(sinUtm/todos.length*100).toFixed(0)}% de los pedidos no trae UTM. El módulo de canales describe menos de la mitad del negocio.`]);
-  const dom=cur.filter(p=>/domicilio/i.test(p.pago)).length;
-  if(cur.length) H.push(['riesgo','Riesgo',`${(dom/cur.length*100).toFixed(0)}% de los pedidos son "Pago en domicilio": el cobro depende de la entrega, no del checkout.`]);
+/* ============================================================
+   DESCARGA POR PANEL · cada tablero arma su propia hoja
+   ============================================================ */
+let BLOQUES={};
+
+function armarBloques(cur,todos,mesesSel,lin,conPrecio){
+  /* --- Facturación y ticket por mes --- */
+  BLOQUES.mensual={arch:'Facturacion_mensual',hoja:'Mensual',
+    anchos:[10,12,18,18,16,16,20,16,20,14],
+    aoa:[['Mes','Pedidos','Facturación','Ticket promedio','Clientes únicos',
+          'Pedidos de nuevos','Pedidos de recurrentes','Envío','Descuento nominal','Canjes ₲0']]
+      .concat(mesesSel.map(m=>{
+        const a=cur.filter(p=>p.mes===m), t=todos.filter(p=>p.mes===m);
+        const ff=suma(a,p=>p.facturacion);
+        return [m,a.length,ff,a.length?ff/a.length:0,new Set(a.map(p=>p.email)).size,
+                a.filter(p=>p.nuevo).length,a.filter(p=>!p.nuevo).length,
+                suma(t,p=>p.envio),-suma(t,p=>p.descuento),t.filter(p=>p.canje).length]}))
+      .concat([(()=>{const ff=suma(cur,p=>p.facturacion);
+        return ['TOTAL',cur.length,ff,cur.length?ff/cur.length:0,new Set(cur.map(p=>p.email)).size,
+                cur.filter(p=>p.nuevo).length,cur.filter(p=>!p.nuevo).length,
+                suma(todos,p=>p.envio),-suma(todos,p=>p.descuento),todos.filter(p=>p.canje).length]})()])};
+
+  /* --- Ritmo semanal --- */
+  const sm=new Map();
+  cur.forEach(p=>{const k=semanaDe(p.fecha);const v=sm.get(k)||{f:0,p:0,d:new Set()};
+    v.f+=p.facturacion;v.p++;v.d.add(p.fecha);sm.set(k,v)});
+  const sems=[...sm.keys()].sort();
+  BLOQUES.semanal={arch:'Ritmo_semanal',hoja:'Semanal',anchos:[14,12,18,18,16,20],
+    aoa:[['Semana ISO','Pedidos','Facturación','Ticket promedio','Días con venta','Facturación por día']]
+      .concat(sems.map(k=>{const v=sm.get(k);
+        return [k,v.p,v.f,v.p?v.f/v.p:0,v.d.size,v.d.size?v.f/v.d.size:0]}))
+      .concat([['TOTAL',suma(sems,k=>sm.get(k).p),suma(sems,k=>sm.get(k).f),
+        cur.length?suma(cur,p=>p.facturacion)/cur.length:0,'','']])};
+
+  /* --- Canales --- */
+  const baseCan=conVenta(sel(A,B,'canal')), cm=new Map();
+  baseCan.forEach(p=>{const v=cm.get(p.canal)||{p:0,f:0,n:0,cl:new Set()};
+    v.p++;v.f+=p.facturacion;if(p.nuevo)v.n++;v.cl.add(p.email);cm.set(p.canal,v)});
+  const totCanF=suma([...cm.values()],v=>v.f), totCanP=suma([...cm.values()],v=>v.p);
+  BLOQUES.canales={arch:'Canales',hoja:'Canales',anchos:[22,12,18,16,16,16,22],
+    aoa:[['Canal','Pedidos','Facturación','Ticket','Participación facturación',
+          'Clientes únicos','Pedidos de clientes nuevos']]
+      .concat([...cm.entries()].sort((a,b)=>b[1].f-a[1].f).map(([k,v])=>
+        [k,v.p,v.f,v.p?v.f/v.p:0,totCanF?v.f/totCanF:0,v.cl.size,v.n]))
+      .concat([['TOTAL',totCanP,totCanF,totCanP?totCanF/totCanP:0,1,
+        new Set(baseCan.map(p=>p.email)).size,baseCan.filter(p=>p.nuevo).length]])};
+
+  /* --- Ciudades --- */
+  const baseCiu=conVenta(sel(A,B,'ciudad')), cim=new Map();
+  baseCiu.forEach(p=>{const v=cim.get(p.ciudad)||{p:0,f:0,d:p.depto,cl:new Set()};
+    v.p++;v.f+=p.facturacion;v.cl.add(p.email);cim.set(p.ciudad,v)});
+  const totCiuF=suma([...cim.values()],v=>v.f), totCiuP=suma([...cim.values()],v=>v.p);
+  BLOQUES.ciudades={arch:'Ciudades',hoja:'Ciudades',anchos:[22,18,12,18,16,16,16],
+    aoa:[['Ciudad','Departamento','Pedidos','Facturación','Ticket','Participación','Clientes únicos']]
+      .concat([...cim.entries()].sort((a,b)=>b[1].f-a[1].f).map(([k,v])=>
+        [k,v.d,v.p,v.f,v.p?v.f/v.p:0,totCiuF?v.f/totCiuF:0,v.cl.size]))
+      .concat([['TOTAL','',totCiuP,totCiuF,totCiuP?totCiuF/totCiuP:0,1,
+        new Set(baseCiu.map(p=>p.email)).size]])};
+
+  /* --- Medios de pago --- */
+  const pm=new Map();
+  cur.forEach(p=>{const v=pm.get(p.pago)||{p:0,f:0};v.p++;v.f+=p.facturacion;pm.set(p.pago,v)});
+  const totPagF=suma([...pm.values()],v=>v.f);
+  BLOQUES.pagos={arch:'Medios_de_pago',hoja:'Medios de pago',anchos:[30,12,18,16,20,22],
+    aoa:[['Medio de pago','Pedidos','Facturación','Ticket','Participación pedidos','Participación facturación']]
+      .concat([...pm.entries()].sort((a,b)=>b[1].p-a[1].p).map(([k,v])=>
+        [k,v.p,v.f,v.p?v.f/v.p:0,cur.length?v.p/cur.length:0,totPagF?v.f/totPagF:0]))
+      .concat([['TOTAL',cur.length,totPagF,cur.length?totPagF/cur.length:0,1,1]])};
+
+  /* --- Productos --- */
+  const sm2=new Map();
+  conPrecio.forEach(o=>{const k=o['SKU Name'];const v=sm2.get(k)||{f:0,u:0,ret:o._ret};
+    v.f+=o._precio;v.u+=o._unid;sm2.set(k,v)});
+  const um=new Map();
+  lin.forEach(o=>{const k=o['SKU Name'];const v=um.get(k)||{u:0,f:0,ret:o._ret};
+    v.u+=o._unid;v.f+=o._precio;um.set(k,v)});
+  const totProd=suma([...sm2.values()],v=>v.f);
+  let acu=0;
+  const filasProd=[...sm2.entries()].sort((a,b)=>b[1].f-a[1].f).map(([k,v])=>{acu+=v.f;
+    return [k,v.ret?'Sí':'No',v.f,v.u,v.u?v.f/v.u:0,totProd?v.f/totProd:0,totProd?acu/totProd:0,
+            (um.get(k)||{u:0}).u]});
+  BLOQUES.productos={arch:'Productos',hoja:'Productos',anchos:[48,12,18,16,18,14,14,22],
+    aoa:[['SKU','Retornable','Facturación','Unidades con precio','Precio promedio por unidad',
+          'Participación','% acumulado','Unidades físicas totales']]
+      .concat(filasProd)
+      .concat([['TOTAL','',totProd,suma([...sm2.values()],v=>v.u),'',1,'',
+        suma([...um.values()],v=>v.u)],
+        [],['Nota','Las unidades físicas incluyen componentes de combo con precio 0']])};
+
+  /* --- Retornables --- */
+  const filasRet=mesesSel.map(m=>{const l=conPrecio.filter(o=>o._mes===m);
+    const r=suma(l.filter(o=>o._ret),o=>o._precio), nr=suma(l.filter(o=>!o._ret),o=>o._precio);
+    const ur=suma(l.filter(o=>o._ret),o=>o._unid), unr=suma(l.filter(o=>!o._ret),o=>o._unid);
+    return [m,r,nr,(r+nr)?r/(r+nr):0,ur,unr]});
+  const tR=suma(filasRet,x=>x[1]), tNR=suma(filasRet,x=>x[2]);
+  BLOQUES.retornables={arch:'Retornables',hoja:'Retornables',anchos:[10,24,26,14,20,22],
+    aoa:[['Mes','Facturación retornable','Facturación no retornable','% retornable',
+          'Unidades retornables','Unidades no retornables']]
+      .concat(filasRet)
+      .concat([['TOTAL',tR,tNR,(tR+tNR)?tR/(tR+tNR):0,
+        suma(filasRet,x=>x[4]),suma(filasRet,x=>x[5])]])};
+
+  /* --- Clientes: nuevos vs recurrentes --- */
+  const filasCli=mesesSel.map(m=>{const a=cur.filter(p=>p.mes===m);
+    const n=a.filter(p=>p.nuevo).length;
+    const fn=suma(a.filter(p=>p.nuevo),p=>p.facturacion), fr=suma(a,p=>p.facturacion)-fn;
+    return [m,n,a.length-n,a.length?(a.length-n)/a.length:0,fn,fr]});
+  const tN=suma(filasCli,x=>x[1]), tRec=suma(filasCli,x=>x[2]);
+  BLOQUES.clientes={arch:'Nuevos_vs_recurrentes',hoja:'Clientes',anchos:[10,22,24,16,24,26],
+    aoa:[['Mes','Pedidos de nuevos','Pedidos de recurrentes','% recurrentes',
+          'Facturación de nuevos','Facturación de recurrentes']]
+      .concat(filasCli)
+      .concat([['TOTAL',tN,tRec,(tN+tRec)?tRec/(tN+tRec):0,
+        suma(filasCli,x=>x[4]),suma(filasCli,x=>x[5])],
+        [],['Nota','"Nuevo" = primera compra del año en la fuente, no cliente nuevo absoluto']])};
+
+  /* --- Frecuencia de compra --- */
   const cnt=new Map(); cur.forEach(p=>cnt.set(p.email,(cnt.get(p.email)||0)+1));
-  let una=0; cnt.forEach(v=>{if(v===1)una++});
-  if(cnt.size) H.push(['retencion','Oportunidad',`${(una/cnt.size*100).toFixed(0)}% de los clientes compró una sola vez en el período. La recompra es la palanca más grande sin tocar pauta.`]);
-  const ret=suma(lin.filter(o=>o._ret),o=>o._precio);
-  if(totSku) H.push(['ticket','Mezcla',`Los retornables explican el ${(ret/totSku*100).toFixed(0)}% de la facturación de producto del período.`]);
-  document.getElementById('hallazgos').innerHTML=H.map(([c,t,m])=>
-    `<div class="hz ${c}"><b>${t}</b>${m}</div>`).join('');
+  const gasto=new Map(); cur.forEach(p=>gasto.set(p.email,(gasto.get(p.email)||0)+p.facturacion));
+  const dist=[0,0,0,0,0,0], fac=[0,0,0,0,0,0];
+  cnt.forEach((v,k)=>{const i=Math.min(v,6)-1;dist[i]++;fac[i]+=gasto.get(k)||0});
+  BLOQUES.frecuencia={arch:'Frecuencia_de_compra',hoja:'Frecuencia',anchos:[22,24,16,22,22],
+    aoa:[['Pedidos por cliente','Cantidad de clientes','% del total','Facturación del grupo',
+          'Facturación promedio por cliente']]
+      .concat(dist.map((c,i)=>[i===5?'6 o más':String(i+1),c,cnt.size?c/cnt.size:0,fac[i],
+        c?fac[i]/c:0]))
+      .concat([['TOTAL',cnt.size,1,suma(fac,x=>x),cnt.size?suma(fac,x=>x)/cnt.size:0]])};
+}
+
+/* encabezado de contexto que se antepone a cada descarga */
+function cabecera(titulo){
+  return [['Mi Portal · Dashboard Ejecutivo — '+titulo],
+    ['Período',`${MESES[A]} a ${MESES[B]}`],
+    ['Filtro canal',FC||'Todos'],
+    ['Filtro ciudad',FCI||'Todas'],
+    ['Generado',new Date().toLocaleString('es-PY')],
+    ['Fuente','Google Sheet Fuente General VTEX 2026 · gid '+GSHEET.gid],
+    []];
+}
+
+function bajar(clave){
+  const b=BLOQUES[clave];
+  if(!b){alert('Todavía no hay datos para descargar en este panel.');return}
+  try{
+    const wb=XLSX.utils.book_new();
+    hoja(wb,b.hoja,cabecera(b.hoja).concat(b.aoa),b.anchos);
+    const f=FC?'_'+FC.replace(/\W+/g,''):'', c=FCI?'_'+FCI.replace(/\W+/g,''):'';
+    XLSX.writeFile(wb,`MiPortal_${b.arch}_${MESES[A]}_a_${MESES[B]}${f}${c}.xlsx`);
+  }catch(e){alert('No se pudo generar el Excel: '+(e.message||e))}
 }
 
 /* ===== control de calidad ===== */

@@ -157,6 +157,13 @@
   .mini-row .nm{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .mini-row .meta{color:var(--muted);font-weight:600;white-space:nowrap;font-size:11px}
   .mini-empty{font-size:12px;color:var(--muted);font-weight:600;padding:14px;text-align:center}
+  /* ---- Nuevos registros ---- */
+  .nr-chips{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 14px}
+  .nr-chips .lbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-right:2px}
+  .nr-chip{font-family:inherit;font-size:11.5px;font-weight:700;padding:7px 15px;border:1px solid var(--line);border-radius:20px;background:#fff;color:#444;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+  .nr-chip:hover{border-color:#bdbdbd}
+  .nr-chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .nr-note{font-size:11px;color:var(--muted);font-weight:600;margin-left:auto}
   @media (max-width:760px){.h-vsep,.h-title{display:none}.topbar{padding:0 16px}.h-chip{display:none}}
   @media (max-width:920px){.kpis,.substrip{grid-template-columns:1fr 1fr}.g2,.g3{grid-template-columns:1fr}.qtiles,.tiers{grid-template-columns:1fr 1fr 1fr}.ins-grid{grid-template-columns:1fr}.rfm-grid{grid-template-columns:1fr 1fr}.kpi .v{font-size:26px}}
   @media (max-width:520px){.kpis,.substrip,.qtiles,.tiers{grid-template-columns:1fr 1fr}.rfm-grid{grid-template-columns:1fr 1fr}.barrow{grid-template-columns:96px 1fr 44px}}
@@ -216,6 +223,31 @@
       <div class="kpi alt2"><div class="l">Clientes activos</div><div class="v" id="kAct">—</div><div class="s" id="kActS">≤90 días</div></div>
       <div class="kpi"><div class="l">Clientes inactivos</div><div class="v" id="kInact">—</div><div class="s" id="kInactS">&gt;90 días sin comprar</div></div>
       <div class="kpi alt3"><div class="l">Nuevos del mes</div><div class="v" id="kNuevos">—</div><div class="s" id="kNuevosS">altas mes en curso</div></div>
+    </div>
+  </div>
+
+  <!-- NUEVOS REGISTROS -->
+  <div class="section">
+    <div class="sec-bar"><h2 class="sec-title">📈 Nuevos registros <span class="hint">altas por fecha de registro · tipo según la columna Estado (Prospectos sólo en «Todos»)</span></h2><button class="xls-btn" onclick="exportNuevos()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Excel</button></div>
+    <div class="nr-chips">
+      <span class="lbl">Tipo</span>
+      <button class="nr-chip on" data-tipo="">Todos</button>
+      <button class="nr-chip" data-tipo="Lead">Leads</button>
+      <button class="nr-chip" data-tipo="Cliente">Clientes</button>
+      <span class="nr-note" id="nrNote"></span>
+    </div>
+    <div class="kpis">
+      <div class="kpi"><div class="l">Nuevos registros</div><div class="v" id="nrTotal">—</div><div class="s" id="nrTotalS">en el período seleccionado</div></div>
+      <div class="kpi alt"><div class="l">Promedio por día</div><div class="v" id="nrProm">—</div><div class="s" id="nrPromS">sobre los días del período</div></div>
+      <div class="kpi alt2"><div class="l">Día con más registros</div><div class="v" id="nrMax">—</div><div class="s" id="nrMaxS">—</div></div>
+      <div class="kpi alt3"><div class="l">Día con menos registros</div><div class="v" id="nrMin">—</div><div class="s" id="nrMinS">entre días con al menos 1 alta</div></div>
+    </div>
+    <div class="grid" style="margin-top:14px">
+      <div class="card">
+        <h3>Evolución diaria de nuevos registros</h3>
+        <p class="sub" id="nrChartSub">Cada registro se cuenta una sola vez, por su fecha de registro</p>
+        <div class="chart-box"><canvas id="chNrDia"></canvas></div>
+      </div>
     </div>
   </div>
 
@@ -531,6 +563,7 @@ let FILT=[];       // filtrados
 let _charts={};
 let VIEW={};       // snapshot del último render (para exports)
 const FILTERS={desde:null,hasta:null,ciudad:'',depto:'',estado:'',canal:'',rubro:'',ejec:'',q:''};
+let NR_TIPO='';   // filtro de la sección Nuevos registros: '' = Todos, 'Lead', 'Cliente' (usa estadoDer, misma clasificación del resto del tablero)
 
 /* ============================================================
    FETCH
@@ -840,11 +873,65 @@ function render(){
     sinSeg,recientes,dormidos,sinAct
   };
 
+  // ----- NUEVOS REGISTROS -----
+  VIEW.nr = renderNuevos(d);
+
   // ----- INSIGHTS -----
   renderInsights({total,leads,prosp,cli,activos,inactivos,convRate,ltvTotal,sinTel,sinEmail,dup,sinSeg,cityTop,mMap,mKeys,cliArr,dormidos});
 
   // contador en el header
   if($('hCountN'))$('hCountN').textContent=fmtInt(ALL.length);
+}
+
+/* ============================================================
+   NUEVOS REGISTROS (sección)
+   Fuente: fecha de registro (regDate) y estado (estadoDer),
+   ambos ya presentes en la hoja. Cada fila cuenta una sola vez.
+============================================================ */
+function _nrKey(d){const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
+function renderNuevos(d){
+  const base = NR_TIPO ? d.filter(r=>r.estadoDer===NR_TIPO) : d;
+  const conFecha = base.filter(r=>r.regDate);
+  const sinFecha = base.length - conFecha.length;
+
+  // conteo por día (una fila = un registro)
+  const dayMap=new Map();
+  conFecha.forEach(r=>{const k=_nrKey(r.regDate);dayMap.set(k,(dayMap.get(k)||0)+1);});
+  const keys=[...dayMap.keys()].sort();
+  const total=conFecha.length;
+
+  // días del período: rango de los filtros Desde/Hasta; si no están, min–max de los datos
+  let dIni=FILTERS.desde, dFin=FILTERS.hasta;
+  if((!dIni||!dFin)&&keys.length){
+    if(!dIni)dIni=new Date(keys[0]+'T00:00:00');
+    if(!dFin)dFin=new Date(keys[keys.length-1]+'T00:00:00');
+  }
+  const nDias=(dIni&&dFin)?Math.max(1,Math.floor((dFin-dIni)/DAY)+1):0;
+  const prom=nDias?total/nDias:0;
+
+  // día máximo y mínimo (mínimo entre días con al menos 1 registro)
+  let maxK=null,maxV=0,minK=null,minV=Infinity;
+  dayMap.forEach((v,k)=>{if(v>maxV){maxV=v;maxK=k;}if(v<minV){minV=v;minK=k;}});
+  if(!keys.length){minV=0;}
+
+  const tipoTxt = NR_TIPO ? (NR_TIPO==='Lead'?'leads':'clientes') : 'todos los tipos';
+  $('nrTotal').textContent = keys.length?fmtInt(total):'0';
+  $('nrTotalS').textContent = nDias?('en '+fmtInt(nDias)+' días · '+tipoTxt):('sin registros con fecha en la selección');
+  $('nrProm').textContent = nDias?(prom>=10?fmtInt(prom):(+prom.toFixed(1)).toLocaleString('es-PY')):'—';
+  $('nrPromS').textContent = nDias?('altas / día sobre '+fmtInt(nDias)+' días del período'):'—';
+  $('nrMax').textContent = maxK?fmtInt(maxV):'—';
+  $('nrMaxS').textContent = maxK?fechaLarga(new Date(maxK+'T00:00:00')):'sin datos en la selección';
+  $('nrMin').textContent = minK?fmtInt(minV):'—';
+  $('nrMinS').textContent = minK?(fechaLarga(new Date(minK+'T00:00:00'))+' · entre días con altas'):'entre días con al menos 1 alta';
+  $('nrNote').textContent = sinFecha>0?(fmtInt(sinFecha)+(sinFecha===1?' registro sin fecha de registro (excluido del conteo)':' registros sin fecha de registro (excluidos del conteo)')):'';
+
+  drawChart('nrDia',$('chNrDia'),{type:'line',
+    data:{labels:keys,datasets:[{data:keys.map(k=>dayMap.get(k)),borderColor:'#E8241B',backgroundColor:'rgba(232,36,27,.10)',fill:true,tension:.25,pointRadius:keys.length>60?0:2,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmtInt(c.parsed.y)} nuevos registros`}}},
+      scales:{x:{grid:{display:false},ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:10}},y:{grid:{color:'#f0f0f0'},ticks:{precision:0},beginAtZero:true}}}});
+
+  return {total,nDias,prom,maxK,maxV,minK:keys.length?minK:null,minV:keys.length?minV:0,sinFecha,keys,dayMap,tipo:NR_TIPO||'Todos'};
 }
 
 /* ============================================================
@@ -986,7 +1073,30 @@ function _wsActResumen(){
     ['Sin actividad registrada',V.sinAct]
   ]),[40,12]);
 }
+function _wsNuevosDia(){
+  const nr=VIEW.nr||{keys:[],dayMap:new Map()};
+  return _cols(_aoa([['Día','Nuevos registros'],...nr.keys.map(k=>[k,nr.dayMap.get(k)])]),[14,18]);
+}
+function _wsNuevosResumen(){
+  const nr=VIEW.nr||{};
+  return _cols(_aoa([
+    ['NUEVOS REGISTROS'],
+    ['Generado',new Date().toLocaleString('es-PY')],
+    ['Filtro de tipo (columna Estado)',nr.tipo||'Todos'],[],
+    ['Indicador','Valor'],
+    ['Total de nuevos registros',nr.total||0],
+    ['Días del período',nr.nDias||0],
+    ['Promedio por día',nr.nDias?+(nr.total/nr.nDias).toFixed(2):0],
+    ['Día con más registros',nr.maxK?(nr.maxK+' ('+nr.maxV+')'):'—'],
+    ['Día con menos registros (entre días con altas)',nr.minK?(nr.minK+' ('+nr.minV+')'):'—'],
+    ['Registros sin fecha de registro (excluidos)',nr.sinFecha||0]
+  ]),[44,20]);
+}
 // ---- exporters por sección ----
+function exportNuevos(){ if(!_guard())return; const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,_wsNuevosResumen(),'Nuevos · resumen');
+  XLSX.utils.book_append_sheet(wb,_wsNuevosDia(),'Nuevos por día');
+  _save(wb,'NuevosRegistros'); }
 function exportResumen(){ if(!_guard())return; const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,_wsResumen(),'Resumen'); _save(wb,'Resumen'); }
 function exportEmbudo(){ if(!_guard())return; const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,_wsEmbudo(),'Embudo'); _save(wb,'Embudo'); }
 function exportAnalisis(){ if(!_guard())return; const V=VIEW,wb=XLSX.utils.book_new();
@@ -1018,6 +1128,8 @@ function exportTodo(){ if(!_guard())return; const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,_mapWS('Género',VIEW.genMap),'Género');
   XLSX.utils.book_append_sheet(wb,_mapWS('Edad',VIEW.ageMap),'Edad');
   XLSX.utils.book_append_sheet(wb,_wsEvol(),'Evolución mensual');
+  XLSX.utils.book_append_sheet(wb,_wsNuevosResumen(),'Nuevos · resumen');
+  XLSX.utils.book_append_sheet(wb,_wsNuevosDia(),'Nuevos por día');
   XLSX.utils.book_append_sheet(wb,_wsSegments(),'Segmentos RFM');
   XLSX.utils.book_append_sheet(wb,_wsTiers(),'Tiers de valor');
   XLSX.utils.book_append_sheet(wb,_wsActResumen(),'Actividad');
@@ -1029,6 +1141,12 @@ function exportTodo(){ if(!_guard())return; const wb=XLSX.utils.book_new();
    INIT + AUTO-REFRESH
 ============================================================ */
 const _xa=$('fXlsAll'); if(_xa)_xa.addEventListener('click',exportTodo);
+// chips Leads / Clientes de la sección Nuevos registros
+document.querySelectorAll('.nr-chip').forEach(b=>b.addEventListener('click',()=>{
+  NR_TIPO=b.dataset.tipo||'';
+  document.querySelectorAll('.nr-chip').forEach(x=>x.classList.toggle('on',x===b));
+  if(ALL.length) applyFiltersAndRender();
+}));
 loadData(true);
 setInterval(()=>loadData(false), REFRESH_MS);
 let lastVis=Date.now();

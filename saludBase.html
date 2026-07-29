@@ -163,7 +163,45 @@
   .nr-chip{font-family:inherit;font-size:11.5px;font-weight:700;padding:7px 15px;border:1px solid var(--line);border-radius:20px;background:#fff;color:#444;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
   .nr-chip:hover{border-color:#bdbdbd}
   .nr-chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .gr-chip{font-family:inherit;font-size:11.5px;font-weight:700;padding:7px 15px;border:1px solid var(--line);border-radius:20px;background:#fff;color:#444;cursor:pointer;transition:background .15s,color .15s,border-color .15s}
+  .gr-chip:hover{border-color:#bdbdbd}
+  .gr-chip.on{background:var(--red);color:#fff;border-color:var(--red)}
+  .trend-row{display:flex;align-items:baseline;gap:10px;padding:11px 0;border-bottom:1px solid #f2f2f2;font-size:12.5px;font-weight:600;color:#333}
+  .trend-row:last-child{border-bottom:none}
+  .trend-row .tv{font-size:19px;font-weight:900;letter-spacing:-.4px;min-width:96px}
+  .trend-row .tl{color:var(--muted);font-weight:600;font-size:12px}
   .nr-note{font-size:11px;color:var(--muted);font-weight:600;margin-left:auto}
+  /* ---- Variacion / deltas ---- */
+  .scard .delta{font-size:11.5px;font-weight:800;margin-top:4px}
+  .delta.up{color:var(--green)} .delta.dn{color:var(--red)} .delta.flat{color:var(--muted)}
+  .scard .s{font-size:10.5px;color:var(--muted);font-weight:600;margin-top:4px}
+  /* ---- Tabla detallada ---- */
+  .tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff;max-height:580px;box-shadow:var(--shadow)}
+  table.dt{border-collapse:collapse;width:100%;font-size:12px}
+  table.dt th{position:sticky;top:0;background:var(--soft);z-index:2;text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:800;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+  table.dt th:hover{color:var(--ink);background:#f2f2f2}
+  table.dt th .ar{font-size:9px;margin-left:4px;color:var(--red)}
+  table.dt td{padding:9px 12px;border-bottom:1px solid #f4f4f4;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+  table.dt td.num{text-align:right;font-variant-numeric:tabular-nums}
+  table.dt tr:hover td{background:#fbfbfb}
+  .pill{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;display:inline-block}
+  .pill.Lead{background:#e7f6fc;color:#1c6c87}
+  .pill.Prospecto{background:#fff5e0;color:#a06800}
+  .pill.Cliente{background:#e6f7ee;color:#137a40}
+  .tbl-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:11px}
+  .pgbtn{font-family:inherit;font-size:11.5px;font-weight:700;padding:7px 13px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink);cursor:pointer}
+  .pgbtn:hover:not(:disabled){background:var(--soft)}
+  .pgbtn:disabled{opacity:.35;cursor:default}
+  .pginfo{font-size:11.5px;color:var(--muted);font-weight:600}
+  .pginfo b{color:var(--ink)}
+  /* ---- Campos no disponibles ---- */
+  .miss{background:#fffdf5;border:1px solid #ffe2ad;border-radius:12px;padding:15px 17px;font-size:12.5px;line-height:1.6;color:#5a4200;box-shadow:var(--shadow)}
+  .miss b{color:#3d2d00;font-weight:800}
+  .miss ul{margin:9px 0 0;padding-left:19px}
+  .miss li{margin-bottom:5px}
+  .miss .okmsg{color:#137a40;font-weight:700}
+  .nodata{font-size:12px;color:var(--muted);font-weight:600;padding:30px 14px;text-align:center;background:var(--soft);border:1px dashed var(--line);border-radius:10px;line-height:1.6}
+  .nodata b{color:#444}
   @media (max-width:760px){.h-vsep,.h-title{display:none}.topbar{padding:0 16px}.h-chip{display:none}}
   @media (max-width:920px){.kpis,.substrip{grid-template-columns:1fr 1fr}.g2,.g3{grid-template-columns:1fr}.qtiles,.tiers{grid-template-columns:1fr 1fr 1fr}.ins-grid{grid-template-columns:1fr}.rfm-grid{grid-template-columns:1fr 1fr}.kpi .v{font-size:26px}}
   @media (max-width:520px){.kpis,.substrip,.qtiles,.tiers{grid-template-columns:1fr 1fr}.rfm-grid{grid-template-columns:1fr 1fr}.barrow{grid-template-columns:96px 1fr 44px}}
@@ -203,6 +241,7 @@
     <div class="ffield"><label>Canal</label><select id="fCanal"><option value="">Todos</option></select></div>
     <div class="ffield" id="fRubroWrap" style="display:none"><label>Rubro</label><select id="fRubro"><option value="">Todos</option></select></div>
     <div class="ffield" id="fEjecWrap" style="display:none"><label>Ejecutivo</label><select id="fEjec"><option value="">Todos</option></select></div>
+    <div class="ffield" id="fCampWrap" style="display:none"><label>Campaña</label><select id="fCamp"><option value="">Todas</option></select></div>
     <div class="ffield search"><label>Buscar</label><input type="text" id="fQ" placeholder="Nombre, email, empresa…"></div>
     <button class="fbtn" id="fReset">Limpiar</button>
     <button class="fbtn xls" id="fXlsAll" title="Descargar todas las secciones en un Excel">⬇ Excel completo</button>
@@ -224,29 +263,111 @@
       <div class="kpi"><div class="l">Clientes inactivos</div><div class="v" id="kInact">—</div><div class="s" id="kInactS">&gt;90 días sin comprar</div></div>
       <div class="kpi alt3"><div class="l">Nuevos del mes</div><div class="v" id="kNuevos">—</div><div class="s" id="kNuevosS">altas mes en curso</div></div>
     </div>
+    <div class="substrip">
+      <div class="scard"><div class="l">Registros hoy</div><div class="v" id="iHoy">—</div><div class="s" id="iHoyS">altas con fecha de hoy</div></div>
+      <div class="scard"><div class="l">Últimos 7 días</div><div class="v" id="i7">—</div><div class="s" id="i7S">altas de la última semana</div></div>
+      <div class="scard"><div class="l">Últimos 30 días</div><div class="v" id="i30">—</div><div class="s" id="i30S">altas del último mes</div></div>
+      <div class="scard"><div class="l">Variación vs período anterior</div><div class="v" id="iVar">—</div><div class="delta" id="iVarD">—</div><div class="s" id="iVarS">requiere rango de fechas</div></div>
+    </div>
   </div>
 
-  <!-- NUEVOS REGISTROS -->
+  <!-- EVOLUCIÓN DE REGISTROS -->
   <div class="section">
-    <div class="sec-bar"><h2 class="sec-title">📈 Nuevos registros <span class="hint">altas por fecha de registro · tipo según la columna Estado (Prospectos sólo en «Todos»)</span></h2><button class="xls-btn" onclick="exportNuevos()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Excel</button></div>
+    <div class="sec-bar"><h2 class="sec-title">📈 Evolución de registros <span class="hint">altas por fecha de registro · tipo según la columna Estado</span></h2><button class="xls-btn" onclick="exportNuevos()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Excel</button></div>
     <div class="nr-chips">
       <span class="lbl">Tipo</span>
       <button class="nr-chip on" data-tipo="">Todos</button>
       <button class="nr-chip" data-tipo="Lead">Leads</button>
+      <button class="nr-chip" data-tipo="Prospecto">Prospectos</button>
       <button class="nr-chip" data-tipo="Cliente">Clientes</button>
+      <span style="width:14px"></span>
+      <span class="lbl">Granularidad</span>
+      <button class="gr-chip on" data-gran="dia">Día</button>
+      <button class="gr-chip" data-gran="semana">Semana</button>
+      <button class="gr-chip" data-gran="mes">Mes</button>
       <span class="nr-note" id="nrNote"></span>
     </div>
-    <div class="kpis">
-      <div class="kpi"><div class="l">Nuevos registros</div><div class="v" id="nrTotal">—</div><div class="s" id="nrTotalS">en el período seleccionado</div></div>
-      <div class="kpi alt"><div class="l">Promedio por día</div><div class="v" id="nrProm">—</div><div class="s" id="nrPromS">sobre los días del período</div></div>
-      <div class="kpi alt2"><div class="l">Día con más registros</div><div class="v" id="nrMax">—</div><div class="s" id="nrMaxS">—</div></div>
-      <div class="kpi alt3"><div class="l">Día con menos registros</div><div class="v" id="nrMin">—</div><div class="s" id="nrMinS">entre días con al menos 1 alta</div></div>
+    <div class="grid">
+      <div class="card">
+        <h3 id="nrChartTitle">Registros por día</h3>
+        <p class="sub" id="nrChartSub">Cada registro se cuenta una sola vez, por su fecha de registro</p>
+        <div class="chart-box tall"><canvas id="chNrDia"></canvas></div>
+      </div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card">
+        <h3>Tendencia del período</h3>
+        <p class="sub">Comparación entre la última parte del período y la anterior, con la misma cantidad de puntos</p>
+        <div id="trendBox"></div>
+      </div>
+      <div class="card">
+        <h3>Composición de las altas</h3>
+        <p class="sub" id="compSub">Participación de cada estado sobre los registros con fecha en el período</p>
+        <div class="chart-box sm"><canvas id="chNrComp"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LEADS -->
+  <div class="section">
+    <div class="sec-bar"><h2 class="sec-title">Leads <span class="hint">registros con Estado = Lead</span></h2><button class="xls-btn" onclick="exportLeads()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Excel</button></div>
+    <div class="substrip">
+      <div class="scard"><div class="l">Total de Leads</div><div class="v" id="lTot">—</div><div class="s" id="lTotS">sobre la selección actual</div></div>
+      <div class="scard"><div class="l">Leads últimos 30 días</div><div class="v" id="l30">—</div><div class="s">por fecha de registro</div></div>
+      <div class="scard"><div class="l">Promedio por día</div><div class="v" id="lProm">—</div><div class="s" id="lPromS">sobre los días del período</div></div>
+      <div class="scard"><div class="l">Ciudad con más leads</div><div class="v" id="lTopCity" style="font-size:16px">—</div><div class="s" id="lTopCityS">—</div></div>
     </div>
     <div class="grid" style="margin-top:14px">
       <div class="card">
-        <h3>Evolución diaria de nuevos registros</h3>
-        <p class="sub" id="nrChartSub">Cada registro se cuenta una sola vez, por su fecha de registro</p>
-        <div class="chart-box"><canvas id="chNrDia"></canvas></div>
+        <h3>Leads por día</h3>
+        <p class="sub">Altas diarias de registros en estado Lead</p>
+        <div class="chart-box"><canvas id="chLeadDia"></canvas></div>
+      </div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card">
+        <h3>Leads por ciudad</h3>
+        <p class="sub" id="lCitySub">Top 12 ciudades</p>
+        <div class="chart-box tall"><canvas id="chLeadCiudad"></canvas></div>
+        <div class="nodata" id="lCityEmpty" style="display:none"></div>
+      </div>
+      <div class="card">
+        <h3>Leads por canal</h3>
+        <p class="sub" id="lCanalSub">Origen del registro</p>
+        <div class="chart-box tall"><canvas id="chLeadCanal"></canvas></div>
+        <div class="nodata" id="lCanalEmpty" style="display:none"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLIENTES -->
+  <div class="section">
+    <div class="sec-bar"><h2 class="sec-title">Clientes <span class="hint">registros con Estado = Cliente</span></h2><button class="xls-btn" onclick="exportClientes()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Excel</button></div>
+    <div class="substrip">
+      <div class="scard"><div class="l">Total de Clientes</div><div class="v" id="cTot">—</div><div class="s" id="cTotS">sobre la selección actual</div></div>
+      <div class="scard"><div class="l">Clientes últimos 30 días</div><div class="v" id="c30">—</div><div class="s">por fecha de registro</div></div>
+      <div class="scard"><div class="l">Promedio por día</div><div class="v" id="cProm">—</div><div class="s" id="cPromS">sobre los días del período</div></div>
+      <div class="scard"><div class="l">Ciudad con más clientes</div><div class="v" id="cTopCity" style="font-size:16px">—</div><div class="s" id="cTopCityS">—</div></div>
+    </div>
+    <div class="grid" style="margin-top:14px">
+      <div class="card">
+        <h3>Clientes por día</h3>
+        <p class="sub">Altas diarias de registros en estado Cliente</p>
+        <div class="chart-box"><canvas id="chCliDia"></canvas></div>
+      </div>
+    </div>
+    <div class="grid g2" style="margin-top:14px">
+      <div class="card">
+        <h3>Clientes por ciudad</h3>
+        <p class="sub" id="cCitySub">Top 12 ciudades</p>
+        <div class="chart-box tall"><canvas id="chCliCiudad"></canvas></div>
+        <div class="nodata" id="cCityEmpty" style="display:none"></div>
+      </div>
+      <div class="card">
+        <h3>Clientes por canal</h3>
+        <p class="sub" id="cCanalSub">Origen del registro</p>
+        <div class="chart-box tall"><canvas id="chCliCanal"></canvas></div>
+        <div class="nodata" id="cCanalEmpty" style="display:none"></div>
       </div>
     </div>
   </div>
@@ -264,6 +385,7 @@
         <h3>Embudo de conversión</h3>
         <p class="sub">Progresión acumulada y caída entre etapas</p>
         <div class="funnel" id="funnel"></div>
+        <p class="sub" id="funnelNote" style="margin:12px 0 0"></p>
       </div>
     </div>
   </div>
@@ -348,6 +470,28 @@
     <div class="ins-grid" id="insights"></div>
   </div>
 
+  <!-- TABLA DETALLADA -->
+  <div class="section">
+    <div class="sec-bar"><h2 class="sec-title">Tabla detallada <span class="hint">responde a todos los filtros de arriba · clic en el encabezado para ordenar</span></h2><button class="xls-btn" onclick="exportTabla()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Excel</button></div>
+    <div class="tbl-wrap"><table class="dt" id="dtTable"><thead id="dtHead"></thead><tbody id="dtBody"></tbody></table></div>
+    <div class="tbl-bar">
+      <button class="pgbtn" id="dtPrev">← Anterior</button>
+      <button class="pgbtn" id="dtNext">Siguiente →</button>
+      <span class="pginfo" id="dtInfo"></span>
+      <span class="pginfo" style="margin-left:auto">Filas por página
+        <select id="dtSize" style="font-family:inherit;font-size:11.5px;padding:5px 8px;border:1px solid var(--line);border-radius:7px;margin-left:5px">
+          <option>25</option><option selected>50</option><option>100</option><option>200</option>
+        </select>
+      </span>
+    </div>
+  </div>
+
+  <!-- CAMPOS NO DISPONIBLES -->
+  <div class="section">
+    <div class="sec-bar"><h2 class="sec-title">Campos no disponibles en la base <span class="hint">qué no se pudo construir y qué columna haría falta</span></h2></div>
+    <div class="miss" id="missBox"></div>
+  </div>
+
 </div>
 
 <div id="overlay">
@@ -420,6 +564,7 @@ const ALIAS = {
   ejecutivo:'ejecutivo',ejecutivo_comercial:'ejecutivo',vendedor:'ejecutivo',asesor:'ejecutivo',owner:'ejecutivo',responsable:'ejecutivo',sales_rep:'ejecutivo',
   ultimo_contacto:'ultimoContacto',last_contact:'ultimoContacto',updated_in:'updatedIn',updated:'updatedIn',
   canal:'canal',canal_adquisicion:'canal',branch_source:'canal',source:'canal',origen:'canal',fuente:'canal',
+  campana:'campana',campaign:'campana',utm_campaign:'campana',nombre_campana:'campana',campanha:'campana',
   cantidad_compras:'compras',compras:'compras',orders:'compras',num_orders:'compras',cantidad_de_compras:'compras',purchases:'compras',pedidos:'compras',
   facturacion:'facturacion',ltv:'facturacion',revenue:'facturacion',monto:'facturacion',total_facturado:'facturacion',lifetime_value:'facturacion',valor:'facturacion',
   ticket_promedio:'ticket',ticket:'ticket',aov:'ticket',avg_ticket:'ticket',ticket_medio:'ticket',
@@ -437,11 +582,11 @@ const ALIAS = {
 };
 
 let HEADER_MAP = {};     // idx -> canonical
-let FLAGS = { rubro:false, ejecutivo:false, compras:false, ticket:false, estado:false };
+let FLAGS = { rubro:false, ejecutivo:false, compras:false, ticket:false, estado:false, campana:false, canal:false };
 
 function buildHeaderMap(cols){
   HEADER_MAP={};
-  FLAGS={rubro:false,ejecutivo:false,compras:false,ticket:false,estado:false};
+  FLAGS={rubro:false,ejecutivo:false,compras:false,ticket:false,estado:false,campana:false,canal:false};
   cols.forEach((c,idx)=>{
     const can = ALIAS[normKey(c.label||c.id||'')];
     if(can){ HEADER_MAP[idx]=can;
@@ -450,6 +595,8 @@ function buildHeaderMap(cols){
       if(can==='compras')FLAGS.compras=true;
       if(can==='ticket')FLAGS.ticket=true;
       if(can==='estado')FLAGS.estado=true;
+      if(can==='campana')FLAGS.campana=true;
+      if(can==='canal')FLAGS.canal=true;
     }
   });
 }
@@ -520,6 +667,7 @@ function deriveRecord(r){
   r.canalClean  = titleCase(r.canal) || (/vtex/.test(obs)?'VTEX':'Sin dato');
   r.rubroClean  = titleCase(r.rubro) || 'Sin dato';
   r.ejecClean   = titleCase(r.ejecutivo) || 'Sin asignar';
+  r.campanaClean= titleCase(r.campana) || 'Sin dato';
 
   // completitud
   let present=0; const fields=[r.hasName,r.hasEmail,r.hasPhone,r.hasCity,r.hasDepto];
@@ -562,8 +710,12 @@ let ALL=[];        // todos los registros
 let FILT=[];       // filtrados
 let _charts={};
 let VIEW={};       // snapshot del último render (para exports)
-const FILTERS={desde:null,hasta:null,ciudad:'',depto:'',estado:'',canal:'',rubro:'',ejec:'',q:''};
-let NR_TIPO='';   // filtro de la sección Nuevos registros: '' = Todos, 'Lead', 'Cliente' (usa estadoDer, misma clasificación del resto del tablero)
+const FILTERS={desde:null,hasta:null,ciudad:'',depto:'',estado:'',canal:'',rubro:'',ejec:'',camp:'',q:''};
+let NR_TIPO='';   // filtro de tipo de la sección Evolución: '' = Todos, 'Lead', 'Prospecto', 'Cliente' (usa estadoDer)
+let NR_GRAN='dia';// granularidad de la serie temporal: 'dia' | 'semana' | 'mes'
+let PREV=[];      // registros del período inmediatamente anterior (mismo largo, mismos filtros no-fecha)
+let PREVWIN=null; // {desde,hasta} del período anterior
+let DATA_MIN=null, DATA_MAX=null; // rango real de fechas de registro en la hoja
 
 /* ============================================================
    FETCH
@@ -622,6 +774,7 @@ function distinct(arr){return [...new Set(arr.filter(x=>x&&x!=='Sin dato'&&x!=='
 function buildFilters(){
   // rango de fechas por defecto
   const dates = ALL.map(r=>r.regDate).filter(Boolean).sort((a,b)=>a-b);
+  if(dates.length){ DATA_MIN=dates[0]; DATA_MAX=dates[dates.length-1]; }
   if(dates.length){
     $('fDesde').value = dates[0].toISOString().slice(0,10);
     $('fHasta').value = dates[dates.length-1].toISOString().slice(0,10);
@@ -632,6 +785,7 @@ function buildFilters(){
   fillSelect('fCanal',  distinct(ALL.map(r=>r.canalClean)));
   if(FLAGS.rubro){ $('fRubroWrap').style.display=''; fillSelect('fRubro', distinct(ALL.map(r=>r.rubroClean))); }
   if(FLAGS.ejecutivo){ $('fEjecWrap').style.display=''; fillSelect('fEjec', distinct(ALL.map(r=>r.ejecClean))); }
+  if(FLAGS.campana){ $('fCampWrap').style.display=''; fillSelect('fCamp', distinct(ALL.map(r=>r.campanaClean))); }
 
   // listeners
   const reread=()=>{
@@ -639,33 +793,56 @@ function buildFilters(){
     FILTERS.hasta = $('fHasta').value?new Date($('fHasta').value+'T23:59:59'):null;
     FILTERS.ciudad=$('fCiudad').value; FILTERS.depto=$('fDepto').value; FILTERS.estado=$('fEstado').value;
     FILTERS.canal=$('fCanal').value; FILTERS.rubro=FLAGS.rubro?$('fRubro').value:''; FILTERS.ejec=FLAGS.ejecutivo?$('fEjec').value:'';
+    FILTERS.camp=FLAGS.campana?$('fCamp').value:'';
+    TBL.page=1;
     applyFiltersAndRender();
   };
-  ['fDesde','fHasta','fCiudad','fDepto','fEstado','fCanal','fRubro','fEjec'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',reread);});
-  let qt; $('fQ').addEventListener('input',e=>{clearTimeout(qt);qt=setTimeout(()=>{FILTERS.q=e.target.value.trim().toLowerCase();applyFiltersAndRender();},250);});
+  ['fDesde','fHasta','fCiudad','fDepto','fEstado','fCanal','fRubro','fEjec','fCamp'].forEach(id=>{const e=$(id);if(e)e.addEventListener('change',reread);});
+  let qt; $('fQ').addEventListener('input',e=>{clearTimeout(qt);qt=setTimeout(()=>{FILTERS.q=e.target.value.trim().toLowerCase();TBL.page=1;applyFiltersAndRender();},250);});
   $('fReset').addEventListener('click',()=>{
     $('fCiudad').value='';$('fDepto').value='';$('fEstado').value='';$('fCanal').value='';
-    if(FLAGS.rubro)$('fRubro').value=''; if(FLAGS.ejecutivo)$('fEjec').value=''; $('fQ').value='';
+    if(FLAGS.rubro)$('fRubro').value=''; if(FLAGS.ejecutivo)$('fEjec').value=''; if(FLAGS.campana)$('fCamp').value=''; $('fQ').value='';
     if(dates.length){$('fDesde').value=dates[0].toISOString().slice(0,10);$('fHasta').value=dates[dates.length-1].toISOString().slice(0,10);}
-    Object.assign(FILTERS,{ciudad:'',depto:'',estado:'',canal:'',rubro:'',ejec:'',q:'',desde:dates[0]||null,hasta:dates[dates.length-1]||null});
+    Object.assign(FILTERS,{ciudad:'',depto:'',estado:'',canal:'',rubro:'',ejec:'',camp:'',q:'',desde:dates[0]||null,hasta:dates[dates.length-1]||null});
+    TBL.page=1;
     applyFiltersAndRender();
   });
 }
 function fillSelect(id,vals){const s=$(id);const first=s.querySelector('option');s.innerHTML='';s.appendChild(first);vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);});}
 
+// todos los filtros excepto el rango de fechas (se reutiliza para el período anterior)
+function matchesNonDate(r,F){
+  if(F.ciudad && r.ciudadClean!==F.ciudad)return false;
+  if(F.depto && r.deptoClean!==F.depto)return false;
+  if(F.estado && r.estadoDer!==F.estado)return false;
+  if(F.canal && r.canalClean!==F.canal)return false;
+  if(F.rubro && r.rubroClean!==F.rubro)return false;
+  if(F.ejec && r.ejecClean!==F.ejec)return false;
+  if(F.camp && r.campanaClean!==F.camp)return false;
+  if(F.q){ const hay=(r.fullName+' '+(r.email||'')+' '+(r.empresa||'')+' '+r.ciudadClean).toLowerCase(); if(!hay.includes(F.q))return false; }
+  return true;
+}
+// período anterior: mismo largo que el rango elegido, inmediatamente antes del "Desde"
+function computePrev(){
+  PREV=[]; PREVWIN=null;
+  const F=FILTERS;
+  if(!F.desde||!F.hasta)return;
+  const len=F.hasta-F.desde;
+  if(len<=0)return;
+  const pHasta=new Date(F.desde.getTime()-1);
+  const pDesde=new Date(pHasta.getTime()-len);
+  // sólo comparamos si el período anterior se solapa con datos reales de la hoja
+  if(DATA_MIN && pHasta<DATA_MIN)return;
+  PREVWIN={desde:pDesde,hasta:pHasta};
+  PREV=ALL.filter(r=>r.regDate&&r.regDate>=pDesde&&r.regDate<=pHasta&&matchesNonDate(r,F));
+}
 function applyFiltersAndRender(){
   const F=FILTERS;
   FILT = ALL.filter(r=>{
     if(F.desde||F.hasta){ if(!r.regDate)return false; if(F.desde&&r.regDate<F.desde)return false; if(F.hasta&&r.regDate>F.hasta)return false; }
-    if(F.ciudad && r.ciudadClean!==F.ciudad)return false;
-    if(F.depto && r.deptoClean!==F.depto)return false;
-    if(F.estado && r.estadoDer!==F.estado)return false;
-    if(F.canal && r.canalClean!==F.canal)return false;
-    if(F.rubro && r.rubroClean!==F.rubro)return false;
-    if(F.ejec && r.ejecClean!==F.ejec)return false;
-    if(F.q){ const hay=(r.fullName+' '+(r.email||'')+' '+(r.empresa||'')+' '+r.ciudadClean).toLowerCase(); if(!hay.includes(F.q))return false; }
-    return true;
+    return matchesNonDate(r,F);
   });
+  computePrev();
   $('fCount').innerHTML = '<b>'+fmtInt(FILT.length)+'</b> de '+fmtInt(ALL.length)+' registros';
   render();
 }
@@ -762,6 +939,52 @@ function render(){
   $('kInact').textContent=fmtInt(inactivos); $('kInactS').textContent=cli?fmtPct(inactivos/cli*100)+' de clientes':'>90 días';
   $('kNuevos').textContent=fmtInt(nuevosMes);
 
+  // ----- INDICADORES (hoy / 7d / 30d / variación) -----
+  const hoy0=new Date(NOW.getFullYear(),NOW.getMonth(),NOW.getDate());
+  const nHoy = d.filter(r=>r.regDate&&r.regDate>=hoy0).length;
+  const n7   = d.filter(r=>r.regDate&&(NOW-r.regDate)/DAY<=7).length;
+  const n30  = d.filter(r=>r.regDate&&(NOW-r.regDate)/DAY<=30).length;
+  $('iHoy').textContent=fmtInt(nHoy);
+  $('iHoyS').textContent = (DATA_MAX && DATA_MAX<hoy0) ? ('último dato de la hoja: '+fechaLarga(DATA_MAX)) : 'altas con fecha de hoy';
+  $('i7').textContent=fmtInt(n7);
+  $('i30').textContent=fmtInt(n30);
+  $('i7S').textContent = total?fmtPct(n7/total*100)+' de la selección':'altas de la última semana';
+  $('i30S').textContent = total?fmtPct(n30/total*100)+' de la selección':'altas del último mes';
+  // variación vs período anterior
+  // A) si el rango elegido tiene un período anterior con datos en la hoja, se compara contra ese
+  // B) si no (por ejemplo con el rango completo), se comparan los últimos 30 días contra los 30 previos
+  let varPct=null, varModo=null, varCur=null, varPrev=null, varDesc='';
+  if(PREVWIN){
+    varModo='periodo'; varCur=d.length; varPrev=PREV.length;
+    varDesc='período anterior: '+fechaCorta(PREVWIN.desde)+' – '+fechaCorta(PREVWIN.hasta);
+  }else{
+    const ref = FILTERS.hasta || DATA_MAX || NOW;
+    const c0=new Date(ref.getTime()-30*DAY), p0=new Date(ref.getTime()-60*DAY);
+    const cur=d.filter(r=>r.regDate&&r.regDate>c0&&r.regDate<=ref).length;
+    const pre=d.filter(r=>r.regDate&&r.regDate>p0&&r.regDate<=c0).length;
+    if(cur+pre>0){ varModo='30d'; varCur=cur; varPrev=pre;
+      varDesc='últimos 30 días ('+fechaCorta(c0)+' – '+fechaCorta(ref)+') vs los 30 previos'; }
+  }
+  if(varModo){
+    $('iVar').textContent=fmtInt(varCur)+' vs '+fmtInt(varPrev);
+    $('iVar').style.fontSize='19px';
+    if(varPrev>0){
+      varPct=(varCur-varPrev)/varPrev*100;
+      const cls = varPct>0.5?'up':varPct<-0.5?'dn':'flat';
+      const arrow = varPct>0.5?'▲':varPct<-0.5?'▼':'▬';
+      $('iVarD').className='delta '+cls;
+      $('iVarD').textContent=arrow+' '+fmtPct(Math.abs(varPct))+(varPct>=0?' más altas':' menos altas');
+    }else{
+      $('iVarD').className='delta flat';
+      $('iVarD').textContent='sin altas en el tramo de comparación';
+    }
+    $('iVarS').textContent=varDesc;
+  }else{
+    $('iVar').textContent='—'; $('iVar').style.fontSize='22px';
+    $('iVarD').className='delta flat'; $('iVarD').textContent='no comparable';
+    $('iVarS').textContent='no hay suficientes fechas en la selección para comparar dos períodos';
+  }
+
   // Distribución (doughnut)
   drawChart('estado',$('chEstado'),{type:'doughnut',
     data:{labels:['Leads','Prospectos','Clientes'],datasets:[{data:[leads,prosp,cli],backgroundColor:['#82E1FF','#FFB400','#78E6A0'],borderWidth:2,borderColor:'#fff'}]},
@@ -776,6 +999,7 @@ function render(){
     `<div class="fstage s2" style="width:${pWidth(calif)}%"><span class="name">Calificados (Prospecto +)</span><span><span class="num">${fmtInt(calif)}</span><span class="pct">${fmtPct(calif/total*100)}</span></span></div>`+
     `<div class="fconv"><span class="arrow">↓</span> Prospecto → Cliente: <b>${fmtPct(calif?conv/calif*100:0)}</b> convierte · abandono <b>${fmtPct(calif?(calif-conv)/calif*100:0)}</b></div>`+
     `<div class="fstage s3" style="width:${pWidth(conv)}%"><span class="name">Convertidos (Cliente)</span><span><span class="num">${fmtInt(conv)}</span><span class="pct">${fmtPct(conv/total*100)}</span></span></div>`;
+  $('funnelNote').textContent='La etapa «Visitantes» no se puede mostrar: la hoja no tiene una columna de visitas o sesiones web. El embudo arranca en Registros, que es el primer dato disponible en la base.';
 
   // Por ciudad (barra horizontal)
   const cityTop = topN(countBy(d,'ciudadClean'),12);
@@ -870,11 +1094,21 @@ function render(){
   VIEW={
     total,leads,prosp,cli,activos,inactivos,convRate,ltvTotal,ltvAvg,nuevosMes,
     cityTop,genMap,ageMap,rfm,tierBuckets,tierLtv,
-    sinSeg,recientes,dormidos,sinAct
+    sinSeg,recientes,dormidos,sinAct,
+    nHoy,n7,n30,varPct,varCur,varPrev,varDesc,
+    prevN:varModo?varPrev:null,
+    prevWin:varModo?varDesc:''
   };
 
-  // ----- NUEVOS REGISTROS -----
-  VIEW.nr = renderNuevos(d);
+  // ----- EVOLUCIÓN DE REGISTROS -----
+  VIEW.nr = renderEvolucion(d);
+  // ----- LEADS / CLIENTES -----
+  VIEW.leadsSec = renderTipoSeccion('l', d.filter(r=>r.estadoDer==='Lead'), '#82E1FF');
+  VIEW.cliSec   = renderTipoSeccion('c', d.filter(r=>r.estadoDer==='Cliente'), '#78E6A0');
+  // ----- TABLA DETALLADA -----
+  renderTabla();
+  // ----- CAMPOS NO DISPONIBLES -----
+  renderFaltantes(d);
 
   // ----- INSIGHTS -----
   renderInsights({total,leads,prosp,cli,activos,inactivos,convRate,ltvTotal,sinTel,sinEmail,dup,sinSeg,cityTop,mMap,mKeys,cliArr,dormidos});
@@ -884,54 +1118,294 @@ function render(){
 }
 
 /* ============================================================
-   NUEVOS REGISTROS (sección)
+   EVOLUCIÓN DE REGISTROS (sección)
    Fuente: fecha de registro (regDate) y estado (estadoDer),
    ambos ya presentes en la hoja. Cada fila cuenta una sola vez.
 ============================================================ */
+const MES3=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
 function _nrKey(d){const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());}
-function renderNuevos(d){
-  const base = NR_TIPO ? d.filter(r=>r.estadoDer===NR_TIPO) : d;
-  const conFecha = base.filter(r=>r.regDate);
-  const sinFecha = base.length - conFecha.length;
-
-  // conteo por día (una fila = un registro)
-  const dayMap=new Map();
-  conFecha.forEach(r=>{const k=_nrKey(r.regDate);dayMap.set(k,(dayMap.get(k)||0)+1);});
-  const keys=[...dayMap.keys()].sort();
-  const total=conFecha.length;
-
-  // días del período: rango de los filtros Desde/Hasta; si no están, min–max de los datos
-  let dIni=FILTERS.desde, dFin=FILTERS.hasta;
-  if((!dIni||!dFin)&&keys.length){
-    if(!dIni)dIni=new Date(keys[0]+'T00:00:00');
-    if(!dFin)dFin=new Date(keys[keys.length-1]+'T00:00:00');
+function _wkStart(d){const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x;}
+function _mesKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
+function granKey(d,g){return g==='mes'?_mesKey(d):g==='semana'?_nrKey(_wkStart(d)):_nrKey(d);}
+function granLabel(k,g){
+  if(g==='mes'){const a=k.split('-');return MES3[+a[1]-1]+' '+a[0].slice(2);}
+  const a=k.split('-');
+  return a[2]+'/'+a[1]+'/'+a[0].slice(2);
+}
+function granTip(k,g){
+  if(g==='mes'){const a=k.split('-');return MES3[+a[1]-1]+' '+a[0];}
+  const a=k.split('-'), txt=a[2]+'/'+a[1]+'/'+a[0];
+  return g==='semana'?('semana del '+txt):txt;
+}
+// genera todas las claves del período (rellena huecos con 0)
+function serieKeys(g,start,end){
+  const keys=[]; if(!start||!end||end<start)return keys;
+  if(g==='mes'){
+    let y=start.getFullYear(),m=start.getMonth(); const ey=end.getFullYear(),em=end.getMonth();
+    let guard=0;
+    while((y<ey||(y===ey&&m<=em)) && guard++<1200){ keys.push(y+'-'+String(m+1).padStart(2,'0')); m++; if(m>11){m=0;y++;} }
+  }else if(g==='semana'){
+    let x=_wkStart(start); const e=_wkStart(end); let guard=0;
+    while(x<=e && guard++<6000){ keys.push(_nrKey(x)); x=new Date(x.getFullYear(),x.getMonth(),x.getDate()+7); }
+  }else{
+    let x=new Date(start.getFullYear(),start.getMonth(),start.getDate());
+    const e=new Date(end.getFullYear(),end.getMonth(),end.getDate()); let guard=0;
+    while(x<=e && guard++<20000){ keys.push(_nrKey(x)); x=new Date(x.getFullYear(),x.getMonth(),x.getDate()+1); }
   }
-  const nDias=(dIni&&dFin)?Math.max(1,Math.floor((dFin-dIni)/DAY)+1):0;
-  const prom=nDias?total/nDias:0;
+  return keys;
+}
+function buildSerie(rows,g){
+  const map=new Map(); let sinFecha=0;
+  rows.forEach(r=>{ if(!r.regDate){sinFecha++;return;} const k=granKey(r.regDate,g); map.set(k,(map.get(k)||0)+1); });
+  let start=FILTERS.desde,end=FILTERS.hasta;
+  if(!start||!end){ const ds=rows.map(r=>r.regDate).filter(Boolean).sort((a,b)=>a-b);
+    if(ds.length){ start=start||ds[0]; end=end||ds[ds.length-1]; } }
+  let keys=serieKeys(g,start,end);
+  if(!keys.length) keys=[...map.keys()].sort();
+  return {keys,vals:keys.map(k=>map.get(k)||0),map,sinFecha,start,end};
+}
+// media móvil simple, sólo para leer la tendencia (no altera los datos)
+function movAvg(vals,w){
+  if(vals.length<w*2)return null;
+  const out=[];
+  for(let i=0;i<vals.length;i++){
+    if(i<w-1){out.push(null);continue;}
+    let sum=0;for(let j=i-w+1;j<=i;j++)sum+=vals[j];
+    out.push(+(sum/w).toFixed(2));
+  }
+  return out;
+}
+function renderEvolucion(d){
+  const g=NR_GRAN;
+  const base = NR_TIPO ? d.filter(r=>r.estadoDer===NR_TIPO) : d;
+  const S=buildSerie(base,g);
+  const total=S.vals.reduce((a,b)=>a+b,0);
+  const tipoTxt = NR_TIPO ? (NR_TIPO==='Lead'?'leads':NR_TIPO==='Cliente'?'clientes':'prospectos') : 'todos los tipos';
+  const gTxt = g==='mes'?'mes':g==='semana'?'semana':'día';
 
-  // día máximo y mínimo (mínimo entre días con al menos 1 registro)
-  let maxK=null,maxV=0,minK=null,minV=Infinity;
-  dayMap.forEach((v,k)=>{if(v>maxV){maxV=v;maxK=k;}if(v<minV){minV=v;minK=k;}});
-  if(!keys.length){minV=0;}
+  $('nrChartTitle').textContent='Registros por '+gTxt;
+  $('nrChartSub').textContent = S.keys.length
+    ? (fmtInt(total)+' registros · '+tipoTxt+' · '+fmtInt(S.keys.length)+' '+(g==='mes'?'meses':g==='semana'?'semanas':'días')+' en el período')
+    : 'No hay registros con fecha de registro en la selección actual';
+  $('nrNote').textContent = S.sinFecha>0?(fmtInt(S.sinFecha)+(S.sinFecha===1?' registro sin fecha de registro (excluido de la serie)':' registros sin fecha de registro (excluidos de la serie)')):'';
 
-  const tipoTxt = NR_TIPO ? (NR_TIPO==='Lead'?'leads':'clientes') : 'todos los tipos';
-  $('nrTotal').textContent = keys.length?fmtInt(total):'0';
-  $('nrTotalS').textContent = nDias?('en '+fmtInt(nDias)+' días · '+tipoTxt):('sin registros con fecha en la selección');
-  $('nrProm').textContent = nDias?(prom>=10?fmtInt(prom):(+prom.toFixed(1)).toLocaleString('es-PY')):'—';
-  $('nrPromS').textContent = nDias?('altas / día sobre '+fmtInt(nDias)+' días del período'):'—';
-  $('nrMax').textContent = maxK?fmtInt(maxV):'—';
-  $('nrMaxS').textContent = maxK?fechaLarga(new Date(maxK+'T00:00:00')):'sin datos en la selección';
-  $('nrMin').textContent = minK?fmtInt(minV):'—';
-  $('nrMinS').textContent = minK?(fechaLarga(new Date(minK+'T00:00:00'))+' · entre días con altas'):'entre días con al menos 1 alta';
-  $('nrNote').textContent = sinFecha>0?(fmtInt(sinFecha)+(sinFecha===1?' registro sin fecha de registro (excluido del conteo)':' registros sin fecha de registro (excluidos del conteo)')):'';
+  const w = g==='mes'?3:g==='semana'?4:7;
+  const ma = movAvg(S.vals,w);
+  const ds=[{
+    type: g==='dia'?'line':'bar',
+    label:'Registros',
+    data:S.vals,
+    borderColor:'#E8241B',backgroundColor:g==='dia'?'rgba(232,36,27,.10)':'#FF8700',
+    fill:g==='dia',tension:.25,pointRadius:S.keys.length>60?0:2,borderWidth:2,borderRadius:4
+  }];
+  if(ma) ds.push({type:'line',label:'Media móvil ('+w+' '+(g==='mes'?'meses':g==='semana'?'semanas':'días')+')',
+    data:ma,borderColor:'#0D0D0D',borderDash:[5,4],borderWidth:2,pointRadius:0,fill:false,tension:.3});
 
-  drawChart('nrDia',$('chNrDia'),{type:'line',
-    data:{labels:keys,datasets:[{data:keys.map(k=>dayMap.get(k)),borderColor:'#E8241B',backgroundColor:'rgba(232,36,27,.10)',fill:true,tension:.25,pointRadius:keys.length>60?0:2,borderWidth:2}]},
+  drawChart('nrDia',$('chNrDia'),{type:'bar',
+    data:{labels:S.keys.map(k=>granLabel(k,g)),datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:!!ma,position:'bottom',labels:{boxWidth:11,boxHeight:11,padding:12,font:{size:11}}},
+        tooltip:{callbacks:{title:items=>granTip(S.keys[items[0].dataIndex],g),
+          label:c=>' '+c.dataset.label+': '+(c.parsed.y==null?'—':fmtInt(c.parsed.y))}}},
+      scales:{x:{grid:{display:false},ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:12}},
+        y:{grid:{color:'#f0f0f0'},ticks:{precision:0},beginAtZero:true}}}});
+
+  // ---- tendencia: última mitad del período vs la anterior (misma cantidad de puntos) ----
+  const n=Math.min(Math.floor(S.keys.length/2), g==='dia'?30:g==='semana'?8:6);
+  let trend=null;
+  if(n>=2){
+    const last=S.vals.slice(-n).reduce((a,b)=>a+b,0);
+    const prev=S.vals.slice(-2*n,-n).reduce((a,b)=>a+b,0);
+    const chg = prev>0?((last-prev)/prev*100):null;
+    trend={n,last,prev,chg};
+    const cls = chg==null?'flat':chg>0.5?'up':chg<-0.5?'dn':'flat';
+    const arrow = chg==null?'':chg>0.5?'▲':chg<-0.5?'▼':'▬';
+    const uni = g==='mes'?'meses':g==='semana'?'semanas':'días';
+    $('trendBox').innerHTML =
+      `<div class="trend-row"><span class="tv">${fmtInt(last)}</span><span class="tl">registros en los últimos <b>${n}</b> ${uni}</span></div>`+
+      `<div class="trend-row"><span class="tv">${fmtInt(prev)}</span><span class="tl">en los <b>${n}</b> ${uni} previos</span></div>`+
+      `<div class="trend-row"><span class="tv delta ${cls}">${chg==null?'—':arrow+' '+fmtPct(Math.abs(chg))}</span><span class="tl">${chg==null?'sin base de comparación (0 registros en el tramo previo)':(chg>=0?'de crecimiento':'de caída')}</span></div>`;
+  }else{
+    $('trendBox').innerHTML='<div class="nodata">El período seleccionado tiene muy pocos puntos para calcular una tendencia. Ampliá el rango de fechas o cambiá la granularidad.</div>';
+  }
+
+  // ---- composición por estado dentro del período ----
+  const conFecha=d.filter(r=>r.regDate);
+  const cL=conFecha.filter(r=>r.estadoDer==='Lead').length;
+  const cP=conFecha.filter(r=>r.estadoDer==='Prospecto').length;
+  const cC=conFecha.filter(r=>r.estadoDer==='Cliente').length;
+  $('compSub').textContent = conFecha.length
+    ? fmtInt(conFecha.length)+' registros con fecha en el período, por estado'
+    : 'Sin registros con fecha de registro en la selección';
+  drawChart('nrComp',$('chNrComp'),{type:'doughnut',
+    data:{labels:['Leads','Prospectos','Clientes'],datasets:[{data:[cL,cP,cC],backgroundColor:['#82E1FF','#FFB400','#78E6A0'],borderWidth:2,borderColor:'#fff'}]},
+    options:{...donutOpts(),cutout:'62%'}});
+
+  return {total,keys:S.keys,vals:S.vals,map:S.map,sinFecha:S.sinFecha,gran:g,tipo:NR_TIPO||'Todos',trend,comp:{Lead:cL,Prospecto:cP,Cliente:cC}};
+}
+
+/* ============================================================
+   SECCIONES LEADS / CLIENTES
+   pre = 'l' (leads) | 'c' (clientes)
+============================================================ */
+function _barOrEmpty(key,canvasId,emptyId,pairs,color,unidad,faltaTxt){
+  const cv=$(canvasId), em=$(emptyId);
+  if(!pairs.length){
+    if(_charts[key]){_charts[key].destroy();delete _charts[key];}
+    cv.parentElement.style.display='none'; em.style.display='block'; em.innerHTML=faltaTxt; return false;
+  }
+  cv.parentElement.style.display=''; em.style.display='none';
+  drawChart(key,cv,{type:'bar',
+    data:{labels:pairs.map(x=>x[0]),datasets:[{data:pairs.map(x=>x[1]),backgroundColor:color,borderRadius:5}]},
+    options:{...hBarOpts(),plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+fmtInt(c.parsed.x)+' '+unidad}}}}});
+  return true;
+}
+function renderTipoSeccion(pre,rows,color){
+  const unidad = pre==='l'?'leads':'clientes';
+  const S=buildSerie(rows,'dia');
+  const nDias=S.keys.length;
+  const conFecha=S.vals.reduce((a,b)=>a+b,0);
+  const n30=rows.filter(r=>r.regDate&&(NOW-r.regDate)/DAY<=30).length;
+  const prom=nDias?conFecha/nDias:0;
+
+  $(pre+'Tot').textContent=fmtInt(rows.length);
+  $(pre+'TotS').textContent = FILT.length?fmtPct(rows.length/FILT.length*100)+' de la selección':'sobre la selección actual';
+  $(pre+'30').textContent=fmtInt(n30);
+  $(pre+'Prom').textContent = nDias?(prom>=10?fmtInt(prom):(+prom.toFixed(1)).toLocaleString('es-PY')):'—';
+  $(pre+'PromS').textContent = nDias?('sobre '+fmtInt(nDias)+' días del período'):'sin días con datos';
+
+  // serie diaria
+  drawChart(pre+'Dia',$(pre==='l'?'chLeadDia':'chCliDia'),{type:'line',
+    data:{labels:S.keys.map(k=>granLabel(k,'dia')),datasets:[{data:S.vals,borderColor:color,backgroundColor:color+'26',fill:true,tension:.25,pointRadius:S.keys.length>60?0:2,borderWidth:2}]},
     options:{responsive:true,maintainAspectRatio:false,
-      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${fmtInt(c.parsed.y)} nuevos registros`}}},
+      plugins:{legend:{display:false},tooltip:{callbacks:{title:it=>granTip(S.keys[it[0].dataIndex],'dia'),label:c=>' '+fmtInt(c.parsed.y)+' '+unidad}}},
       scales:{x:{grid:{display:false},ticks:{maxRotation:0,autoSkip:true,maxTicksLimit:10}},y:{grid:{color:'#f0f0f0'},ticks:{precision:0},beginAtZero:true}}}});
 
-  return {total,nDias,prom,maxK,maxV,minK:keys.length?minK:null,minV:keys.length?minV:0,sinFecha,keys,dayMap,tipo:NR_TIPO||'Todos'};
+  // ciudad
+  const cityMap=countBy(rows,'ciudadClean');
+  const sinCiudad=cityMap.get('Sin dato')||0;
+  const cityPairs=[...cityMap.entries()].filter(x=>x[0]!=='Sin dato').sort((a,b)=>b[1]-a[1]).slice(0,12);
+  $(pre+'CitySub').textContent = cityPairs.length
+    ? ('Top '+cityPairs.length+' ciudades'+(sinCiudad?(' · '+fmtInt(sinCiudad)+' sin ciudad cargada'):''))
+    : 'Sin ciudades cargadas en la selección';
+  _barOrEmpty(pre+'City', pre==='l'?'chLeadCiudad':'chCliCiudad', pre+'CityEmpty', cityPairs, '#FF8700', unidad,
+    'No se puede construir el gráfico: ningún '+unidad.slice(0,-1)+' de la selección tiene valor en la columna <b>Ciudad</b> (City).');
+
+  // canal
+  const canalMap=countBy(rows,'canalClean');
+  const sinCanal=canalMap.get('Sin dato')||0;
+  const canalPairs=[...canalMap.entries()].filter(x=>x[0]!=='Sin dato').sort((a,b)=>b[1]-a[1]).slice(0,12);
+  $(pre+'CanalSub').textContent = canalPairs.length
+    ? ('Origen del registro'+(sinCanal?(' · '+fmtInt(sinCanal)+' sin canal cargado'):''))
+    : 'Sin canal cargado en la selección';
+  _barOrEmpty(pre+'Canal', pre==='l'?'chLeadCanal':'chCliCanal', pre+'CanalEmpty', canalPairs, '#7C4DFF', unidad,
+    FLAGS.canal
+      ? 'No se puede construir el gráfico: la columna de canal existe pero está vacía para estos registros.'
+      : 'No se puede construir el gráfico: falta una columna de <b>canal u origen</b> en la hoja (Branch Source / Canal / Origen / Fuente).');
+
+  // top ciudad en tarjeta
+  if(cityPairs.length){ $(pre+'TopCity').textContent=cityPairs[0][0];
+    $(pre+'TopCityS').textContent=fmtInt(cityPairs[0][1])+' '+unidad+' · '+fmtPct(rows.length?cityPairs[0][1]/rows.length*100:0); }
+  else { $(pre+'TopCity').textContent='—'; $(pre+'TopCityS').textContent='sin ciudad cargada'; }
+
+  return {total:rows.length,n30,nDias,prom,conFecha,sinFecha:S.sinFecha,keys:S.keys,vals:S.vals,cityPairs,canalPairs,sinCiudad,sinCanal};
+}
+
+/* ============================================================
+   TABLA DETALLADA
+============================================================ */
+const TBL={page:1,size:50,sort:'regDate',dir:-1};
+function tblCols(){
+  const c=[
+    {k:'fullName',t:'Nombre',ty:'s'},
+    {k:'email',t:'Email',ty:'s'},
+    {k:'telefono',t:'Teléfono',ty:'s'},
+    {k:'estadoDer',t:'Estado',ty:'s'},
+    {k:'ciudadClean',t:'Ciudad',ty:'s'},
+    {k:'deptoClean',t:'Departamento',ty:'s'},
+    {k:'canalClean',t:'Canal',ty:'s'}
+  ];
+  if(FLAGS.campana) c.push({k:'campanaClean',t:'Campaña',ty:'s'});
+  if(FLAGS.rubro)   c.push({k:'rubroClean',t:'Rubro',ty:'s'});
+  if(FLAGS.ejecutivo)c.push({k:'ejecClean',t:'Ejecutivo',ty:'s'});
+  c.push({k:'regDate',t:'Fecha registro',ty:'d'});
+  c.push({k:'lastPurchase',t:'Última compra',ty:'d'});
+  if(FLAGS.compras) c.push({k:'comprasNum',t:'Compras',ty:'n'});
+  c.push({k:'facturacionNum',t:'Facturación (₲)',ty:'n'});
+  return c;
+}
+function tblVal(r,c){
+  const v=r[c.k];
+  if(c.ty==='d') return v?fechaCorta(v):'—';
+  if(c.ty==='n') return isFinite(v)&&v!==null?fmtInt(v):'—';
+  if(c.k==='estadoDer') return '<span class="pill '+v+'">'+v+'</span>';
+  return v?escapeHtml(String(v)):'—';
+}
+function renderTabla(){
+  const cols=tblCols();
+  const col=cols.find(c=>c.k===TBL.sort)||cols[0];
+  const arr=FILT.slice().sort((a,b)=>{
+    let x=a[col.k],y=b[col.k];
+    if(col.ty==='d'){ x=x?x.getTime():-Infinity; y=y?y.getTime():-Infinity; return (x-y)*TBL.dir; }
+    if(col.ty==='n'){ x=isFinite(x)?x:-Infinity; y=isFinite(y)?y:-Infinity; return (x-y)*TBL.dir; }
+    return String(x||'').localeCompare(String(y||''),'es')*TBL.dir;
+  });
+  const pages=Math.max(1,Math.ceil(arr.length/TBL.size));
+  if(TBL.page>pages)TBL.page=pages;
+  const ini=(TBL.page-1)*TBL.size, fin=Math.min(ini+TBL.size,arr.length);
+
+  $('dtHead').innerHTML='<tr>'+cols.map(c=>
+    '<th data-k="'+c.k+'">'+c.t+(TBL.sort===c.k?'<span class="ar">'+(TBL.dir===1?'▲':'▼')+'</span>':'')+'</th>').join('')+'</tr>';
+  $('dtBody').innerHTML = arr.length
+    ? arr.slice(ini,fin).map(r=>'<tr>'+cols.map(c=>'<td'+(c.ty==='n'?' class="num"':'')+'>'+tblVal(r,c)+'</td>').join('')+'</tr>').join('')
+    : '<tr><td colspan="'+cols.length+'"><div class="nodata" style="margin:8px 0">Ningún registro coincide con los filtros aplicados.</div></td></tr>';
+  $('dtInfo').innerHTML = arr.length?('<b>'+fmtInt(ini+1)+'–'+fmtInt(fin)+'</b> de <b>'+fmtInt(arr.length)+'</b> registros · página '+TBL.page+' de '+pages):'0 registros';
+  $('dtPrev').disabled = TBL.page<=1;
+  $('dtNext').disabled = TBL.page>=pages;
+
+  $('dtHead').querySelectorAll('th').forEach(th=>th.addEventListener('click',()=>{
+    const k=th.dataset.k;
+    if(TBL.sort===k)TBL.dir=-TBL.dir; else {TBL.sort=k;TBL.dir=(cols.find(c=>c.k===k).ty==='s')?1:-1;}
+    TBL.page=1; renderTabla();
+  }));
+}
+
+/* ============================================================
+   CAMPOS NO DISPONIBLES
+============================================================ */
+function renderFaltantes(d){
+  const items=[];
+  const n=d.length||1;
+  // 1. Visitantes (embudo completo)
+  items.push('<b>Visitantes → Registros</b>: no hay ninguna columna de visitas o sesiones web en la hoja, así que el embudo empieza en Registros. Haría falta una fuente de tráfico (GA4, VTEX) o una columna de visitantes por período.');
+  // 2. Campaña
+  if(!FLAGS.campana) items.push('<b>Campaña</b>: no existe una columna de campaña en la hoja, por eso no hay filtro ni corte por campaña. Alcanzaría con una columna llamada <i>Campaña</i>, <i>Campaign</i> o <i>utm_campaign</i>.');
+  else { const sc=d.filter(r=>r.campanaClean==='Sin dato').length;
+    if(sc) items.push('<b>Campaña</b>: la columna existe, pero '+fmtInt(sc)+' de '+fmtInt(d.length)+' registros ('+fmtPct(sc/n*100)+') la tienen vacía.'); }
+  // 3. Canal
+  if(!FLAGS.canal) items.push('<b>Canal / origen</b>: no se encontró una columna de canal (Branch Source, Canal, Origen, Fuente), así que los cortes por canal quedan vacíos.');
+  else { const sc=d.filter(r=>r.canalClean==='Sin dato').length;
+    if(sc) items.push('<b>Canal</b>: la columna existe, pero '+fmtInt(sc)+' registros ('+fmtPct(sc/n*100)+') no tienen valor cargado.'); }
+  // 4. Ciudad
+  const sinCiu=d.filter(r=>r.ciudadClean==='Sin dato').length;
+  if(sinCiu) items.push('<b>Ciudad</b>: '+fmtInt(sinCiu)+' registros ('+fmtPct(sinCiu/n*100)+') no tienen ciudad cargada, quedan fuera de los gráficos geográficos.');
+  // 5. Fecha de registro
+  const sinFec=d.filter(r=>!r.regDate).length;
+  if(sinFec) items.push('<b>Fecha de registro</b>: '+fmtInt(sinFec)+' registros ('+fmtPct(sinFec/n*100)+') no tienen fecha, por eso no aparecen en las series temporales ni responden al filtro Desde–Hasta.');
+  // 6. Estado explícito
+  if(!FLAGS.estado) items.push('<b>Estado</b>: la hoja no trae una columna de estado, así que Lead / Prospecto / Cliente se deducen de la actividad (compras, teléfono, validación). Una columna <i>Estado</i> explícita haría el corte exacto.');
+  // 7. Período anterior
+  if(VIEW.varPct==null && !VIEW.varCur) items.push('<b>Variación vs período anterior</b>: no se puede calcular porque no hay suficientes fechas de registro en la selección para armar dos períodos comparables.');
+  else if(!PREVWIN) items.push('<b>Variación vs período anterior</b>: el rango elegido no tiene un período previo con datos en la hoja, así que la tarjeta compara los últimos 30 días contra los 30 previos dentro de la misma selección.');
+  // 8. Compras / ticket
+  if(!FLAGS.compras) items.push('<b>Cantidad de compras</b>: no existe la columna, la frecuencia del RFM se calcula con la latencia en vez de con el número de pedidos.');
+  // 9. Conversión Lead→Cliente en el tiempo
+  const sinConv=d.filter(r=>!r.convDate).length;
+  if(sinConv===d.length) items.push('<b>Fecha de conversión</b>: ningún registro la tiene cargada, por eso la conversión se mide como proporción de la base (clientes / total) y no como tiempo entre alta y conversión.');
+
+  $('missBox').innerHTML = items.length
+    ? 'Estos cortes no se pudieron construir con los datos actuales de la hoja. Nada de esto está estimado ni completado con valores inventados:<ul>'+items.map(x=>'<li>'+x+'</li>').join('')+'</ul>'
+    : '<span class="okmsg">Todos los cortes solicitados se pudieron construir con las columnas disponibles en la hoja.</span>';
 }
 
 /* ============================================================
@@ -1020,6 +1494,11 @@ function _wsResumen(){
     ['Clientes activos (≤90d)',V.activos,V.cli?fmtPct(V.activos/V.cli*100):''],
     ['Clientes inactivos (>90d)',V.inactivos,V.cli?fmtPct(V.inactivos/V.cli*100):''],
     ['Nuevos del mes',V.nuevosMes,''],
+    ['Registros hoy',V.nHoy,''],
+    ['Registros últimos 7 días',V.n7,''],
+    ['Registros últimos 30 días',V.n30,''],
+    ['Período anterior (registros)',V.prevN==null?'no comparable':V.prevN,V.prevWin||''],
+    ['Variación vs período anterior',V.varPct==null?'no comparable':fmtPct(V.varPct),''],
     ['Facturación total (LTV)',pg(V.ltvTotal),'₲'],
     ['LTV promedio / cliente',pg(V.ltvAvg),'₲']
   ]),[34,18,18]);
@@ -1074,23 +1553,56 @@ function _wsActResumen(){
   ]),[40,12]);
 }
 function _wsNuevosDia(){
-  const nr=VIEW.nr||{keys:[],dayMap:new Map()};
-  return _cols(_aoa([['Día','Nuevos registros'],...nr.keys.map(k=>[k,nr.dayMap.get(k)])]),[14,18]);
+  const nr=VIEW.nr||{keys:[],vals:[]};
+  const gTxt = nr.gran==='mes'?'Mes':nr.gran==='semana'?'Semana (inicio)':'Día';
+  return _cols(_aoa([[gTxt,'Registros'],...nr.keys.map((k,i)=>[k,nr.vals[i]])]),[18,14]);
 }
 function _wsNuevosResumen(){
   const nr=VIEW.nr||{};
+  const t=nr.trend;
+  const uni = nr.gran==='mes'?'meses':nr.gran==='semana'?'semanas':'días';
   return _cols(_aoa([
-    ['NUEVOS REGISTROS'],
+    ['EVOLUCIÓN DE REGISTROS'],
     ['Generado',new Date().toLocaleString('es-PY')],
-    ['Filtro de tipo (columna Estado)',nr.tipo||'Todos'],[],
+    ['Filtro de tipo (columna Estado)',nr.tipo||'Todos'],
+    ['Granularidad',nr.gran||'dia'],[],
     ['Indicador','Valor'],
-    ['Total de nuevos registros',nr.total||0],
-    ['Días del período',nr.nDias||0],
-    ['Promedio por día',nr.nDias?+(nr.total/nr.nDias).toFixed(2):0],
-    ['Día con más registros',nr.maxK?(nr.maxK+' ('+nr.maxV+')'):'—'],
-    ['Día con menos registros (entre días con altas)',nr.minK?(nr.minK+' ('+nr.minV+')'):'—'],
-    ['Registros sin fecha de registro (excluidos)',nr.sinFecha||0]
-  ]),[44,20]);
+    ['Total de registros en la serie',nr.total||0],
+    ['Puntos de la serie',(nr.keys||[]).length],
+    ['Registros sin fecha de registro (excluidos)',nr.sinFecha||0],[],
+    ['TENDENCIA'],
+    ['Últimos '+(t?t.n:0)+' '+uni,t?t.last:'—'],
+    [(t?t.n:0)+' '+uni+' previos',t?t.prev:'—'],
+    ['Variación',t&&t.chg!=null?fmtPct(t.chg):'no comparable'],[],
+    ['COMPOSICIÓN POR ESTADO (registros con fecha)'],
+    ['Leads',nr.comp?nr.comp.Lead:0],
+    ['Prospectos',nr.comp?nr.comp.Prospecto:0],
+    ['Clientes',nr.comp?nr.comp.Cliente:0]
+  ]),[44,22]);
+}
+function _wsTipoSec(title,sec,unidad){
+  if(!sec) return _cols(_aoa([[title],['Sin datos']]),[30,14]);
+  const rows=[
+    [title.toUpperCase()],
+    ['Generado',new Date().toLocaleString('es-PY')],[],
+    ['Indicador','Valor'],
+    ['Total',sec.total],
+    ['Últimos 30 días',sec.n30],
+    ['Días del período',sec.nDias],
+    ['Promedio por día',sec.nDias?+(sec.conFecha/sec.nDias).toFixed(2):0],
+    ['Sin fecha de registro (excluidos de la serie)',sec.sinFecha],
+    ['Sin ciudad cargada',sec.sinCiudad],
+    ['Sin canal cargado',sec.sinCanal],[],
+    ['POR CIUDAD','Cantidad'],
+    ...sec.cityPairs.map(x=>[x[0],x[1]]),[],
+    ['POR CANAL','Cantidad'],
+    ...(sec.canalPairs.length?sec.canalPairs.map(x=>[x[0],x[1]]):[['Sin canal cargado en la hoja','']])
+  ];
+  return _cols(_aoa(rows),[44,16]);
+}
+function _wsTipoDia(sec){
+  if(!sec) return _cols(_aoa([['Día','Cantidad']]),[14,12]);
+  return _cols(_aoa([['Día','Cantidad'],...sec.keys.map((k,i)=>[k,sec.vals[i]])]),[14,12]);
 }
 // ---- exporters por sección ----
 function exportNuevos(){ if(!_guard())return; const wb=XLSX.utils.book_new();
@@ -1119,6 +1631,19 @@ function exportActividad(){ if(!_guard())return; const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,recsWS(FILT.filter(r=>(r.estadoDer==='Lead'||r.estadoDer==='Prospecto')&&(r.daysContact==null||r.daysContact>STALE_DAYS))),'Leads sin seguimiento');
   _save(wb,'Actividad'); }
 function exportInsights(){ if(!_guard())return; const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,_wsInsights(),'Insights'); _save(wb,'Insights'); }
+function exportLeads(){ if(!_guard())return; const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,_wsTipoSec('Leads',VIEW.leadsSec,'leads'),'Leads · resumen');
+  XLSX.utils.book_append_sheet(wb,_wsTipoDia(VIEW.leadsSec),'Leads por día');
+  XLSX.utils.book_append_sheet(wb,recsWS(FILT.filter(r=>r.estadoDer==='Lead')),'Leads (detalle)');
+  _save(wb,'Leads'); }
+function exportClientes(){ if(!_guard())return; const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,_wsTipoSec('Clientes',VIEW.cliSec,'clientes'),'Clientes · resumen');
+  XLSX.utils.book_append_sheet(wb,_wsTipoDia(VIEW.cliSec),'Clientes por día');
+  XLSX.utils.book_append_sheet(wb,recsWS(FILT.filter(r=>r.estadoDer==='Cliente')),'Clientes (detalle)');
+  _save(wb,'Clientes'); }
+function exportTabla(){ if(!_guard())return; const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,recsWS(FILT),'Tabla filtrada');
+  _save(wb,'TablaDetallada'); }
 
 // ---- export COMPLETO ----
 function exportTodo(){ if(!_guard())return; const wb=XLSX.utils.book_new();
@@ -1128,8 +1653,12 @@ function exportTodo(){ if(!_guard())return; const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,_mapWS('Género',VIEW.genMap),'Género');
   XLSX.utils.book_append_sheet(wb,_mapWS('Edad',VIEW.ageMap),'Edad');
   XLSX.utils.book_append_sheet(wb,_wsEvol(),'Evolución mensual');
-  XLSX.utils.book_append_sheet(wb,_wsNuevosResumen(),'Nuevos · resumen');
-  XLSX.utils.book_append_sheet(wb,_wsNuevosDia(),'Nuevos por día');
+  XLSX.utils.book_append_sheet(wb,_wsNuevosResumen(),'Evolución · resumen');
+  XLSX.utils.book_append_sheet(wb,_wsNuevosDia(),'Evolución serie');
+  XLSX.utils.book_append_sheet(wb,_wsTipoSec('Leads',VIEW.leadsSec,'leads'),'Leads · resumen');
+  XLSX.utils.book_append_sheet(wb,_wsTipoDia(VIEW.leadsSec),'Leads por día');
+  XLSX.utils.book_append_sheet(wb,_wsTipoSec('Clientes',VIEW.cliSec,'clientes'),'Clientes · resumen');
+  XLSX.utils.book_append_sheet(wb,_wsTipoDia(VIEW.cliSec),'Clientes por día');
   XLSX.utils.book_append_sheet(wb,_wsSegments(),'Segmentos RFM');
   XLSX.utils.book_append_sheet(wb,_wsTiers(),'Tiers de valor');
   XLSX.utils.book_append_sheet(wb,_wsActResumen(),'Actividad');
@@ -1141,12 +1670,22 @@ function exportTodo(){ if(!_guard())return; const wb=XLSX.utils.book_new();
    INIT + AUTO-REFRESH
 ============================================================ */
 const _xa=$('fXlsAll'); if(_xa)_xa.addEventListener('click',exportTodo);
-// chips Leads / Clientes de la sección Nuevos registros
+// chips de tipo (Todos / Leads / Prospectos / Clientes) de la sección Evolución
 document.querySelectorAll('.nr-chip').forEach(b=>b.addEventListener('click',()=>{
   NR_TIPO=b.dataset.tipo||'';
   document.querySelectorAll('.nr-chip').forEach(x=>x.classList.toggle('on',x===b));
   if(ALL.length) applyFiltersAndRender();
 }));
+// chips de granularidad (Día / Semana / Mes)
+document.querySelectorAll('.gr-chip').forEach(b=>b.addEventListener('click',()=>{
+  NR_GRAN=b.dataset.gran||'dia';
+  document.querySelectorAll('.gr-chip').forEach(x=>x.classList.toggle('on',x===b));
+  if(ALL.length) applyFiltersAndRender();
+}));
+// paginación de la tabla detallada
+$('dtPrev').addEventListener('click',()=>{ if(TBL.page>1){TBL.page--;renderTabla();window.scrollBy(0,-1);} });
+$('dtNext').addEventListener('click',()=>{ TBL.page++;renderTabla(); });
+$('dtSize').addEventListener('change',e=>{ TBL.size=+e.target.value||50; TBL.page=1; renderTabla(); });
 loadData(true);
 setInterval(()=>loadData(false), REFRESH_MS);
 let lastVis=Date.now();

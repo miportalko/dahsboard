@@ -82,6 +82,24 @@
   .section-head h2{font-size:15px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
   .section-head h2 .dot{width:8px;height:8px;border-radius:3px;background:var(--red)}
   .section-head .note{font-size:11.5px;color:var(--muted);font-weight:500}
+  /* ===== Selector de modo de facturación ===== */
+  .fg.fg-fac{padding:0 14px 0 0;border-right:1px solid var(--line);margin-right:4px}
+  .fg.fg-fac label{color:var(--red)}
+  .seg-fac{display:flex;gap:4px;background:var(--bg);padding:3px;border-radius:9px;
+    border:1px solid var(--line)}
+  .seg-fac button{border:none;background:none;font-family:inherit;font-size:12px;font-weight:700;
+    padding:8px 13px;border-radius:7px;cursor:pointer;color:var(--muted);white-space:nowrap;transition:.15s}
+  .seg-fac button:hover{color:var(--ink)}
+  .seg-fac button.on{background:var(--ink);color:#fff;box-shadow:0 1px 2px rgba(0,0,0,.18)}
+  .fac-tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
+    padding:6px 11px;border-radius:20px;background:#fff;border:1px solid var(--line);color:var(--ink)}
+  .fac-tag .pip{width:7px;height:7px;border-radius:50%;background:var(--red)}
+  .fac-tag.sin .pip{background:var(--g2)}
+  .h-mode{font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;
+    background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.18);color:#fff;
+    display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .h-mode .pip{width:7px;height:7px;border-radius:50%;background:var(--g5)}
+  .h-mode.sin .pip{background:var(--g2)}
   .seg{display:flex;gap:4px;background:var(--bg);padding:3px;border-radius:9px}
   .seg button{border:none;background:none;font-family:inherit;font-size:12px;font-weight:600;
     padding:6px 11px;border-radius:7px;cursor:pointer;color:var(--muted)}
@@ -186,6 +204,7 @@
     <div class="h-title">Dashboard <span>Ejecutivo</span></div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
+    <div class="h-mode" id="modeTag"><span class="pip"></span>Facturación con envío</div>
     <div class="h-period" id="periodTag">—</div>
     <button class="exp-btn" id="btnRefresh" style="background:rgba(255,255,255,.08);
       border-color:rgba(255,255,255,.15);color:#ccc">&#8635; Actualizar</button>
@@ -196,6 +215,13 @@
   <div class="fatal" id="fatal"></div>
 
   <div class="filters">
+    <div class="fg fg-fac">
+      <label>Facturación</label>
+      <div class="seg-fac" id="segFac" role="group" aria-label="Modo de facturación">
+        <button class="on" data-v="con" aria-pressed="true">Con envío</button>
+        <button data-v="sin" aria-pressed="false">Sin envío</button>
+      </div>
+    </div>
     <div class="fg">
       <label>Rango</label>
       <div class="presets" id="presets"></div>
@@ -209,7 +235,8 @@
     <button class="reset" id="reset">Limpiar filtros</button>
     <div class="rule-chips">
       <span class="hint-chip">Pedidos válidos <b>Faturado + Pronto para o manuseio</b></span>
-      <span class="hint-chip">Facturación <b>&Sigma; SKU + &Sigma; envío por fila</b></span>
+      <span class="fac-tag" id="facTag"><span class="pip"></span>Mostrando: <b>facturación con envío</b></span>
+      <span class="hint-chip" id="chipFac">Facturación <b>&Sigma; SKU + &Sigma; envío por fila</b></span>
       <span class="hint-chip">Descuento <b>ya neteado en el precio</b></span>
       <span class="hint-chip">Canjes ₲0 <b>excluidos del ticket</b></span>
       <span class="hint-chip">El Excel <b>respeta los filtros activos</b></span>
@@ -232,7 +259,7 @@
   <div class="grid g2">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Facturación y ticket por mes</h2>
-        <p class="hint">Barras = facturación · línea = ticket promedio</p></div>
+        <p class="hint" id="hintEvol">Barras = facturación · línea = ticket promedio</p></div>
         <button class="exp-btn" onclick="bajar('mensual')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cEvol"></canvas></div></div>
     <div class="panel">
@@ -251,13 +278,13 @@
       <div class="tscroll" id="tCanal"></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Participación por canal</h2>
-        <p class="hint">Sobre facturación del período</p></div></div>
+        <p class="hint" id="hintPartCanal">Sobre facturación del período</p></div></div>
       <div class="cwrap"><canvas id="cCanal"></canvas></div></div>
   </div>
   <div class="grid g2e">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Ciudades</h2>
-        <p class="hint">Facturación por ciudad normalizada</p></div>
+        <p class="hint" id="hintCiudad">Facturación por ciudad normalizada</p></div>
         <button class="exp-btn" onclick="bajar('ciudades')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cCiudad"></canvas></div></div>
     <div class="panel">
@@ -280,7 +307,7 @@
       <div class="cwrap alto"><canvas id="cSku"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Retornable vs. no retornable</h2>
-        <p class="hint">Participación en facturación de producto</p></div>
+        <p class="hint" id="hintRet">Participación en facturación de producto</p></div>
         <button class="exp-btn" onclick="bajar('retornables')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cRet"></canvas></div></div>
   </div>
@@ -463,6 +490,8 @@ function construir(rows){
       filasCero:lineas.filter(o=>o._precio===0).length,
       clientes:new Set(pedidos.map(p=>p.email)).size,
       facturacion:conVenta.reduce((s,p)=>s+p.facturacion,0),
+      facturacionSinEnvio:conVenta.reduce((s,p)=>s+p.facturacion-p.envio,0),
+      envioVenta:conVenta.reduce((s,p)=>s+p.envio,0),
       envio:pedidos.reduce((s,p)=>s+p.envio,0),
       descuento:-pedidos.reduce((s,p)=>s+p.descuento,0),
       desde:MESES[0], hasta:MESES[MESES.length-1],
@@ -479,6 +508,19 @@ function construir(rows){
 
 /* ===== estado ===== */
 let A=0,B=0,FC='',FCI='',MODO='f';
+
+/* ------------------------------------------------------------------
+   MODO DE FACTURACIÓN · 'con' = total pagado (producto + envío)
+                         'sin' = total pagado − envío
+   Campos reales de la fuente: 'Total Value' (ya incluye el envío) y
+   'Shipping Value' (viene prorrateado por fila, por eso se suma).
+   No se estima nada: si un pedido no trae envío, 'sin' = 'con'.
+------------------------------------------------------------------ */
+let MODOFAC='con';
+const FAC=p=>MODOFAC==='con'?p.facturacion:(p.facturacion-p.envio);
+const ETIQ=()=>MODOFAC==='con'?'con envío':'sin envío';
+const ETIQL=()=>MODOFAC==='con'?'Facturación con envío':'Facturación sin envío';
+const HFAC=()=>MODOFAC==='con'?'Facturación (con envío)':'Facturación (sin envío)';
 const charts={};
 const C={red:'#E31837',red2:'#E8241B',amber:'#FFB300',ink:'#111315',gris:'#B0BEC5',
   cyan:'#82E1FF',verde:'#78E6A0',naranja:'#FF8700',rojoClaro:'#FBC0BA'};
@@ -521,11 +563,11 @@ function rank(arr,clave,valor,top){
 function kpis(){
   const cur=conVenta(sel()), len=B-A+1, pa=A-len, pb=A-1, hay=pa>=0;
   const prev=hay?conVenta(sel(pa,pb)):[];
-  const f=suma(cur,p=>p.facturacion), p=cur.length;
-  const fp=suma(prev,x=>x.facturacion), pp=prev.length;
+  const f=suma(cur,p=>FAC(p)), p=cur.length;
+  const fp=suma(prev,x=>FAC(x)), pp=prev.length;
   const cl=new Set(cur.map(x=>x.email)).size, clP=new Set(prev.map(x=>x.email)).size;
   const items=[
-    ['Facturación',fmt(f),fp?f/fp-1:null],
+    [ETIQL(),fmt(f),fp?f/fp-1:null],
     ['Pedidos',num(p),pp?p/pp-1:null],
     ['Ticket promedio',fmt(p?f/p:0),pp&&p?(f/p)/(fp/pp)-1:null],
     ['Clientes únicos',num(cl),clP?cl/clP-1:null]];
@@ -551,18 +593,43 @@ const BASE={responsive:true,maintainAspectRatio:false,
 const draw=(id,cfg)=>{if(charts[id])charts[id].destroy();
   charts[id]=new Chart(document.getElementById(id),cfg)};
 
+/* refresca todos los indicadores visuales del modo activo */
+function pintarModo(){
+  const sin=MODOFAC==='sin';
+  const mt=document.getElementById('modeTag');
+  if(mt){mt.className='h-mode'+(sin?' sin':'');
+    mt.innerHTML='<span class="pip"></span>'+ETIQL()}
+  const ft=document.getElementById('facTag');
+  if(ft){ft.className='fac-tag'+(sin?' sin':'');
+    ft.innerHTML=`<span class="pip"></span>Mostrando: <b>facturación ${ETIQ()}</b>`}
+  const cf=document.getElementById('chipFac');
+  if(cf) cf.innerHTML=sin
+    ?'Facturación <b>Total Value \u2212 Shipping Value</b>'
+    :'Facturación <b>&Sigma; SKU + &Sigma; envío por fila</b>';
+  const set=(id,html)=>{const e=document.getElementById(id);if(e)e.innerHTML=html};
+  set('hintEvol',`Barras = facturación ${ETIQ()} · línea = ticket promedio`);
+  set('hintPartCanal',`Sobre facturación ${ETIQ()} del período`);
+  set('hintCiudad',`Facturación ${ETIQ()} por ciudad normalizada`);
+  set('hintRet','Participación en facturación de producto · '+
+    '<b>siempre sin envío</b>: el envío no se atribuye a un SKU en la fuente');
+  document.querySelectorAll('#segFac button').forEach(b=>{
+    const on=b.dataset.v===MODOFAC;
+    b.classList.toggle('on',on); b.setAttribute('aria-pressed',on?'true':'false')});
+}
+
 function render(){
+  pintarModo();
   kpis();
   const cur=conVenta(sel()), todos=sel();
   const mesesSel=MESES.slice(A,B+1), lab=mesesSel.map(nomMes);
   const ultimo=MESES[MESES.length-1];
   const porMes=k=>mesesSel.map(m=>k(cur.filter(p=>p.mes===m),m));
 
-  const fMes=porMes(a=>suma(a,p=>p.facturacion));
+  const fMes=porMes(a=>suma(a,p=>FAC(p)));
   const pMes=porMes(a=>a.length);
   const tMes=fMes.map((f,i)=>pMes[i]?f/pMes[i]:0);
   draw('cEvol',{type:'bar',data:{labels:lab,datasets:[
-    {label:'Facturación',data:fMes,borderRadius:4,order:2,yAxisID:'y',
+    {label:ETIQL(),data:fMes,borderRadius:4,order:2,yAxisID:'y',
      backgroundColor:mesesSel.map(m=>m===ultimo?C.rojoClaro:C.red)},
     {label:'Ticket promedio',data:tMes,type:'line',borderColor:C.ink,backgroundColor:C.ink,
      borderWidth:2,tension:.3,pointRadius:3,yAxisID:'y1',order:1}]},
@@ -571,10 +638,10 @@ function render(){
       y1:{position:'right',grid:{display:false},border:{display:false},ticks:{font:F11,callback:fmtK}}}}});
 
   const sm=new Map();
-  cur.forEach(p=>{const k=semanaDe(p.fecha);const v=sm.get(k)||{f:0,p:0};v.f+=p.facturacion;v.p++;sm.set(k,v)});
+  cur.forEach(p=>{const k=semanaDe(p.fecha);const v=sm.get(k)||{f:0,p:0};v.f+=FAC(p);v.p++;sm.set(k,v)});
   const sems=[...sm.keys()].sort();
   draw('cSem',{type:'line',data:{labels:sems,datasets:[
-    {label:'Facturación',data:sems.map(k=>sm.get(k).f),borderColor:C.red,
+    {label:ETIQL(),data:sems.map(k=>sm.get(k).f),borderColor:C.red,
      backgroundColor:'rgba(227,24,55,.10)',fill:true,borderWidth:2,tension:.3,pointRadius:2},
     {label:'Pedidos',data:sems.map(k=>sm.get(k).p),borderColor:C.amber,borderWidth:1.8,
      tension:.3,pointRadius:0,yAxisID:'y1'}]},
@@ -585,11 +652,11 @@ function render(){
 
   // canales (ignora su propio filtro para seguir mostrando el universo)
   const baseCan=conVenta(sel(A,B,'canal'));
-  const can=rank(baseCan,p=>p.canal,p=>p.facturacion);
+  const can=rank(baseCan,p=>p.canal,p=>FAC(p));
   const canP=new Map(); baseCan.forEach(p=>canP.set(p.canal,(canP.get(p.canal)||0)+1));
   const totC=suma(can,x=>x[1]), mxC=can.length?can[0][1]:1;
   document.getElementById('tCanal').innerHTML='<table><thead><tr><th>Canal</th><th>Pedidos</th>'+
-    '<th>Facturación</th><th>Ticket</th><th>Part.</th></tr></thead><tbody>'+
+    '<th>'+HFAC()+'</th><th>Ticket</th><th>Part.</th></tr></thead><tbody>'+
     can.map(([k,f],i)=>`<tr${FC===k?' style="background:#FFF6F5"':''}><td><span class="rank">${i+1}</span>${k}</td>`+
     `<td>${num(canP.get(k))}</td><td class="bar-cell"><div class="fill" style="width:${f/mxC*100}%"></div>`+
     `<span>${fmt(f)}</span></td><td>${fmt(f/canP.get(k))}</td><td>${(f/totC*100).toFixed(1)}%</td></tr>`).join('')+
@@ -601,7 +668,7 @@ function render(){
       usePointStyle:true,pointStyle:'rectRounded'}},
       tooltip:{callbacks:{label:c=>c.label+': '+fmt(c.parsed)+' ('+(c.parsed/totC*100).toFixed(1)+'%)'}}}}});
 
-  const ciu=rank(conVenta(sel(A,B,'ciudad')),p=>p.ciudad,p=>p.facturacion,12);
+  const ciu=rank(conVenta(sel(A,B,'ciudad')),p=>p.ciudad,p=>FAC(p),12);
   draw('cCiudad',{type:'bar',data:{labels:ciu.map(x=>x[0]),datasets:[{data:ciu.map(x=>x[1]),
     backgroundColor:ciu.map(x=>FCI&&x[0]===FCI?C.ink:C.red),borderRadius:6,barThickness:'flex',maxBarThickness:26}]},
     options:{...BASE,indexAxis:'y',plugins:{legend:{display:false},
@@ -638,7 +705,8 @@ function render(){
       y:{grid:{display:false},border:{display:false},ticks:{font:{family:'Inter',size:10}}}}}});
   document.getElementById('tituloProd').textContent=esF?'Top SKUs por facturación':'Top productos por unidades';
   document.getElementById('hintProd').innerHTML=esF
-    ?'Solo líneas con precio &gt; 0 · excluye componentes de combo · rojo = 80% acumulado'
+    ?'Solo líneas con precio &gt; 0 · excluye componentes de combo · rojo = 80% acumulado · '+
+     '<b>facturación de producto, siempre sin envío</b>'
     :'Incluye componentes desagregados de combos y cajas · lo que realmente sale del depósito';
 
   const retSerie=k=>mesesSel.map(m=>suma(conPrecio.filter(o=>o._mes===m&&o._ret===k),o=>o._precio));
@@ -683,19 +751,19 @@ function notaParcial(){
 /* ===== tablas que dependen del período ===== */
 function tablasPeriodo(cur,todos){
   const cu=new Map();
-  cur.filter(p=>p.cupon).forEach(p=>{const v=cu.get(p.cupon)||{p:0,f:0};v.p++;v.f+=p.facturacion;cu.set(p.cupon,v)});
+  cur.filter(p=>p.cupon).forEach(p=>{const v=cu.get(p.cupon)||{p:0,f:0};v.p++;v.f+=FAC(p);cu.set(p.cupon,v)});
   const orden=[...cu.entries()].sort((a,b)=>b[1].p-a[1].p);
   const cup=orden.slice(0,12);
   const mxP=cup.length?cup[0][1].p:1;
 
   /* totales de TODOS los cupones del período, no solo del top visible */
   const totP=suma(orden,x=>x[1].p), totF=suma(orden,x=>x[1].f);
-  const pedTot=cur.length, facTot=suma(cur,p=>p.facturacion);
+  const pedTot=cur.length, facTot=suma(cur,p=>FAC(p));
   /* subtotal de lo que se ve en pantalla */
   const visP=suma(cup,x=>x[1].p), visF=suma(cup,x=>x[1].f);
 
   document.getElementById('tCupon').innerHTML=cup.length?
-    '<table><thead><tr><th>Cupón</th><th>Pedidos</th><th>Facturación</th><th>Ticket</th>'+
+    '<table><thead><tr><th>Cupón</th><th>Pedidos</th><th>'+HFAC()+'</th><th>Ticket</th>'+
     '<th>% de pedidos con cupón</th></tr></thead><tbody>'+
     cup.map(([k,v],i)=>`<tr><td><span class="rank">${i+1}</span>${corta(k,30)}</td>`+
     `<td class="bar-cell"><div class="fill" style="width:${v.p/mxP*100}%"></div><span>${num(v.p)}</span></td>`+
@@ -715,7 +783,7 @@ function tablasPeriodo(cur,todos){
     `(${facTot?(totF/facTot*100).toFixed(1):'0.0'}% de la facturación)`;
 
   BLOQUES.cupones={arch:'Cupones',hoja:'Cupones',anchos:[34,12,18,16,20,14],
-    aoa:[['Cupón','Pedidos','Facturación','Ticket promedio','% de pedidos con cupón','% de la facturación total']]
+    aoa:[['Cupón','Pedidos',HFAC(),'Ticket promedio','% de pedidos con cupón','% de la facturación total']]
       .concat(orden.map(([k,v])=>[k,v.p,v.f,v.p?v.f/v.p:0,totP?v.p/totP:0,facTot?v.f/facTot:0]))
       .concat([['TOTAL',totP,totF,totP?totF/totP:0,1,facTot?totF/facTot:0],
                [],['Pedidos del período (con venta)',pedTot],
@@ -732,15 +800,15 @@ function armarBloques(cur,todos,mesesSel,lin,conPrecio){
   /* --- Facturación y ticket por mes --- */
   BLOQUES.mensual={arch:'Facturacion_mensual',hoja:'Mensual',
     anchos:[10,12,18,18,16,16,20,16,20,14],
-    aoa:[['Mes','Pedidos','Facturación','Ticket promedio','Clientes únicos',
+    aoa:[['Mes','Pedidos',HFAC(),'Ticket promedio','Clientes únicos',
           'Pedidos de nuevos','Pedidos de recurrentes','Envío','Descuento nominal','Canjes ₲0']]
       .concat(mesesSel.map(m=>{
         const a=cur.filter(p=>p.mes===m), t=todos.filter(p=>p.mes===m);
-        const ff=suma(a,p=>p.facturacion);
+        const ff=suma(a,p=>FAC(p));
         return [m,a.length,ff,a.length?ff/a.length:0,new Set(a.map(p=>p.email)).size,
                 a.filter(p=>p.nuevo).length,a.filter(p=>!p.nuevo).length,
                 suma(t,p=>p.envio),-suma(t,p=>p.descuento),t.filter(p=>p.canje).length]}))
-      .concat([(()=>{const ff=suma(cur,p=>p.facturacion);
+      .concat([(()=>{const ff=suma(cur,p=>FAC(p));
         return ['TOTAL',cur.length,ff,cur.length?ff/cur.length:0,new Set(cur.map(p=>p.email)).size,
                 cur.filter(p=>p.nuevo).length,cur.filter(p=>!p.nuevo).length,
                 suma(todos,p=>p.envio),-suma(todos,p=>p.descuento),todos.filter(p=>p.canje).length]})()])};
@@ -748,22 +816,22 @@ function armarBloques(cur,todos,mesesSel,lin,conPrecio){
   /* --- Ritmo semanal --- */
   const sm=new Map();
   cur.forEach(p=>{const k=semanaDe(p.fecha);const v=sm.get(k)||{f:0,p:0,d:new Set()};
-    v.f+=p.facturacion;v.p++;v.d.add(p.fecha);sm.set(k,v)});
+    v.f+=FAC(p);v.p++;v.d.add(p.fecha);sm.set(k,v)});
   const sems=[...sm.keys()].sort();
   BLOQUES.semanal={arch:'Ritmo_semanal',hoja:'Semanal',anchos:[14,12,18,18,16,20],
-    aoa:[['Semana ISO','Pedidos','Facturación','Ticket promedio','Días con venta','Facturación por día']]
+    aoa:[['Semana ISO','Pedidos',HFAC(),'Ticket promedio','Días con venta','Facturación por día']]
       .concat(sems.map(k=>{const v=sm.get(k);
         return [k,v.p,v.f,v.p?v.f/v.p:0,v.d.size,v.d.size?v.f/v.d.size:0]}))
       .concat([['TOTAL',suma(sems,k=>sm.get(k).p),suma(sems,k=>sm.get(k).f),
-        cur.length?suma(cur,p=>p.facturacion)/cur.length:0,'','']])};
+        cur.length?suma(cur,p=>FAC(p))/cur.length:0,'','']])};
 
   /* --- Canales --- */
   const baseCan=conVenta(sel(A,B,'canal')), cm=new Map();
   baseCan.forEach(p=>{const v=cm.get(p.canal)||{p:0,f:0,n:0,cl:new Set()};
-    v.p++;v.f+=p.facturacion;if(p.nuevo)v.n++;v.cl.add(p.email);cm.set(p.canal,v)});
+    v.p++;v.f+=FAC(p);if(p.nuevo)v.n++;v.cl.add(p.email);cm.set(p.canal,v)});
   const totCanF=suma([...cm.values()],v=>v.f), totCanP=suma([...cm.values()],v=>v.p);
   BLOQUES.canales={arch:'Canales',hoja:'Canales',anchos:[22,12,18,16,16,16,22],
-    aoa:[['Canal','Pedidos','Facturación','Ticket','Participación facturación',
+    aoa:[['Canal','Pedidos',HFAC(),'Ticket','Participación facturación',
           'Clientes únicos','Pedidos de clientes nuevos']]
       .concat([...cm.entries()].sort((a,b)=>b[1].f-a[1].f).map(([k,v])=>
         [k,v.p,v.f,v.p?v.f/v.p:0,totCanF?v.f/totCanF:0,v.cl.size,v.n]))
@@ -773,10 +841,10 @@ function armarBloques(cur,todos,mesesSel,lin,conPrecio){
   /* --- Ciudades --- */
   const baseCiu=conVenta(sel(A,B,'ciudad')), cim=new Map();
   baseCiu.forEach(p=>{const v=cim.get(p.ciudad)||{p:0,f:0,d:p.depto,cl:new Set()};
-    v.p++;v.f+=p.facturacion;v.cl.add(p.email);cim.set(p.ciudad,v)});
+    v.p++;v.f+=FAC(p);v.cl.add(p.email);cim.set(p.ciudad,v)});
   const totCiuF=suma([...cim.values()],v=>v.f), totCiuP=suma([...cim.values()],v=>v.p);
   BLOQUES.ciudades={arch:'Ciudades',hoja:'Ciudades',anchos:[22,18,12,18,16,16,16],
-    aoa:[['Ciudad','Departamento','Pedidos','Facturación','Ticket','Participación','Clientes únicos']]
+    aoa:[['Ciudad','Departamento','Pedidos',HFAC(),'Ticket','Participación','Clientes únicos']]
       .concat([...cim.entries()].sort((a,b)=>b[1].f-a[1].f).map(([k,v])=>
         [k,v.d,v.p,v.f,v.p?v.f/v.p:0,totCiuF?v.f/totCiuF:0,v.cl.size]))
       .concat([['TOTAL','',totCiuP,totCiuF,totCiuP?totCiuF/totCiuP:0,1,
@@ -784,10 +852,10 @@ function armarBloques(cur,todos,mesesSel,lin,conPrecio){
 
   /* --- Medios de pago --- */
   const pm=new Map();
-  cur.forEach(p=>{const v=pm.get(p.pago)||{p:0,f:0};v.p++;v.f+=p.facturacion;pm.set(p.pago,v)});
+  cur.forEach(p=>{const v=pm.get(p.pago)||{p:0,f:0};v.p++;v.f+=FAC(p);pm.set(p.pago,v)});
   const totPagF=suma([...pm.values()],v=>v.f);
   BLOQUES.pagos={arch:'Medios_de_pago',hoja:'Medios de pago',anchos:[30,12,18,16,20,22],
-    aoa:[['Medio de pago','Pedidos','Facturación','Ticket','Participación pedidos','Participación facturación']]
+    aoa:[['Medio de pago','Pedidos',HFAC(),'Ticket','Participación pedidos','Participación facturación']]
       .concat([...pm.entries()].sort((a,b)=>b[1].p-a[1].p).map(([k,v])=>
         [k,v.p,v.f,v.p?v.f/v.p:0,cur.length?v.p/cur.length:0,totPagF?v.f/totPagF:0]))
       .concat([['TOTAL',cur.length,totPagF,cur.length?totPagF/cur.length:0,1,1]])};
@@ -805,7 +873,7 @@ function armarBloques(cur,todos,mesesSel,lin,conPrecio){
     return [k,v.ret?'Sí':'No',v.f,v.u,v.u?v.f/v.u:0,totProd?v.f/totProd:0,totProd?acu/totProd:0,
             (um.get(k)||{u:0}).u]});
   BLOQUES.productos={arch:'Productos',hoja:'Productos',anchos:[48,12,18,16,18,14,14,22],
-    aoa:[['SKU','Retornable','Facturación','Unidades con precio','Precio promedio por unidad',
+    aoa:[['SKU','Retornable','Facturación de producto (sin envío)','Unidades con precio','Precio promedio por unidad',
           'Participación','% acumulado','Unidades físicas totales']]
       .concat(filasProd)
       .concat([['TOTAL','',totProd,suma([...sm2.values()],v=>v.u),'',1,'',
@@ -828,7 +896,7 @@ function armarBloques(cur,todos,mesesSel,lin,conPrecio){
   /* --- Clientes: nuevos vs recurrentes --- */
   const filasCli=mesesSel.map(m=>{const a=cur.filter(p=>p.mes===m);
     const n=a.filter(p=>p.nuevo).length;
-    const fn=suma(a.filter(p=>p.nuevo),p=>p.facturacion), fr=suma(a,p=>p.facturacion)-fn;
+    const fn=suma(a.filter(p=>p.nuevo),p=>FAC(p)), fr=suma(a,p=>FAC(p))-fn;
     return [m,n,a.length-n,a.length?(a.length-n)/a.length:0,fn,fr]});
   const tN=suma(filasCli,x=>x[1]), tRec=suma(filasCli,x=>x[2]);
   BLOQUES.clientes={arch:'Nuevos_vs_recurrentes',hoja:'Clientes',anchos:[10,22,24,16,24,26],
@@ -841,7 +909,7 @@ function armarBloques(cur,todos,mesesSel,lin,conPrecio){
 
   /* --- Frecuencia de compra --- */
   const cnt=new Map(); cur.forEach(p=>cnt.set(p.email,(cnt.get(p.email)||0)+1));
-  const gasto=new Map(); cur.forEach(p=>gasto.set(p.email,(gasto.get(p.email)||0)+p.facturacion));
+  const gasto=new Map(); cur.forEach(p=>gasto.set(p.email,(gasto.get(p.email)||0)+FAC(p)));
   const dist=[0,0,0,0,0,0], fac=[0,0,0,0,0,0];
   cnt.forEach((v,k)=>{const i=Math.min(v,6)-1;dist[i]++;fac[i]+=gasto.get(k)||0});
   BLOQUES.frecuencia={arch:'Frecuencia_de_compra',hoja:'Frecuencia',anchos:[22,24,16,22,22],
@@ -858,6 +926,7 @@ function cabecera(titulo){
     ['Período',`${MESES[A]} a ${MESES[B]}`],
     ['Filtro canal',FC||'Todos'],
     ['Filtro ciudad',FCI||'Todas'],
+    ['Modo de facturación',ETIQL()],
     ['Generado',new Date().toLocaleString('es-PY')],
     ['Fuente','Google Sheet Fuente General VTEX 2026 · gid '+GSHEET.gid],
     []];
@@ -870,7 +939,8 @@ function bajar(clave){
     const wb=XLSX.utils.book_new();
     hoja(wb,b.hoja,cabecera(b.hoja).concat(b.aoa),b.anchos);
     const f=FC?'_'+FC.replace(/\W+/g,''):'', c=FCI?'_'+FCI.replace(/\W+/g,''):'';
-    XLSX.writeFile(wb,`MiPortal_${b.arch}_${MESES[A]}_a_${MESES[B]}${f}${c}.xlsx`);
+    const mo=MODOFAC==='con'?'_conEnvio':'_sinEnvio';
+    XLSX.writeFile(wb,`MiPortal_${b.arch}_${MESES[A]}_a_${MESES[B]}${f}${c}${mo}.xlsx`);
   }catch(e){alert('No se pudo generar el Excel: '+(e.message||e))}
 }
 
@@ -888,8 +958,9 @@ function qcRender(){
     ['warn','Canjes / premios en ₲0 <small>fuera del ticket</small>',num(v.canjes)],
     ['warn','Filas de componente de combo <small>precio 0</small>',num(v.filasCero)],
     ['ok','Clientes únicos',num(v.clientes)],
-    ['ok','Facturación total',fmt(v.facturacion)],
-    ['ok','Ticket promedio',fmt(v.ticket)],
+    ['ok','Facturación con envío <small>Total Value</small>',fmt(v.facturacion)],
+    ['ok','Facturación sin envío <small>Total Value \u2212 Shipping Value</small>',fmt(v.facturacionSinEnvio)],
+    ['ok','Ticket promedio <small>con envío</small>',fmt(v.ticket)],
     ['ok','Envío total <small>sumado por fila</small>',fmt(v.envio)],
     ['ok','Descuento nominal',fmt(v.descuento)],
     ['ok','Rango de datos',v.desde+' \u2192 '+v.fechaMax]
@@ -898,7 +969,11 @@ function qcRender(){
   document.getElementById('foot').innerHTML=
     'Lectura en vivo del Google Sheet <b>Fuente General VTEX 2026</b> · gid '+GSHEET.gid+
     ' · '+num(v.filasCrudas)+' filas · pedidos <b>Faturado</b> y <b>Pronto para o manuseio</b> · '+
-    'facturación = Σ SKU Total Price + Σ Shipping Value por fila · descuento ya neteado en el precio.';
+    'modo activo: <b>facturación '+ETIQ()+'</b> = '+
+    (MODOFAC==='con'
+      ?'Total Value (producto + envío)'
+      :'Total Value \u2212 Σ Shipping Value del pedido')+
+    ' · descuento ya neteado en el precio.';
 }
 
 /* ===== controles ===== */
@@ -923,6 +998,11 @@ function controles(){
     btn.onclick=()=>{A=a;B=b;dz.value=a;hz.value=b;marcar(i);render()};cont.appendChild(btn)});
   document.getElementById('reset').onclick=()=>{A=0;B=n-1;FC='';FCI='';
     dz.value=0;hz.value=n-1;fc.value='';fci.value='';marcar(3);render()};
+  /* selector de modo de facturación: recalcula todo el tablero */
+  document.querySelectorAll('#segFac button').forEach(b=>b.onclick=()=>{
+    if(MODOFAC===b.dataset.v) return;
+    MODOFAC=b.dataset.v; qcRender(); render();
+  });
   document.querySelectorAll('#segProd button').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('#segProd button').forEach(x=>x.classList.remove('on'));
     b.classList.add('on');MODO=b.dataset.v;render()});
@@ -962,7 +1042,8 @@ function hoja(wb,nombre,aoa,anchos){
 }
 function nombreArchivo(){
   const f=FC?'_'+FC.replace(/\W+/g,''):'', c=FCI?'_'+FCI.replace(/\W+/g,''):'';
-  return `MiPortal_Ejecutivo_${MESES[A]}_a_${MESES[B]}${f}${c}.xlsx`;
+  const mo=MODOFAC==='con'?'_conEnvio':'_sinEnvio';
+  return `MiPortal_Ejecutivo_${MESES[A]}_a_${MESES[B]}${f}${c}${mo}.xlsx`;
 }
 function exportarTodo(){
   const btn=document.getElementById('btnXls');
@@ -976,7 +1057,7 @@ function exportarTodo(){
     /* --- Resumen / KPIs --- */
     const len=B-A+1, pa=A-len, hay=pa>=0;
     const prev=hay?conVenta(sel(pa,A-1)):[];
-    const f=suma(cur,p=>p.facturacion), fp=suma(prev,p=>p.facturacion);
+    const f=suma(cur,p=>FAC(p)), fp=suma(prev,p=>FAC(p));
     const desc=-suma(todos,p=>p.descuento);
     const rec=cur.filter(p=>!p.nuevo).length;
     const cl=new Set(cur.map(p=>p.email)).size;
@@ -986,11 +1067,12 @@ function exportarTodo(){
       ['Período',`${MESES[A]} a ${MESES[B]}`],
       ['Filtro canal',FC||'Todos'],
       ['Filtro ciudad',FCI||'Todas'],
+      ['Modo de facturación',ETIQL()],
       ['Generado',new Date().toLocaleString('es-PY')],
       ['Fuente','Google Sheet Fuente General VTEX 2026 · gid '+GSHEET.gid],
       [],
       ['Indicador','Valor','Período previo','Variación'],
-      ['Facturación',f,hay?fp:'',hay?va(f,fp):''],
+      [HFAC(),f,hay?fp:'',hay?va(f,fp):''],
       ['Pedidos',cur.length,hay?prev.length:'',hay?va(cur.length,prev.length):''],
       ['Ticket promedio',cur.length?f/cur.length:0,hay&&prev.length?fp/prev.length:'',
         hay&&prev.length?va(f/cur.length,fp/prev.length):''],
@@ -1002,7 +1084,10 @@ function exportarTodo(){
       ['Canjes / premios en ₲0',todos.filter(p=>p.canje).length,'',''],
       [],
       ['Reglas aplicadas'],
-      ['Facturación','Σ SKU Total Price + Σ Shipping Value por fila del pedido'],
+      ['Modo de facturación aplicado',ETIQL()],
+      ['Facturación con envío','Total Value = producto + envío (tal como lo paga el cliente)'],
+      ['Facturación sin envío','Total Value − Σ Shipping Value del pedido'],
+      ['Facturación de producto','siempre sin envío: el envío no se atribuye a un SKU en la fuente'],
       ['Descuento','ya neteado dentro del precio de venta; no se resta'],
       ['Envío','viene prorrateado por fila: se suma, no se toma de una sola fila'],
       ['Estados válidos',ESTADOS_VALIDOS.join(' / ')],
@@ -1010,10 +1095,10 @@ function exportarTodo(){
     ],[38,20,18,14]);
 
     /* --- Mensual --- */
-    hoja(wb,'Mensual',[['Mes','Pedidos','Facturación','Ticket promedio','Clientes únicos',
+    hoja(wb,'Mensual',[['Mes','Pedidos',HFAC(),'Ticket promedio','Clientes únicos',
       'Nuevos','Recurrentes','Envío','Descuento nominal','Canjes ₲0']].concat(
       mesesSel.map(m=>{const a=cur.filter(p=>p.mes===m), t=todos.filter(p=>p.mes===m);
-        const ff=suma(a,p=>p.facturacion);
+        const ff=suma(a,p=>FAC(p));
         return [m,a.length,ff,a.length?ff/a.length:0,new Set(a.map(p=>p.email)).size,
           a.filter(p=>p.nuevo).length,a.filter(p=>!p.nuevo).length,
           suma(t,p=>p.envio),-suma(t,p=>p.descuento),t.filter(p=>p.canje).length]})),
@@ -1021,33 +1106,33 @@ function exportarTodo(){
 
     /* --- Semanal --- */
     const sm=new Map();
-    cur.forEach(p=>{const k=semanaDe(p.fecha);const v=sm.get(k)||{f:0,p:0};v.f+=p.facturacion;v.p++;sm.set(k,v)});
-    hoja(wb,'Semanal',[['Semana ISO','Pedidos','Facturación','Ticket promedio']].concat(
+    cur.forEach(p=>{const k=semanaDe(p.fecha);const v=sm.get(k)||{f:0,p:0};v.f+=FAC(p);v.p++;sm.set(k,v)});
+    hoja(wb,'Semanal',[['Semana ISO','Pedidos',HFAC(),'Ticket promedio']].concat(
       [...sm.keys()].sort().map(k=>{const v=sm.get(k);return [k,v.p,v.f,v.p?v.f/v.p:0]})),[14,10,16,16]);
 
     /* --- Canales --- */
     const baseCan=conVenta(sel(A,B,'canal'));
     const cm=new Map();
-    baseCan.forEach(p=>{const v=cm.get(p.canal)||{p:0,f:0,n:0};v.p++;v.f+=p.facturacion;
+    baseCan.forEach(p=>{const v=cm.get(p.canal)||{p:0,f:0,n:0};v.p++;v.f+=FAC(p);
       if(p.nuevo)v.n++;cm.set(p.canal,v)});
     const totCan=suma([...cm.values()],v=>v.f);
-    hoja(wb,'Canales',[['Canal','Pedidos','Facturación','Ticket','Participación','Pedidos de clientes nuevos']].concat(
+    hoja(wb,'Canales',[['Canal','Pedidos',HFAC(),'Ticket','Participación','Pedidos de clientes nuevos']].concat(
       [...cm.entries()].sort((a,b)=>b[1].f-a[1].f).map(([k,v])=>
         [k,v.p,v.f,v.p?v.f/v.p:0,totCan?v.f/totCan:0,v.n])),[22,10,16,14,14,26]);
 
     /* --- Ciudades --- */
     const cim=new Map();
     conVenta(sel(A,B,'ciudad')).forEach(p=>{const v=cim.get(p.ciudad)||{p:0,f:0,d:p.depto};
-      v.p++;v.f+=p.facturacion;cim.set(p.ciudad,v)});
+      v.p++;v.f+=FAC(p);cim.set(p.ciudad,v)});
     const totCiu=suma([...cim.values()],v=>v.f);
-    hoja(wb,'Ciudades',[['Ciudad','Departamento','Pedidos','Facturación','Ticket','Participación']].concat(
+    hoja(wb,'Ciudades',[['Ciudad','Departamento','Pedidos',HFAC(),'Ticket','Participación']].concat(
       [...cim.entries()].sort((a,b)=>b[1].f-a[1].f).map(([k,v])=>
         [k,v.d,v.p,v.f,v.p?v.f/v.p:0,totCiu?v.f/totCiu:0])),[20,18,10,16,14,14]);
 
     /* --- Medios de pago --- */
     const pm=new Map();
-    cur.forEach(p=>{const v=pm.get(p.pago)||{p:0,f:0};v.p++;v.f+=p.facturacion;pm.set(p.pago,v)});
-    hoja(wb,'Medios de pago',[['Medio de pago','Pedidos','Facturación','Ticket','Participación pedidos']].concat(
+    cur.forEach(p=>{const v=pm.get(p.pago)||{p:0,f:0};v.p++;v.f+=FAC(p);pm.set(p.pago,v)});
+    hoja(wb,'Medios de pago',[['Medio de pago','Pedidos',HFAC(),'Ticket','Participación pedidos']].concat(
       [...pm.entries()].sort((a,b)=>b[1].p-a[1].p).map(([k,v])=>
         [k,v.p,v.f,v.p?v.f/v.p:0,cur.length?v.p/cur.length:0])),[26,10,16,14,20]);
 
@@ -1057,7 +1142,7 @@ function exportarTodo(){
       v.f+=o._precio;v.u+=o._unid;sm2.set(k,v)});
     const totProd=suma([...sm2.values()],v=>v.f);
     let acu=0;
-    hoja(wb,'Productos facturación',[['SKU','Retornable','Facturación','Unidades vendidas',
+    hoja(wb,'Productos facturación',[['SKU','Retornable','Facturación de producto (sin envío)','Unidades vendidas',
       'Ticket por unidad','Participación','% acumulado']].concat(
       [...sm2.entries()].sort((a,b)=>b[1].f-a[1].f).map(([k,v])=>{acu+=v.f;
         return [k,v.ret?'Sí':'No',v.f,v.u,v.u?v.f/v.u:0,totProd?v.f/totProd:0,totProd?acu/totProd:0]})),
@@ -1081,7 +1166,7 @@ function exportarTodo(){
     /* --- Promociones --- */
     const pr=new Map();
     todos.forEach(p=>p.promos.forEach(k=>{const v=pr.get(k)||{p:0,d:0,f:0};
-      v.p++;v.d+=-p.descuento;v.f+=p.facturacion;pr.set(k,v)}));
+      v.p++;v.d+=-p.descuento;v.f+=FAC(p);pr.set(k,v)}));
     hoja(wb,'Promociones',[['Mecánica','Pedidos','Descuento nominal','Facturación asociada',
       'Descuento por pedido']].concat(
       [...pr.entries()].sort((a,b)=>b[1].p-a[1].p).map(([k,v])=>
@@ -1090,8 +1175,8 @@ function exportarTodo(){
     /* --- Cupones --- */
     const cu=new Map();
     cur.filter(p=>p.cupon).forEach(p=>{const v=cu.get(p.cupon)||{p:0,f:0};
-      v.p++;v.f+=p.facturacion;cu.set(p.cupon,v)});
-    hoja(wb,'Cupones',[['Cupón','Pedidos','Facturación','Ticket']].concat(
+      v.p++;v.f+=FAC(p);cu.set(p.cupon,v)});
+    hoja(wb,'Cupones',[['Cupón','Pedidos',HFAC(),'Ticket']].concat(
       [...cu.entries()].sort((a,b)=>b[1].p-a[1].p).map(([k,v])=>
         [k,v.p,v.f,v.p?v.f/v.p:0])),[32,10,16,14]);
 
@@ -1107,11 +1192,11 @@ function exportarTodo(){
 
     /* --- Detalle --- */
     hoja(wb,'Detalle pedidos',[['Pedido','Fecha','Mes','Email','Ciudad','Departamento','Canal',
-      'Medio de pago','Cupón','Promociones','Facturación','Envío','Descuento nominal',
+      'Medio de pago','Cupón','Promociones',HFAC(),'Envío','Descuento nominal',
       'Líneas','Cliente nuevo','Canje ₲0']].concat(
       todos.slice().sort((a,b)=>a.fecha<b.fecha?-1:1).map(p=>
         [p.id,p.fecha,p.mes,p.email,p.ciudad,p.depto,p.canal,p.pago,p.cupon,p.promos.join(' | '),
-         p.facturacion,p.envio,-p.descuento,p.filas,p.nuevo?'Sí':'No',p.canje?'Sí':'No'])),
+         FAC(p),p.envio,-p.descuento,p.filas,p.nuevo?'Sí':'No',p.canje?'Sí':'No'])),
       [22,12,10,30,18,16,18,22,18,40,14,12,18,8,14,10]);
 
     XLSX.writeFile(wb,nombreArchivo());

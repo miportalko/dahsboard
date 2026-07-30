@@ -184,13 +184,21 @@
   .xls:hover{filter:brightness(1.07)}
   .xls:disabled{opacity:.6;cursor:default}
 
+  /* ===== Proyección: mini KPIs ===== */
+  .proy-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0 14px}
+  .pk{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+  .pk .l{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  .pk .v{font-size:17px;font-weight:800;margin-top:2px;letter-spacing:-.3px}
+  .pk .d{font-size:11px;font-weight:600;margin-top:2px;color:var(--muted)}
+  .pk .d.up{color:var(--ok)}.pk .d.dn{color:var(--bad)}
+  @media(max-width:900px){.proy-kpis{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 <div id="loadOverlay">
   <div class="load-card">
     <div class="spinner"></div>
-    <div class="load-title">Leyendo el Google Sheet en vivo…</div>
+    <div class="load-title">Leyendo los Google Sheets en vivo…</div>
     <div class="load-sub" id="loadSub">Conectando…</div>
   </div>
 </div>
@@ -267,6 +275,31 @@
         <p class="hint">Detecta quiebres que el corte mensual esconde</p></div>
         <button class="exp-btn" onclick="bajar('semanal')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cSem"></canvas></div></div>
+  </div>
+
+  <div class="section-head">
+    <h2><span class="dot"></span>2026 vs. 2025</h2>
+    <span class="note" id="aviso25"></span>
+  </div>
+  <div class="grid g2">
+    <div class="panel">
+      <div class="ph"><div><h2><span class="dot"></span>Facturación mes a mes</h2>
+        <p class="hint" id="hintYoY">Rojo = 2026 · gris = 2025 · rosado = mes 2026 en curso</p></div>
+        <button class="exp-btn" onclick="bajar('yoy')">&#8681; Excel</button></div>
+      <div class="cwrap alto"><canvas id="cYoY"></canvas></div></div>
+    <div class="panel">
+      <div class="ph"><div><h2><span class="dot"></span>Detalle comparativo</h2>
+        <p class="hint">Variación calculada sólo donde hay dato en los dos años</p></div></div>
+      <div class="tscroll" id="tYoY"></div></div>
+  </div>
+  <div class="grid">
+    <div class="panel">
+      <div class="ph"><div><h2><span class="dot"></span>Proyección de cierre 2026</h2>
+        <p class="hint">Estimación calculada, no dato de la fuente · respeta canal, ciudad y modo de facturación</p></div>
+        <button class="exp-btn" onclick="bajar('proyeccion')">&#8681; Excel</button></div>
+      <div class="proy-kpis" id="proyKpis"></div>
+      <div class="cwrap alto"><canvas id="cProy"></canvas></div>
+      <p class="hint" id="notaProy" style="margin-top:10px"></p></div>
   </div>
 
   <div class="section-head"><h2><span class="dot"></span>De dónde viene la venta</h2></div>
@@ -350,6 +383,12 @@ const GSHEET = {
   gid: '2098720537',                                      // hoja Base
   gidCanceladas: ''                                       // opcional: gid de Canceladas_Probables
 };
+/* Fuente del año anterior · debe tener las mismas columnas que la 2026 */
+const GSHEET25 = {
+  id:  '1PfSeehY2EFMVU3VZfG0ICIHT3GZNnjIDlZbkbKn5Bxo',   // Fuente VTEX General 2025 — NO MODIFICAR
+  gid: '',        // si queda vacío, se busca la hoja por nombre y después gid 0
+  sheet: 'Base'   // nombre de la pestaña con los pedidos
+};
 /* Columnas que se piden al Sheet. Si alguien reordena columnas en la hoja,
    el select por letra falla y el código cae automáticamente a traer todo
    y detectar por nombre de encabezado (más lento, pero no se rompe). */
@@ -374,9 +413,10 @@ function normCreationDate(s){
   if(m){const p=n=>String(n).padStart(2,'0');return m[3]+'-'+p(m[2])+'-'+p(m[1])+(m[4]||'')}
   return s;
 }
-async function gvizRaw(gid, tq){
-  let url='https://docs.google.com/spreadsheets/d/'+GSHEET.id+'/gviz/tq?gid='+gid+
-          '&tqx=out:json&headers=1&_='+Date.now();
+async function gvizRaw(sheetId, loc, tq){
+  let url='https://docs.google.com/spreadsheets/d/'+sheetId+'/gviz/tq?tqx=out:json&headers=1&_='+Date.now();
+  if(loc&&loc.gid!==undefined&&loc.gid!=='') url+='&gid='+loc.gid;
+  else if(loc&&loc.sheet) url+='&sheet='+encodeURIComponent(loc.sheet);
   if(tq) url+='&tq='+encodeURIComponent('select '+tq);
   const res=await fetch(url,{cache:'no-store'});
   if(!res.ok) throw new Error('HTTP '+res.status+' — ¿el Sheet está compartido como "cualquiera con el enlace"?');
@@ -406,19 +446,23 @@ async function gvizRaw(gid, tq){
   });
   return {headers,rows};
 }
-async function traerBase(){
-  paso('Pidiendo solo las 16 columnas necesarias…');
-  let r;
-  try{
-    r=await gvizRaw(GSHEET.gid, SELECT);
-    const faltan=REQUERIDAS.filter(c=>!r.headers.includes(c));
-    if(faltan.length) throw new Error('columnas movidas: '+faltan.join(', '));
-  }catch(e){
-    paso('El select por letra no coincidió. Trayendo la hoja completa…');
-    r=await gvizRaw(GSHEET.gid, null);
-    const faltan=REQUERIDAS.filter(c=>!r.headers.includes(c));
-    if(faltan.length) throw new Error('La hoja no tiene estas columnas: '+faltan.join(', '));
+async function traerFuente(cfg, etiqueta, locs){
+  let r=null, err=null;
+  for(const loc of locs){
+    try{
+      try{
+        r=await gvizRaw(cfg.id, loc, SELECT);
+        const faltan=REQUERIDAS.filter(c=>!r.headers.includes(c));
+        if(faltan.length) throw new Error('columnas movidas: '+faltan.join(', '));
+      }catch(e1){
+        r=await gvizRaw(cfg.id, loc, null);
+        const faltan=REQUERIDAS.filter(c=>!r.headers.includes(c));
+        if(faltan.length) throw new Error(etiqueta+': la hoja no tiene estas columnas: '+faltan.join(', '));
+      }
+      err=null; break;
+    }catch(e){ err=e; r=null; }
   }
+  if(!r) throw err||new Error('No se pudo leer '+etiqueta);
   r.rows.forEach(o=>{
     if(o['Order']!=null) o['Order']=String(o['Order']).trim();
     if(o['Creation Date']) o['Creation Date']=normCreationDate(o['Creation Date']);
@@ -444,10 +488,18 @@ const nOf=v=>{const n=typeof v==='number'?v:parseFloat(String(v).replace(/[^\d.-
 
 /* ===== modelo ===== */
 let LINEAS=[], PEDIDOS=[], MESES=[], QC={};
-function construir(rows){
+let HAY25=false, ERR25='';
+function construir(rows, rows25){
   paso('Reconstruyendo pedidos y aplicando las reglas de la fuente…');
-  const filasCrudas=rows.length;
-  const lineas=rows.filter(o=>ESTADOS_VALIDOS.includes(String(o['Status']).trim()));
+  rows25=rows25||[];
+  const filasCrudas=rows.length, filas25Crudas=rows25.length;
+  const lineas26=rows.filter(o=>ESTADOS_VALIDOS.includes(String(o['Status']).trim()));
+  const lineas25Todas=rows25.filter(o=>ESTADOS_VALIDOS.includes(String(o['Status']).trim()));
+  /* si un pedido aparece en ambas fuentes se toma la versión 2026 (foto más nueva) */
+  const ordenes26=new Set(lineas26.map(o=>o['Order']).filter(Boolean));
+  const lineas25=lineas25Todas.filter(o=>!ordenes26.has(o['Order']));
+  const dupCruz=new Set(lineas25Todas.filter(o=>ordenes26.has(o['Order'])).map(o=>o['Order'])).size;
+  const lineas=lineas25.concat(lineas26);
   const mapa=new Map();
   lineas.forEach(o=>{
     const id=o['Order']; if(!id) return;
@@ -477,15 +529,20 @@ function construir(rows){
   });
   const pedidos=[...mapa.values()];
   pedidos.forEach(p=>{p.canje=p.facturacion<=0});
-  // primera compra del año por email
+  // primera compra del año por email (por año, para no mezclar 2025 con 2026)
   const prim=new Map();
-  pedidos.forEach(p=>{if(!p.email)return;const v=prim.get(p.email);if(!v||p.fecha<v)prim.set(p.email,p.fecha)});
-  pedidos.forEach(p=>p.nuevo=(prim.get(p.email)===p.fecha));
+  pedidos.forEach(p=>{if(!p.email)return;const k=p.mes.slice(0,4)+'|'+p.email;
+    const v=prim.get(k);if(!v||p.fecha<v)prim.set(k,p.fecha)});
+  pedidos.forEach(p=>p.nuevo=(prim.get(p.mes.slice(0,4)+'|'+p.email)===p.fecha));
 
   LINEAS=lineas; PEDIDOS=pedidos;
   MESES=[...new Set(pedidos.map(p=>p.mes))].filter(Boolean).sort();
   const conVenta=pedidos.filter(p=>!p.canje);
-  QC={filasCrudas, filas:lineas.length, pedidos:pedidos.length, pedidosVenta:conVenta.length,
+  const ped25=pedidos.filter(p=>p.mes.slice(0,4)==='2025');
+  QC={filasCrudas, filas25Crudas, dupCruz,
+      pedidos25:ped25.length,
+      fechaMax26:pedidos.filter(p=>p.mes.slice(0,4)==='2026').reduce((m,p)=>p.fecha>m?p.fecha:m,''),
+      filas:lineas.length, pedidos:pedidos.length, pedidosVenta:conVenta.length,
       canjes:pedidos.length-conVenta.length,
       filasCero:lineas.filter(o=>o._precio===0).length,
       clientes:new Set(pedidos.map(p=>p.email)).size,
@@ -535,7 +592,7 @@ const corta=(s,n)=>s.length>n?s.slice(0,n)+'\u2026':s;
 const semanaDe=f=>{const d=new Date(f+'T00:00:00Z');const t=new Date(d);
   t.setUTCDate(t.getUTCDate()+4-(t.getUTCDay()||7));
   const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));
-  return 'S'+String(Math.ceil(((t-y0)/864e5+1)/7)).padStart(2,'0')};
+  return String(t.getUTCFullYear()).slice(2)+'-S'+String(Math.ceil(((t-y0)/864e5+1)/7)).padStart(2,'0')};
 
 /* filtros: ahora SÍ se cruzan entre sí, porque tenemos el detalle en memoria */
 function sel(a,b,ignorar){
@@ -736,7 +793,149 @@ function render(){
 
   tablasPeriodo(cur,todos);
   armarBloques(cur,todos,mesesSel,lin,conPrecio);
+  renderYoY();
+  renderProy();
   notaParcial();
+}
+
+/* ============================================================
+   2026 vs 2025 · comparativo mes a mes y proyección de cierre
+   Usan los años completos (no el rango Desde/Hasta) y respetan
+   canal, ciudad y modo de facturación.
+   ============================================================ */
+const MESES_CORTOS=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+function pedidosAnio(y){
+  return PEDIDOS.filter(p=>p.mes.slice(0,4)===y&&!p.canje&&
+    (!FC||p.canal===FC)&&(!FCI||p.ciudad===FCI));
+}
+function renderYoY(){
+  const aviso=document.getElementById('aviso25');
+  if(!document.getElementById('cYoY')) return;
+  const filtro=(FC?` · canal ${FC}`:'')+(FCI?` · ciudad ${FCI}`:'');
+  if(!HAY25){
+    aviso.textContent='Fuente 2025 no disponible'+(ERR25?': '+ERR25:'')+' — no se puede armar el comparativo.';
+    if(charts.cYoY){charts.cYoY.destroy();delete charts.cYoY}
+    document.getElementById('tYoY').innerHTML='<p class="hint">Falta la fuente 2025 para comparar.</p>';
+    delete BLOQUES.yoy; return;
+  }
+  aviso.textContent='Años completos'+filtro+' · modo: facturación '+ETIQ();
+  const p25=pedidosAnio('2025'), p26=pedidosAnio('2026');
+  const f25=[],f26=[],n25=[],n26=[];
+  for(let i=1;i<=12;i++){const mm=String(i).padStart(2,'0');
+    const a=p25.filter(p=>p.mes==='2025-'+mm), b=p26.filter(p=>p.mes==='2026-'+mm);
+    f25.push(suma(a,x=>FAC(x))); f26.push(suma(b,x=>FAC(x)));
+    n25.push(a.length); n26.push(b.length);}
+  const mParcial=(QC.fechaMax26||'').slice(5,7);
+  draw('cYoY',{type:'bar',data:{labels:MESES_CORTOS,datasets:[
+    {label:'2025',data:f25,backgroundColor:C.gris,borderRadius:4,maxBarThickness:20},
+    {label:'2026',data:f26,borderRadius:4,maxBarThickness:20,
+     backgroundColor:MESES_CORTOS.map((_,i)=>String(i+1).padStart(2,'0')===mParcial?C.rojoClaro:C.red)}]},
+    options:{...BASE,plugins:{...BASE.plugins,tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y)}}},
+      scales:{...BASE.scales,y:{...BASE.scales.y,ticks:{font:F11,callback:fmtK}}}}});
+  /* tabla + acumulado comparable al mismo día del año */
+  const corte=(QC.fechaMax26||'').slice(5);           // 'MM-DD'
+  const f25c=suma(p25.filter(p=>p.fecha.slice(5)<=corte),p=>FAC(p));
+  const f26c=suma(p26,p=>FAC(p));
+  const t25=suma(p25,p=>FAC(p));
+  const filas=[];
+  for(let i=0;i<12;i++){
+    if(!f25[i]&&!f26[i]&&!n25[i]&&!n26[i]) continue;
+    const parc=String(i+1).padStart(2,'0')===mParcial;
+    const v=(f25[i]>0&&(f26[i]>0||n26[i]>0))?f26[i]/f25[i]-1:null;
+    filas.push([MESES_CORTOS[i]+(parc?' *':''),f25[i],f26[i],v,n25[i],n26[i]]);
+  }
+  const vAc=f25c>0?f26c/f25c-1:null;
+  const celVar=v=>v===null?'<td>—</td>':
+    `<td style="font-weight:700;color:${Math.abs(v)<.005?'var(--muted)':v>0?'var(--ok)':'var(--bad)'}">${pct(v*100)}</td>`;
+  document.getElementById('tYoY').innerHTML=
+    '<table><thead><tr><th>Mes</th><th>2025</th><th>2026</th><th>Var.</th><th>Ped. 25</th><th>Ped. 26</th></tr></thead><tbody>'+
+    filas.map(r=>`<tr><td>${r[0]}</td><td>${fmt(r[1])}</td><td>${r[2]?fmt(r[2]):'—'}</td>`+
+      celVar(r[3])+`<td>${num(r[4])}</td><td>${r[5]?num(r[5]):'—'}</td></tr>`).join('')+
+    '</tbody><tfoot>'+
+    `<tr><td class="tt">Acum. comparable al ${corte.slice(3)}/${corte.slice(0,2)}</td>`+
+    `<td>${fmt(f25c)}</td><td>${fmt(f26c)}</td>${celVar(vAc)}<td colspan="2"></td></tr>`+
+    `<tr><td class="tt">Total 2025 completo</td><td>${fmt(t25)}</td><td>—</td><td>—</td>`+
+    `<td>${num(p25.length)}</td><td>${num(p26.length)}</td></tr>`+
+    '</tfoot></table>'+
+    '<p class="hint" style="margin-top:8px">* mes en curso: la fuente 2026 corta el '+
+    (QC.fechaMax26?QC.fechaMax26.slice(8,10)+'/'+QC.fechaMax26.slice(5,7):'—')+'.</p>';
+  BLOQUES.yoy={arch:'2026_vs_2025',hoja:'2026 vs 2025',anchos:[12,18,18,12,10,10],
+    aoa:[['Mes','Facturación 2025','Facturación 2026','Variación','Pedidos 2025','Pedidos 2026']]
+      .concat(filas.map(r=>[r[0],r[1],r[2],r[3]===null?'':r[3],r[4],r[5]]))
+      .concat([['Acumulado comparable (mismo día del año)',f25c,f26c,vAc===null?'':vAc,'',''],
+               ['Total 2025 completo',t25,'','',p25.length,''],
+               [],['* mes en curso','la fuente 2026 corta el '+(QC.fechaMax26||'—')]])};
+}
+function renderProy(){
+  const box=document.getElementById('proyKpis'); if(!box) return;
+  const nota=document.getElementById('notaProy');
+  const p26=pedidosAnio('2026');
+  if(!p26.length||!QC.fechaMax26){
+    box.innerHTML=''; nota.textContent='Sin pedidos 2026 para el filtro activo: no hay nada que proyectar.';
+    if(charts.cProy){charts.cProy.destroy();delete charts.cProy}
+    delete BLOQUES.proyeccion; return;
+  }
+  const fmax=QC.fechaMax26;
+  const y=+fmax.slice(0,4), mo=+fmax.slice(5,7), d=+fmax.slice(8,10);
+  const doy=Math.round((Date.UTC(y,mo-1,d)-Date.UTC(y,0,0))/864e5);
+  const f26c=suma(p26,p=>FAC(p));
+  const ritmo=f26c/doy*365;
+  let factor=null, est=null, t25=0, f25c=0, f25m=[];
+  if(HAY25){
+    const p25=pedidosAnio('2025');
+    t25=suma(p25,p=>FAC(p));
+    f25c=suma(p25.filter(p=>p.fecha.slice(5)<=fmax.slice(5)),p=>FAC(p));
+    for(let i=1;i<=12;i++) f25m.push(suma(p25.filter(p=>p.mes==='2025-'+String(i).padStart(2,'0')),x=>FAC(x)));
+    if(f25c>0){factor=f26c/f25c; est=t25*factor;}
+  }
+  const card=(l,v,d,cls)=>`<div class="pk"><div class="l">${l}</div><div class="v">${v}</div>`+
+    (d?`<div class="d ${cls||''}">${d}</div>`:'')+'</div>';
+  const dvs=v=>t25>0?pct((v/t25-1)*100)+' vs. total 2025':'';
+  box.innerHTML=
+    card('Real 2026 acumulado',fmt(f26c),'al '+fmax.slice(8,10)+'/'+fmax.slice(5,7)+' · '+doy+' días')+
+    card('Proyección por ritmo diario',fmt(ritmo),dvs(ritmo),t25>0?(ritmo>=t25?'up':'dn'):'')+
+    (est!==null
+      ?card('Proyección por estacionalidad 2025',fmt(est),dvs(est),est>=t25?'up':'dn')
+      :card('Proyección por estacionalidad 2025','—',HAY25?'sin facturación 2025 comparable para este filtro':'fuente 2025 no disponible'))+
+    card('Total 2025 completo',t25>0?fmt(t25):'—',HAY25?'referencia año anterior':'fuente 2025 no disponible');
+  /* gráfico: real por mes + estimado a completar con la distribución mensual 2025 */
+  const f26m=[];
+  for(let i=1;i<=12;i++) f26m.push(suma(p26.filter(p=>p.mes==='2026-'+String(i).padStart(2,'0')),x=>FAC(x)));
+  const datasets=[{label:'Real 2026',data:f26m,backgroundColor:f26m.map((_,i)=>i+1===mo?C.rojoClaro:C.red),
+    borderRadius:4,maxBarThickness:22,stack:'p'}];
+  if(factor!==null){
+    const extra=f26m.map((v,i)=>{
+      if(i+1<mo) return 0;
+      const e=f25m[i]*factor;
+      return i+1===mo?Math.max(0,e-v):e;});
+    datasets.push({label:'Estimado (estacionalidad 2025)',data:extra,
+      backgroundColor:'rgba(251,192,186,.55)',borderColor:C.rojoClaro,borderWidth:1,
+      borderRadius:4,maxBarThickness:22,stack:'p'});
+  }
+  if(HAY25) datasets.push({label:'2025',data:f25m,type:'line',borderColor:C.gris,backgroundColor:C.gris,
+    borderWidth:2,borderDash:[5,4],tension:.25,pointRadius:2});
+  draw('cProy',{type:'bar',data:{labels:MESES_CORTOS,datasets},
+    options:{...BASE,plugins:{...BASE.plugins,tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y)}}},
+      scales:{x:{stacked:true,grid:{display:false},border:{display:false},ticks:{font:F11}},
+        y:{stacked:true,grid:{color:'#F0F0F0'},border:{display:false},ticks:{font:F11,callback:fmtK}}}}});
+  nota.innerHTML='<b>Ritmo diario</b> = facturación 2026 acumulada ÷ '+doy+' días × 365. '+
+    '<b>Estacionalidad 2025</b> = total 2025 × (2026 acumulado ÷ 2025 acumulado al mismo día del año). '+
+    'Los meses estimados reparten con la distribución mensual real de 2025. '+
+    'Ninguna proyección modifica la fuente: son cálculos sobre los datos existentes.';
+  BLOQUES.proyeccion={arch:'Proyeccion_2026',hoja:'Proyección 2026',anchos:[40,20,20],
+    aoa:[['Proyección de cierre 2026','',''],
+         ['Corte de datos',fmax,''],
+         ['Días transcurridos',doy,''],
+         ['Real 2026 acumulado',f26c,''],
+         ['Proyección por ritmo diario',ritmo,t25>0?ritmo/t25-1:''],
+         ['Proyección por estacionalidad 2025',est!==null?est:'sin base comparable',est!==null&&t25>0?est/t25-1:''],
+         ['Facturación 2025 acumulada al mismo día',f25c,''],
+         ['Total 2025 completo',t25,''],
+         [],['Mes','Real 2026','Estimado (estacionalidad 2025)']]
+      .concat(MESES_CORTOS.map((m,i)=>{
+        const e=factor!==null?(i+1<mo?'':(i+1===mo?Math.max(0,f25m[i]*factor-f26m[i]):f25m[i]*factor)):'';
+        return [m,f26m[i],e];}))
+      .concat([[],['Método','Estimación calculada sobre datos existentes; no es dato de la fuente']])};
 }
 
 /* aviso de mes incompleto, lo único que se rescata del bloque de hallazgos */
@@ -928,7 +1127,7 @@ function cabecera(titulo){
     ['Filtro ciudad',FCI||'Todas'],
     ['Modo de facturación',ETIQL()],
     ['Generado',new Date().toLocaleString('es-PY')],
-    ['Fuente','Google Sheet Fuente General VTEX 2026 · gid '+GSHEET.gid],
+    ['Fuente','Fuente General VTEX 2026 (gid '+GSHEET.gid+')'+(HAY25?' + Fuente VTEX General 2025':'')],
     []];
 }
 
@@ -963,12 +1162,17 @@ function qcRender(){
     ['ok','Ticket promedio <small>con envío</small>',fmt(v.ticket)],
     ['ok','Envío total <small>sumado por fila</small>',fmt(v.envio)],
     ['ok','Descuento nominal',fmt(v.descuento)],
-    ['ok','Rango de datos',v.desde+' \u2192 '+v.fechaMax]
+    ['ok','Rango de datos',v.desde+' \u2192 '+v.fechaMax],
+    ['ok','Filas leídas de la fuente 2025',num(v.filas25Crudas||0)],
+    [HAY25?'ok':'bad','Fuente 2025 '+(HAY25?'conectada':'no disponible'+(ERR25?' · '+ERR25:'')),
+      HAY25?num(v.pedidos25||0)+' pedidos':'\u2014'],
+    [(v.dupCruz||0)>0?'warn':'ok','Pedidos repetidos entre fuentes <small>se toma la versión 2026</small>',num(v.dupCruz||0)]
   ].map(([t,k,val])=>`<div class="qc-item ${t}"><span class="ic">${t==='ok'?'\u2713':'!'}</span>`+
     `<span>${k}</span><b>${val}</b></div>`).join('');
   document.getElementById('foot').innerHTML=
-    'Lectura en vivo del Google Sheet <b>Fuente General VTEX 2026</b> · gid '+GSHEET.gid+
-    ' · '+num(v.filasCrudas)+' filas · pedidos <b>Faturado</b> y <b>Pronto para o manuseio</b> · '+
+    'Lectura en vivo de <b>Fuente General VTEX 2026</b> (gid '+GSHEET.gid+', '+num(v.filasCrudas)+' filas)'+
+    (HAY25?' + <b>Fuente VTEX General 2025</b> ('+num(v.filas25Crudas||0)+' filas)':' · <b>fuente 2025 no disponible</b>')+
+    ' · pedidos <b>Faturado</b> y <b>Pronto para o manuseio</b> · '+
     'modo activo: <b>facturación '+ETIQ()+'</b> = '+
     (MODOFAC==='con'
       ?'Total Value (producto + envío)'
@@ -981,7 +1185,6 @@ function controles(){
   const dz=document.getElementById('desde'), hz=document.getElementById('hasta');
   dz.innerHTML=''; hz.innerHTML='';
   MESES.forEach((m,i)=>{dz.add(new Option(nomMes(m),i));hz.add(new Option(nomMes(m),i))});
-  A=0; B=MESES.length-1; dz.value=A; hz.value=B;
   dz.onchange=()=>{A=+dz.value;if(A>B){B=A;hz.value=B}marcar(-1);render()};
   hz.onchange=()=>{B=+hz.value;if(B<A){A=B;dz.value=A}marcar(-1);render()};
   const fc=document.getElementById('fcanal'), fci=document.getElementById('fciudad');
@@ -991,13 +1194,24 @@ function controles(){
   fc.onchange=()=>{FC=fc.value;render()};
   fci.onchange=()=>{FCI=fci.value;render()};
   const n=MESES.length;
+  const es26=m=>m.slice(0,4)==='2026', es25=m=>m.slice(0,4)==='2025';
+  const i26=MESES.findIndex(es26), hay26=i26>=0;
+  const a25=MESES.findIndex(es25);
+  const b25=(()=>{let j=-1;MESES.forEach((m,i)=>{if(es25(m))j=i});return j})();
   const P=[['Último mes',n-1,n-1],['3 meses',Math.max(0,n-3),n-1],
-    ['6 meses',Math.max(0,n-6),n-1],['Todo',0,n-1]];
+    ['6 meses',Math.max(0,n-6),n-1]];
+  if(hay26) P.push(['Año 2026',i26,n-1]);
+  if(a25>=0) P.push(['Año 2025',a25,b25]);
+  P.push(['Todo',0,n-1]);
+  /* vista por defecto: el año 2026 completo (o todo si no hay 2026) */
+  const DEF=hay26?{a:i26,b:n-1,i:P.findIndex(x=>x[0]==='Año 2026')}
+                 :{a:0,b:n-1,i:P.length-1};
+  A=DEF.a; B=DEF.b; dz.value=A; hz.value=B;
   const cont=document.getElementById('presets'); cont.innerHTML='';
   P.forEach(([t,a,b],i)=>{const btn=document.createElement('button');btn.className='chip';btn.textContent=t;
     btn.onclick=()=>{A=a;B=b;dz.value=a;hz.value=b;marcar(i);render()};cont.appendChild(btn)});
-  document.getElementById('reset').onclick=()=>{A=0;B=n-1;FC='';FCI='';
-    dz.value=0;hz.value=n-1;fc.value='';fci.value='';marcar(3);render()};
+  document.getElementById('reset').onclick=()=>{A=DEF.a;B=DEF.b;FC='';FCI='';
+    dz.value=A;hz.value=B;fc.value='';fci.value='';marcar(DEF.i);render()};
   /* selector de modo de facturación: recalcula todo el tablero */
   document.querySelectorAll('#segFac button').forEach(b=>b.onclick=()=>{
     if(MODOFAC===b.dataset.v) return;
@@ -1006,7 +1220,7 @@ function controles(){
   document.querySelectorAll('#segProd button').forEach(b=>b.onclick=()=>{
     document.querySelectorAll('#segProd button').forEach(x=>x.classList.remove('on'));
     b.classList.add('on');MODO=b.dataset.v;render()});
-  marcar(3);
+  marcar(DEF.i);
 }
 const marcar=i=>[...document.querySelectorAll('#presets button')]
   .forEach((b,j)=>b.classList.toggle('active',j===i));
@@ -1015,9 +1229,20 @@ const marcar=i=>[...document.querySelectorAll('#presets button')]
 const paso=t=>{const e=document.getElementById('loadSub');if(e)e.textContent=t};
 async function iniciar(){
   try{
-    const rows=await traerBase();
-    if(!rows.length) throw new Error('La hoja respondió sin filas. Verificá el gid.');
-    construir(rows);
+    paso('Leyendo las fuentes 2026 y 2025 en paralelo…');
+    const locs25=GSHEET25.gid?[{gid:GSHEET25.gid}]:[{sheet:GSHEET25.sheet||'Base'},{gid:'0'}];
+    const [r26,r25]=await Promise.allSettled([
+      traerFuente(GSHEET,'Fuente 2026',[{gid:GSHEET.gid}]),
+      traerFuente(GSHEET25,'Fuente 2025',locs25)
+    ]);
+    if(r26.status==='rejected') throw r26.reason;
+    const rows=r26.value;
+    if(!rows.length) throw new Error('La hoja 2026 respondió sin filas. Verificá el gid.');
+    let rows25=[];
+    HAY25=false; ERR25='';
+    if(r25.status==='fulfilled'&&r25.value.length){rows25=r25.value; HAY25=true;}
+    else ERR25=r25.status==='rejected'?String(r25.reason&&(r25.reason.message||r25.reason)):'la hoja respondió sin filas';
+    construir(rows,rows25);
     if(!MESES.length) throw new Error('No se pudo leer ninguna fecha válida en "Creation Date".');
     controles(); qcRender(); render();
     document.getElementById('loadOverlay').style.display='none';
@@ -1025,9 +1250,11 @@ async function iniciar(){
     document.getElementById('loadOverlay').style.display='none';
     const f=document.getElementById('fatal');
     f.style.display='block';
-    f.innerHTML='<b>No se pudieron cargar los datos.</b><br>'+String(e.message||e)+
-      '<br><br>Revisá que el Sheet esté compartido como “Cualquier persona con el enlace · Lector” '+
-      'y que el <code>gid</code> configurado ('+GSHEET.gid+') sea el de la hoja <b>Base</b>.';
+    f.innerHTML='<b>No se pudieron cargar los datos de la fuente 2026.</b><br>'+String(e.message||e)+
+      '<br><br>Revisá que los Sheets estén compartidos como “Cualquier persona con el enlace · Lector” '+
+      'y que el <code>gid</code> configurado ('+GSHEET.gid+') sea el de la hoja <b>Base</b>. '+
+      'La fuente 2025 se lee por nombre de pestaña (<b>'+(GSHEET25.sheet||'Base')+'</b>); '+
+      'si su pestaña se llama distinto, cargá el gid en <code>GSHEET25.gid</code>.';
   }
 }
 
@@ -1069,7 +1296,7 @@ function exportarTodo(){
       ['Filtro ciudad',FCI||'Todas'],
       ['Modo de facturación',ETIQL()],
       ['Generado',new Date().toLocaleString('es-PY')],
-      ['Fuente','Google Sheet Fuente General VTEX 2026 · gid '+GSHEET.gid],
+      ['Fuente','Fuente General VTEX 2026 (gid '+GSHEET.gid+')'+(HAY25?' + Fuente VTEX General 2025':'')],
       [],
       ['Indicador','Valor','Período previo','Variación'],
       [HFAC(),f,hay?fp:'',hay?va(f,fp):''],
@@ -1109,6 +1336,10 @@ function exportarTodo(){
     cur.forEach(p=>{const k=semanaDe(p.fecha);const v=sm.get(k)||{f:0,p:0};v.f+=FAC(p);v.p++;sm.set(k,v)});
     hoja(wb,'Semanal',[['Semana ISO','Pedidos',HFAC(),'Ticket promedio']].concat(
       [...sm.keys()].sort().map(k=>{const v=sm.get(k);return [k,v.p,v.f,v.p?v.f/v.p:0]})),[14,10,16,16]);
+
+    /* --- 2026 vs 2025 y proyección (si están armados) --- */
+    if(BLOQUES.yoy) hoja(wb,BLOQUES.yoy.hoja,BLOQUES.yoy.aoa,BLOQUES.yoy.anchos);
+    if(BLOQUES.proyeccion) hoja(wb,BLOQUES.proyeccion.hoja,BLOQUES.proyeccion.aoa,BLOQUES.proyeccion.anchos);
 
     /* --- Canales --- */
     const baseCan=conVenta(sel(A,B,'canal'));

@@ -75,7 +75,9 @@
   .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
   .panel h2{font-size:15px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
   .panel h2 .dot{width:8px;height:8px;border-radius:3px;background:var(--red)}
-  .panel .hint{font-size:12px;color:var(--muted);margin-top:2px;margin-bottom:14px}
+  .panel .hint{font-size:12px;color:var(--muted);margin-top:2px;margin-bottom:6px}
+  .cols{font-size:10.5px;color:var(--muted);margin-bottom:12px;line-height:1.9}
+  .cols code{font-family:ui-monospace,'SF Mono',Consolas,monospace;font-size:10px;background:#F4F4F5;border:1px solid var(--line);border-radius:4px;padding:1px 5px;white-space:nowrap}
   .ph{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
   .section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;
     flex-wrap:wrap;margin-top:18px;margin-bottom:-4px}
@@ -258,6 +260,7 @@
   </details>
 
   <div class="kpis" id="kpis"></div>
+  <p class="cols" style="margin-top:8px">Columnas de los KPIs: <code>Order</code> <code>Status</code> <code>Creation Date</code> <code>Total Value</code> <code>Shipping Value*</code> <code>Email</code> <code>Discounts Totals</code> &nbsp;·&nbsp; <b>*</b> <code>Shipping Value</code> se resta sólo en modo “sin envío” (Facturación = <code>Total Value</code> − Σ <code>Shipping Value</code> del pedido)</p>
   <p class="footnote" style="text-align:left;margin-top:10px" id="ctx"></p>
 
   <div class="section-head">
@@ -267,12 +270,12 @@
   <div class="grid g2">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Facturación y ticket por mes</h2>
-        <p class="hint" id="hintEvol">Barras = facturación · línea = ticket promedio</p></div>
+        <p class="hint" id="hintEvol">Barras = facturación · línea = ticket promedio</p><p class="cols">Columnas: <code>Creation Date</code> <code>Order</code> <code>Total Value</code> <code>Shipping Value*</code></p></div>
         <button class="exp-btn" onclick="bajar('mensual')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cEvol"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Ritmo semanal</h2>
-        <p class="hint">Detecta quiebres que el corte mensual esconde</p></div>
+        <p class="hint">Detecta quiebres que el corte mensual esconde</p><p class="cols">Columnas: <code>Creation Date</code> <code>Order</code> <code>Total Value</code> <code>Shipping Value*</code></p></div>
         <button class="exp-btn" onclick="bajar('semanal')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cSem"></canvas></div></div>
   </div>
@@ -284,18 +287,18 @@
   <div class="grid g2">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Facturación mes a mes</h2>
-        <p class="hint" id="hintYoY">Rojo = 2026 · gris = 2025 · rosado = mes 2026 en curso</p></div>
+        <p class="hint" id="hintYoY">Rojo = 2026 · gris = 2025 · rosado = mes 2026 en curso</p><p class="cols">Columnas: <code>Creation Date</code> <code>Order</code> <code>Total Value</code> <code>Shipping Value*</code></p></div>
         <button class="exp-btn" onclick="bajar('yoy')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cYoY"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Detalle comparativo</h2>
-        <p class="hint">Variación calculada sólo donde hay dato en los dos años</p></div></div>
+        <p class="hint">Variación calculada sólo donde hay dato en los dos años</p><p class="cols">Columnas: <code>Creation Date</code> <code>Order</code> <code>Total Value</code> <code>Shipping Value*</code></p></div></div>
       <div class="tscroll" id="tYoY"></div></div>
   </div>
   <div class="grid">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Proyección de cierre 2026</h2>
-        <p class="hint">Estimación calculada, no dato de la fuente · respeta canal, ciudad y modo de facturación</p></div>
+        <p class="hint">Estimación calculada, no dato de la fuente · respeta canal, ciudad y modo de facturación</p><p class="cols">Columnas: <code>Creation Date</code> <code>Order</code> <code>Total Value</code> <code>Shipping Value*</code></p></div>
         <button class="exp-btn" onclick="bajar('proyeccion')">&#8681; Excel</button></div>
       <div class="proy-kpis" id="proyKpis"></div>
       <div class="cwrap alto"><canvas id="cProy"></canvas></div>
@@ -306,23 +309,23 @@
   <div class="grid g2">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Canales</h2>
-        <p class="hint">Origen UTM del pedido · el resto entra como “Sin UTM”</p></div>
+        <p class="hint">Origen UTM del pedido · el resto entra como “Sin UTM”</p><p class="cols">Columnas: <code>UtmSource</code> <code>Order</code> <code>Total Value</code> <code>Email</code></p></div>
         <button class="exp-btn" onclick="bajar('canales')">&#8681; Excel</button></div>
       <div class="tscroll" id="tCanal"></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Participación por canal</h2>
-        <p class="hint" id="hintPartCanal">Sobre facturación del período</p></div></div>
+        <p class="hint" id="hintPartCanal">Sobre facturación del período</p><p class="cols">Columnas: <code>UtmSource</code> <code>Total Value</code></p></div></div>
       <div class="cwrap"><canvas id="cCanal"></canvas></div></div>
   </div>
   <div class="grid g2e">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Ciudades</h2>
-        <p class="hint" id="hintCiudad">Facturación por ciudad normalizada</p></div>
+        <p class="hint" id="hintCiudad">Facturación por ciudad normalizada</p><p class="cols">Columnas: <code>City</code> <code>UF</code> <code>Order</code> <code>Total Value</code></p></div>
         <button class="exp-btn" onclick="bajar('ciudades')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cCiudad"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Medio de pago</h2>
-        <p class="hint">Define cuándo se cobra realmente</p></div>
+        <p class="hint">Define cuándo se cobra realmente</p><p class="cols">Columnas: <code>Payment System Name</code> <code>Order</code> <code>Total Value</code></p></div>
         <button class="exp-btn" onclick="bajar('pagos')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cPago"></canvas></div></div>
   </div>
@@ -335,12 +338,12 @@
   <div class="grid g2">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span><span id="tituloProd">Top SKUs por facturación</span></h2>
-        <p class="hint" id="hintProd">Solo líneas con precio &gt; 0 · excluye componentes de combo</p></div>
+        <p class="hint" id="hintProd">Solo líneas con precio &gt; 0 · excluye componentes de combo</p><p class="cols">Columnas: <code>SKU Name</code> <code>SKU Total Price</code> <code>Quantity_SKU</code></p></div>
         <button class="exp-btn" onclick="bajar('productos')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cSku"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Retornable vs. no retornable</h2>
-        <p class="hint" id="hintRet">Participación en facturación de producto</p></div>
+        <p class="hint" id="hintRet">Participación en facturación de producto</p><p class="cols">Columnas: <code>SKU Name (detecta “retornable”)</code> <code>SKU Total Price</code> <code>Quantity_SKU</code></p></div>
         <button class="exp-btn" onclick="bajar('retornables')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cRet"></canvas></div></div>
   </div>
@@ -349,7 +352,7 @@
   <div class="grid">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Cupones más usados</h2>
-        <p class="hint" id="cupTot">—</p></div>
+        <p class="hint" id="cupTot">—</p><p class="cols">Columnas: <code>Coupon</code> <code>Order</code> <code>Total Value</code> <code>Discounts Totals</code> <code>Discounts Names</code></p></div>
         <button class="exp-btn" onclick="bajar('cupones')">&#8681; Excel</button></div>
       <div class="tscroll" id="tCupon"></div></div>
   </div>
@@ -361,12 +364,12 @@
   <div class="grid g2e">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Nuevos vs. recurrentes</h2>
-        <p class="hint">Pedidos por tipo de cliente y mes</p></div>
+        <p class="hint">Pedidos por tipo de cliente y mes</p><p class="cols">Columnas: <code>Email</code> <code>Creation Date</code> <code>Order</code></p></div>
         <button class="exp-btn" onclick="bajar('clientes')">&#8681; Excel</button></div>
       <div class="cwrap"><canvas id="cClientes"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Frecuencia de compra</h2>
-        <p class="hint">Clientes según cantidad de pedidos en el período</p></div>
+        <p class="hint">Clientes según cantidad de pedidos en el período</p><p class="cols">Columnas: <code>Email</code> <code>Order</code></p></div>
         <button class="exp-btn" onclick="bajar('frecuencia')">&#8681; Excel</button></div>
       <div class="cwrap"><canvas id="cFreq"></canvas></div></div>
   </div>

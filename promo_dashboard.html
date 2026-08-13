@@ -1399,6 +1399,12 @@ async function autoSyncPromo(reason){
   try{
     await loadPromoFromSheet();
     _lastSync = Date.now();
+  } catch(e){
+    /* Falla de red sin snapshot disponible: no romper el ciclo de
+       auto-refresco ni generar rechazos no manejados. Se reintenta
+       en el próximo intervalo; el estado visible lo maneja la capa
+       estándar (semáforo + badge). */
+    console.warn('[promo] auto-sync sin éxito:', e && e.message);
   } finally {
     if(dot) dot.classList.remove('busy');
   }

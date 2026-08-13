@@ -44,35 +44,42 @@
 }
 
 /* =====================================================================
-   BLOQUE ESTÁNDAR DE METADATOS (inyectado por mp-standard.js debajo
-   del header propio de cada dashboard)
+   HEADER NEGRO UNIFICADO
+   Todos los tableros ya usan header negro con logo Mi Portal; acá se
+   fija el mismo negro exacto (#0D0D0D) y la misma altura (64px) para
+   los tres patrones de markup existentes:
+     <header>  (general, ciudades) · .header (promo, mailing,
+     Retornables, index) · .topbar (saludBase)
    ===================================================================== */
-.mp-meta{
-  max-width:1500px; margin:10px auto 0; padding:10px 24px;
-  display:flex; flex-wrap:wrap; align-items:center; gap:8px 18px;
-  font-family:'Inter',system-ui,sans-serif; font-size:12.5px;
-  color:var(--muted); line-height:1.4;
+header, .header, .topbar{
+  background:#0D0D0D !important;
+  height:64px !important;
 }
-.mp-meta b{ color:var(--ink); font-weight:700; }
-.mp-meta .mp-item{ display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
-.mp-meta .mp-sep{ color:var(--line); }
+/* .page-header de Retornables y otros sub-encabezados internos quedan
+   fuera de estos selectores a propósito. */
 
-/* Semáforo de estado de datos */
-.mp-status{
-  display:inline-flex; align-items:center; gap:7px;
-  padding:4px 12px; border-radius:20px; font-weight:700; font-size:12px;
-  border:1px solid var(--line); background:var(--card); color:var(--ink);
-  box-shadow:var(--shadow);
+/* =====================================================================
+   METADATOS DE DATOS DENTRO DEL HEADER (inyectado por mp-standard.js)
+   ● estado · Datos hasta · Últ. sincronización · Fuente
+   ===================================================================== */
+.mp-hdr-meta{
+  display:flex; align-items:center; gap:12px;
+  font-family:'Inter',system-ui,sans-serif; font-size:11.5px;
+  color:rgba(255,255,255,.62); white-space:nowrap; line-height:1;
+  margin-right:12px;
 }
-.mp-status .dot{ width:8px; height:8px; border-radius:50%; flex:0 0 auto; }
-.mp-status.ok   .dot{ background:var(--ok); }
-.mp-status.warn .dot{ background:var(--warn); }
-.mp-status.bad  .dot{ background:var(--bad); }
-.mp-status.ok   { color:var(--ok);  border-color:color-mix(in srgb,var(--ok) 35%,var(--line)); }
-.mp-status.warn { color:#8a6100; }
-.mp-status.bad  { color:var(--bad); }
+.mp-hdr-meta b{ font-weight:700; color:#fff; }
+.mp-hdr-meta .mp-h-data b{ color:var(--amber); }
+.mp-hdr-meta .mp-dot{
+  width:9px; height:9px; border-radius:50%; flex:0 0 auto; cursor:help;
+  box-shadow:0 0 0 3px rgba(255,255,255,.08);
+}
+.mp-hdr-meta .mp-dot.ok  { background:var(--ok); }
+.mp-hdr-meta .mp-dot.warn{ background:var(--warn); }
+.mp-hdr-meta .mp-dot.bad { background:var(--bad); }
 
-@media (max-width:640px){
-  .mp-meta{ padding:8px 14px; font-size:11.5px; gap:6px 12px; }
-  .mp-meta .mp-sep{ display:none; }
-}
+/* Responsive: en pantallas medianas se oculta la fuente; en chicas
+   queda solo el dot (el detalle completo vive en su tooltip). */
+@media (max-width:1100px){ .mp-hdr-meta .mp-h-src{ display:none; } }
+@media (max-width:860px) { .mp-hdr-meta .mp-h-sync{ display:none; } }
+@media (max-width:640px) { .mp-hdr-meta .mp-h-data{ display:none; } .mp-hdr-meta{ gap:0; margin-right:8px; } }

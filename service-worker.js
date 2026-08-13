@@ -15,7 +15,7 @@
    ===================================================================== */
 'use strict';
 
-const VERSION = 'v2';                       // ← subir a v2, v3… al publicar cambios
+const VERSION = 'v5';                       // ← subir a v2, v3… al publicar cambios
 const SHELL_CACHE = 'mp-shell-' + VERSION;
 const CDN_CACHE   = 'mp-cdn-' + VERSION;
 

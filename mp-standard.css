@@ -1,0 +1,78 @@
+/* =====================================================================
+   mp-standard.css — Sistema visual unificado · Suite Mi Portal CC
+   ---------------------------------------------------------------------
+   Se carga DESPUÉS de los estilos propios de cada dashboard.
+   No toca layouts: solo redefine las variables CSS que cada tablero
+   ya usa, mapeándolas al set canónico (referencia: dashboard_ciudades),
+   y agrega los estilos del bloque estándar de metadatos (.mp-meta).
+
+   TOKENS CANÓNICOS
+   Rojo #E8241B · Rojo 2 #E61A27 · Tinta #111315 · Negro #0D0D0D
+   Ámbar #FFB300 · Fondo #F2F2F2 · Tarjeta #FFF · Línea #E4E4E7
+   Muted #6B7280 · Gradiente g1 #82E1FF g2 #78E6A0 g3 #FFB400
+   g4 #FF8700 g5 #E8241B · ok #1E9E5A warn #E6A100 bad #D8342E
+   Sombra 0 1px 3px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.05)
+   Radio 14px · Tipografía Inter
+   ===================================================================== */
+:root{
+  /* --- Set canónico (ciudades / general ya lo usan) --- */
+  --red:#E8241B; --red2:#E61A27; --ink:#111315; --black:#0D0D0D;
+  --amber:#FFB300; --bg:#F2F2F2; --card:#FFFFFF; --line:#E4E4E7;
+  --muted:#6B7280;
+  --g1:#82E1FF; --g2:#78E6A0; --g3:#FFB400; --g4:#FF8700; --g5:#E8241B;
+  --ok:#1E9E5A; --warn:#E6A100; --bad:#D8342E;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.05);
+
+  /* --- Alias usados por promo_dashboard y mailingWoowup --- */
+  --dark:#0D0D0D;               /* era #0D0D0D — se mantiene            */
+  --text:#111315;               /* era #1a1a1a → tinta canónica          */
+  --text-muted:#6B7280;         /* era #666                              */
+  --border:#E4E4E7;             /* era #e0e0e0                           */
+  --cyan:#82E1FF;               /* era #5BDDE8 → g1                      */
+  --green:#78E6A0;              /* era #A8D95A → g2                      */
+  --yellow:#FFB400;             /* era #F5C518 → g3                      */
+  --orange:#FF8700;             /* era #F5821F → g4                      */
+  --red-light:#E61A27;          /* era #f5453c → rojo 2                  */
+  --r:14px; --radius:14px;      /* eran 10px / 12px → radio canónico     */
+
+  /* --- Alias usados por saludBase y Retornables --- */
+  --c1:#82E1FF; --c2:#78E6A0; --c3:#FFB400; --c4:#FF8700; --c5:#E8241B;
+  /* --c6 (#7C4DFF, violeta) se conserva en saludBase: es un acento de
+     series de datos; remapearlo duplicaría colores entre series.       */
+  --white:#FFFFFF; --light:#FAFAFA; --soft:#FAFAFA;
+  --rainbow:linear-gradient(90deg,#82E1FF 0%,#78E6A0 25%,#FFB400 50%,#FF8700 75%,#E8241B 100%);
+}
+
+/* =====================================================================
+   BLOQUE ESTÁNDAR DE METADATOS (inyectado por mp-standard.js debajo
+   del header propio de cada dashboard)
+   ===================================================================== */
+.mp-meta{
+  max-width:1500px; margin:10px auto 0; padding:10px 24px;
+  display:flex; flex-wrap:wrap; align-items:center; gap:8px 18px;
+  font-family:'Inter',system-ui,sans-serif; font-size:12.5px;
+  color:var(--muted); line-height:1.4;
+}
+.mp-meta b{ color:var(--ink); font-weight:700; }
+.mp-meta .mp-item{ display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+.mp-meta .mp-sep{ color:var(--line); }
+
+/* Semáforo de estado de datos */
+.mp-status{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:4px 12px; border-radius:20px; font-weight:700; font-size:12px;
+  border:1px solid var(--line); background:var(--card); color:var(--ink);
+  box-shadow:var(--shadow);
+}
+.mp-status .dot{ width:8px; height:8px; border-radius:50%; flex:0 0 auto; }
+.mp-status.ok   .dot{ background:var(--ok); }
+.mp-status.warn .dot{ background:var(--warn); }
+.mp-status.bad  .dot{ background:var(--bad); }
+.mp-status.ok   { color:var(--ok);  border-color:color-mix(in srgb,var(--ok) 35%,var(--line)); }
+.mp-status.warn { color:#8a6100; }
+.mp-status.bad  { color:var(--bad); }
+
+@media (max-width:640px){
+  .mp-meta{ padding:8px 14px; font-size:11.5px; gap:6px 12px; }
+  .mp-meta .mp-sep{ display:none; }
+}

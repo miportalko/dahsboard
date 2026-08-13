@@ -15,7 +15,7 @@
    ===================================================================== */
 'use strict';
 
-const VERSION = 'v1';                       // ← subir a v2, v3… al publicar cambios
+const VERSION = 'v2';                       // ← subir a v2, v3… al publicar cambios
 const SHELL_CACHE = 'mp-shell-' + VERSION;
 const CDN_CACHE   = 'mp-cdn-' + VERSION;
 
@@ -30,6 +30,8 @@ const SHELL_ASSETS = [
   './dashboard_ciudades.html',
   './Retornables.html',
   './offline-core.js',
+  './mp-standard.css',
+  './mp-standard.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png'

@@ -200,6 +200,8 @@
   .pk .d.up{color:var(--ok)}.pk .d.dn{color:var(--bad)}
   @media(max-width:900px){.proy-kpis{grid-template-columns:repeat(2,1fr)}}
 </style>
+<link rel="stylesheet" href="mp-standard.css">
+<script src="mp-standard.js" defer></script>
 </head>
 <body>
 <div id="loadOverlay">
@@ -722,7 +724,7 @@ const C={red:'#E31837',red2:'#E8241B',amber:'#FFB300',ink:'#111315',gris:'#B0BEC
   cyan:'#82E1FF',verde:'#78E6A0',naranja:'#FF8700',rojoClaro:'#FBC0BA'};
 const PAL=[C.red,C.amber,C.verde,C.cyan,C.naranja,C.gris,C.rojoClaro,'#5BDDE8'];
 const fmt=n=>'\u20b2\u00a0'+Math.round(n).toLocaleString('es-PY');
-const fmtK=n=>n>=1e9?'\u20b2'+(n/1e9).toFixed(2)+'MM':n>=1e6?'\u20b2'+(n/1e6).toFixed(0)+'M':fmt(n);
+const fmtK=n=>n>=1e9?'\u20b2 '+(n/1e9).toFixed(2).replace('.',',')+' MM':n>=1e6?'\u20b2 '+(n/1e6).toFixed(0)+' M':fmt(n);
 const num=n=>Math.round(n).toLocaleString('es-PY');
 const pct=n=>(n>=0?'+':'')+n.toFixed(1)+'%';
 const nomMes=m=>{const[y,mo]=m.split('-');

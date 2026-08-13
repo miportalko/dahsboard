@@ -192,6 +192,7 @@
           idbPut(STORE, { key: key, url: url.split(/[?&](?:_|cb|_ts)=/)[0], text: text, syncedAt: now, schema: DB_VERSION })
             .then(function () { return idbPut(META, { key: 'lastSync', ts: now }); })
             .catch(function () { /* best-effort: no bloquear el dashboard */ });
+          document.dispatchEvent(new CustomEvent('mp:gviz-data', { detail: { key: key, text: text, fromCache: false, netError: false, syncedAt: now } }));
           showBadge('🟢 Online — Datos actualizados · ' + fmtDate(now), '#1E9E5A', 4000);
         }
         return new Response(text, { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
@@ -201,6 +202,7 @@
       return idbGet(STORE, key).then(function (rec) {
         if (rec && rec.text) {
           usedOfflineData = true;
+          document.dispatchEvent(new CustomEvent('mp:gviz-data', { detail: { key: key, text: rec.text, fromCache: true, netError: true, syncedAt: rec.syncedAt } }));
           if (!oldestShownSync || rec.syncedAt < oldestShownSync) oldestShownSync = rec.syncedAt;
           if (navigator.onLine) {
             /* Hay conexión pero la fuente falló */
@@ -211,6 +213,7 @@
           return new Response(rec.text, { status: 200, headers: { 'Content-Type': 'text/plain; charset=utf-8', 'X-MP-Offline': '1' } });
         }
         hadNoData = true;
+        document.dispatchEvent(new CustomEvent('mp:gviz-error', { detail: { key: key } }));
         updateOfflineBadge();
         throw netErr; /* el dashboard muestra su propio mensaje de error */
       });

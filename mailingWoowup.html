@@ -220,6 +220,8 @@
   @media(max-width:1100px){ .cmp-metrics { grid-template-columns: repeat(3,1fr); } }
 
 </style>
+<link rel="stylesheet" href="mp-standard.css">
+<script src="mp-standard.js" defer></script>
 </head>
 <body>
 
@@ -623,7 +625,7 @@ async function fetchSheetData(){
 // ═══════════════════════════════════════════════════════
 const COLORS = ['#E8241B','#F5821F','#F5C518','#A8D95A','#5BDDE8','#9B1C1C','#3b82f6','#8b5cf6','#ec4899','#14b8a6'];
 const charts = {};
-function fmtG(n){if(Math.abs(n)>=1e9)return'₲'+(n/1e9).toFixed(2)+'B';if(Math.abs(n)>=1e6)return'₲'+Math.round(n/1e6)+'M';return'₲'+n.toLocaleString('es-PY');}
+function fmtG(n){const s=n<0?'-':'',a=Math.abs(n);if(a>=1e9)return s+'₲ '+(a/1e9).toFixed(2).replace('.',',')+' MM';if(a>=1e6)return s+'₲ '+Math.round(a/1e6)+' M';return s+'₲ '+Math.round(a).toLocaleString('es-PY');}
 function fmtN(n){return Math.round(n).toLocaleString('es-PY');}
 function shortStr(s,max=32){return s.length>max?s.substring(0,max)+'…':s;}
 function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}

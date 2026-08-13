@@ -212,6 +212,8 @@
   @media (max-width:520px){.kpis,.substrip,.qtiles,.tiers{grid-template-columns:1fr 1fr}.rfm-grid{grid-template-columns:1fr 1fr}.barrow{grid-template-columns:96px 1fr 44px}}
   @media (prefers-reduced-motion:reduce){.sync-dot,.spinner{animation:none}}
 </style>
+<link rel="stylesheet" href="mp-standard.css">
+<script src="mp-standard.js" defer></script>
 </head>
 <body>
 
@@ -526,7 +528,7 @@ const fmtInt = n => nf.format(Math.round(n||0));
 const fmtPYG = n => '₲ ' + nf.format(Math.round(n||0));
 const fmtPct = (n,d=1) => (isFinite(n)?(+n).toFixed(d):'0') + '%';
 function fmtCompactPYG(n){ n=n||0; const s=n<0?'-':''; n=Math.abs(n);
-  if(n>=1e9)return s+'₲ '+(n/1e9).toFixed(2)+' B';
+  if(n>=1e9)return s+'₲ '+(n/1e9).toFixed(2).replace('.',',')+' MM';
   if(n>=1e6)return s+'₲ '+(n/1e6).toFixed(1)+' M';
   if(n>=1e3)return s+'₲ '+(n/1e3).toFixed(0)+' K';
   return s+'₲ '+fmtInt(n);

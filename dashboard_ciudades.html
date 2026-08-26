@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- ===== OFFLINE / PWA — capa agregada, no toca la lógica del dashboard ===== -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0D0D0D">
-<script src="offline-core.js"></script>
-<!-- ===== FIN OFFLINE / PWA ===== -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mi Portal · Inteligencia Geográfica de Ventas</title>
@@ -163,8 +158,6 @@
   @media(max-width:1100px){.g2{grid-template-columns:1fr}}
   @media(max-width:760px){.kpis{grid-template-columns:repeat(2,1fr)}}
 </style>
-<link rel="stylesheet" href="mp-standard.css">
-<script src="mp-standard.js" defer></script>
 </head>
 <body>
 <div id="loadOverlay">
@@ -883,8 +876,8 @@ const fmtG = n => '₲ '+Math.round(n).toLocaleString('es-PY');
 const fmtInt = n => Math.round(n).toLocaleString('es-PY');
 const fmtShort = n => { n=Math.round(n);
   if(n>=1e9)return (n/1e9).toFixed(2)+' MM'; if(n>=1e6)return (n/1e6).toFixed(1)+' M';
-  if(n>=1e3)return (n/1e3).toFixed(0)+' K'; return n.toLocaleString('es-PY'); };
-function fmtDate(s){ if(!s) return '—'; const d=parseD(s); return isNaN(d)?String(s):(String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear()); }
+  if(n>=1e3)return (n/1e3).toFixed(0)+' mil'; return n.toLocaleString('es-PY'); };
+function fmtDate(s){ if(!s) return '—'; const d=parseD(s); return isNaN(d)?String(s):d.toLocaleDateString('es-PY',{day:'2-digit',month:'short',year:'2-digit'}); }
 const pctEs=(x,d)=> (isFinite(x)?x:0).toFixed(d==null?1:d).replace('.',',');
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const chartsOK=()=> typeof Chart!=='undefined';

@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- ===== OFFLINE / PWA — capa agregada, no toca la lógica del dashboard ===== -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0D0D0D">
-<script src="offline-core.js"></script>
-<!-- ===== FIN OFFLINE / PWA ===== -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mi Portal CC — Resumen de Promos</title>
@@ -140,8 +135,6 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
 .kw-preview li{font-size:10px;color:#666}
 .modal-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;background:#fafafa}
 </style>
-<link rel="stylesheet" href="mp-standard.css">
-<script src="mp-standard.js" defer></script>
 </head>
 <body>
 <div class="top-bar"></div>
@@ -258,7 +251,7 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
   <div class="sec">Insights Automáticos</div>
   <div class="insights" id="insights"></div>
 </div>
-<div class="footer"><span>Mi Portal CC — Coca-Cola Paraguay</span> &nbsp;|&nbsp; Fuente: VTEX Report Export &nbsp;|&nbsp; <span data-mp-daterange>Período según datos disponibles en la fuente</span></div>
+<div class="footer"><span>Mi Portal CC — Coca-Cola Paraguay</span> &nbsp;|&nbsp; Fuente: VTEX Report Export &nbsp;|&nbsp; Enero – Mayo 2026</div>
 
 <!-- ─── Modal: crear / editar campaña manual ─── -->
 <div class="modal-bg" id="campModal" onclick="if(event.target===this)closeCampModal()">
@@ -383,7 +376,7 @@ function slugifyCampId(name){
 const COLORS=['#E8241B','#F5821F','#F5C518','#A8D95A','#5BDDE8','#9B1C1C','#3b82f6','#8b5cf6','#ec4899','#14b8a6'];
 const MED={'organico':'Orgánico','paid-search':'Paid Search','paid-social':'Paid Social','paid':'Paid/WooWup','email':'Email','whatsapp':'WhatsApp','meta':'Meta','social':'Social','cpm':'CPM'};
 
-function fG(n){const a=Math.abs(n),s=n<0?'-':'';if(a>=1e9)return s+'₲ '+(a/1e9).toFixed(2).replace('.',',')+' MM';if(a>=1e6)return s+'₲ '+Math.round(a/1e6)+' M';return s+'₲ '+Math.round(a).toLocaleString('es-PY')}
+function fG(n){const a=Math.abs(n),s=n<0?'-':'';if(a>=1e9)return s+'₲'+(a/1e9).toFixed(2)+'B';if(a>=1e6)return s+'₲'+Math.round(a/1e6)+'M';return s+'₲'+Math.round(a).toLocaleString('es-PY')}
 function fN(n){return Math.round(n).toLocaleString('es-PY')}
 function sk(s,m=40){return s.length>m?s.substring(0,m)+'…':s}
 function dateStr(d){return d.toISOString().substring(0,10)}
@@ -1038,11 +1031,11 @@ function exportCSV(){
   const rows=filterRows();
   const camp=getCampMeta();
   const data=rows.map(r=>({
-    'Fecha':r[0],'SKU':r[1],'Cantidad':r[2],'Ventas (₲)':r[3],'Canal':r[4],'Orden':r[5]
+    'Fecha':r[0],'SKU':r[1],'Cantidad':r[2],'Ventas (Gs.)':r[3],'Canal':r[4],'Orden':r[5]
   }));
   const wb=XLSX.utils.book_new();
   const ws=XLSX.utils.json_to_sheet(data);
-  ws['!cols']=['Fecha','SKU','Cantidad','Ventas (₲)','Canal','Orden'].map(h=>({wch:Math.max(h.length,14)}));
+  ws['!cols']=['Fecha','SKU','Cantidad','Ventas (Gs.)','Canal','Orden'].map(h=>({wch:Math.max(h.length,14)}));
   XLSX.utils.book_append_sheet(wb,ws,'Pedidos');
   XLSX.writeFile(wb,'promo_'+(camp?camp.id:'data')+'_'+new Date().toISOString().substring(0,10)+'.xlsx');
 }
@@ -1399,12 +1392,6 @@ async function autoSyncPromo(reason){
   try{
     await loadPromoFromSheet();
     _lastSync = Date.now();
-  } catch(e){
-    /* Falla de red sin snapshot disponible: no romper el ciclo de
-       auto-refresco ni generar rechazos no manejados. Se reintenta
-       en el próximo intervalo; el estado visible lo maneja la capa
-       estándar (semáforo + badge). */
-    console.warn('[promo] auto-sync sin éxito:', e && e.message);
   } finally {
     if(dot) dot.classList.remove('busy');
   }

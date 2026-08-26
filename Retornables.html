@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- ===== OFFLINE / PWA — capa agregada, no toca la lógica del dashboard ===== -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0D0D0D">
-<script src="offline-core.js"></script>
-<!-- ===== FIN OFFLINE / PWA ===== -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Retornables Dashboard · Mi Portal Coca-Cola</title>
@@ -373,8 +368,6 @@
   }
   .sr-note { font-size:11px; color:var(--muted); font-weight:500; margin:-6px 0 14px; line-height:1.5; }
 </style>
-<link rel="stylesheet" href="mp-standard.css">
-<script src="mp-standard.js" defer></script>
 </head>
 <body>
 
@@ -533,7 +526,7 @@
 
     <div class="row cols-2-1">
       <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Evolución Mensual · Starter vs Refill (₲)</div>
+        <div class="card-title"><span class="card-title-dot"></span> Evolución Mensual · Starter vs Refill (Gs.)</div>
         <div class="chart-wrap h280"><canvas id="c_srMonth"></canvas><div class="na-box hidden-el" id="na_srMonth"></div></div>
       </div>
       <div class="card">
@@ -547,13 +540,13 @@
         <div class="chart-wrap h240"><canvas id="c_srUnits"></canvas><div class="na-box hidden-el" id="na_srUnits"></div></div>
       </div>
       <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Comparativo por Ciudad (₲)</div>
+        <div class="card-title"><span class="card-title-dot"></span> Comparativo por Ciudad (Gs.)</div>
         <div class="chart-wrap h240"><canvas id="c_srCity"></canvas><div class="na-box hidden-el" id="na_srCity"></div></div>
       </div>
     </div>
     <div class="row" style="grid-template-columns:1fr">
       <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Comparativo por SKU · Top 12 retornables por revenue (₲)</div>
+        <div class="card-title"><span class="card-title-dot"></span> Comparativo por SKU · Top 12 retornables por revenue (Gs.)</div>
         <div class="chart-wrap" style="height:340px"><canvas id="c_srSku"></canvas><div class="na-box hidden-el" id="na_srSku"></div></div>
       </div>
     </div>
@@ -614,7 +607,7 @@
       <div class="kpi">
         <div class="kpi-label">Ventas Retornables</div>
         <div class="kpi-value" id="k1v">342M</div>
-        <div class="kpi-sub" id="k1s">₲ 342.164.734 en el período</div>
+        <div class="kpi-sub" id="k1s">Gs. 342.164.734 en el período</div>
         <div class="kpi-badge badge-red" id="k1b">↑ Pico en Mayo</div>
       </div>
       <div class="kpi">
@@ -632,7 +625,7 @@
       <div class="kpi">
         <div class="kpi-label">Ticket Promedio</div>
         <div class="kpi-value" id="k4v">84.4K</div>
-        <div class="kpi-sub" id="k4s">₲ por orden retornable</div>
+        <div class="kpi-sub" id="k4s">Gs. por orden retornable</div>
         <div class="kpi-badge badge-red" id="k4b">vs 160K tienda</div>
       </div>
       <div class="kpi">
@@ -650,7 +643,7 @@
     </div>
     <div class="row cols-2-1">
       <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Evolución Mensual · Revenue Retornables (₲)</div>
+        <div class="card-title"><span class="card-title-dot"></span> Evolución Mensual · Revenue Retornables (Gs.)</div>
         <div class="chart-wrap h280"><canvas id="c_revMonth"></canvas></div>
       </div>
       <div class="card">
@@ -689,13 +682,13 @@
       <div class="kpi">
         <div class="kpi-label">Revenue Nuevos</div>
         <div class="kpi-value" id="n3v">159M</div>
-        <div class="kpi-sub" id="n3s">₲ generados por nuevos</div>
+        <div class="kpi-sub" id="n3s">Gs. generados por nuevos</div>
         <div class="kpi-badge badge-blue" id="n3b">46% del rev. ret.</div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Ticket Nuevos</div>
         <div class="kpi-value" id="n4v">77.2K</div>
-        <div class="kpi-sub" id="n4s">₲ primer orden promedio</div>
+        <div class="kpi-sub" id="n4s">Gs. primer orden promedio</div>
         <div class="kpi-badge badge-red" id="n4b">−8.5% vs ticket ret.</div>
       </div>
       <div class="kpi">
@@ -723,7 +716,7 @@
     </div>
     <div class="row cols-2">
       <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Revenue: Nuevos vs Recurrentes (₲)</div>
+        <div class="card-title"><span class="card-title-dot"></span> Revenue: Nuevos vs Recurrentes (Gs.)</div>
         <div class="chart-wrap h240"><canvas id="c_newVsRet"></canvas></div>
       </div>
       <div class="card">
@@ -812,7 +805,7 @@
     <div class="sec-title" id="s4Title">Top SKUs retornables por revenue</div>
     <div class="row cols-2">
       <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Top 10 SKUs · Revenue (₲)</div>
+        <div class="card-title"><span class="card-title-dot"></span> Top 10 SKUs · Revenue (Gs.)</div>
         <div style="overflow-y:auto;max-height:380px">
           <table class="dt" id="t_topSku"></table>
         </div>
@@ -904,7 +897,7 @@
         <div class="chart-wrap h220"><canvas id="c_newAccum"></canvas></div>
       </div>
       <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Revenue Estimado por Segmento (₲)</div>
+        <div class="card-title"><span class="card-title-dot"></span> Revenue Estimado por Segmento (Gs.)</div>
         <div class="chart-wrap h220"><canvas id="c_segValue"></canvas></div>
       </div>
     </div>
@@ -915,7 +908,7 @@
     <div class="mini-kpis" id="yoyKpis"></div>
     <div class="row cols-1" style="grid-template-columns:1fr">
       <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Revenue Retornables Mensual · 2026 vs 2025 (₲)</div>
+        <div class="card-title"><span class="card-title-dot"></span> Revenue Retornables Mensual · 2026 vs 2025 (Gs.)</div>
         <div class="chart-wrap h280"><canvas id="c_yoyRet"></canvas></div>
       </div>
     </div>
@@ -923,7 +916,7 @@
     <div class="mini-kpis" id="projKpis"></div>
     <div class="row" style="grid-template-columns:1fr">
       <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Real 2026 + Proyección vs referencia 2025 (₲)</div>
+        <div class="card-title"><span class="card-title-dot"></span> Real 2026 + Proyección vs referencia 2025 (Gs.)</div>
         <div class="chart-wrap h280"><canvas id="c_projRet"></canvas></div>
       </div>
     </div>
@@ -1663,7 +1656,7 @@ function updateKPIs(m) {
 
   // ── S1 RESUMEN ──
   setText('k1v', FMT(m.retRevTotal));
-  setText('k1s', `₲ ${NUM(m.retRevTotal)} en el período`);
+  setText('k1s', `Gs. ${NUM(m.retRevTotal)} en el período`);
   setText('k1b', noData ? '' : `↑ Pico en ${m.maxNcMonth}`);
 
   setText('k2v', NUM(m.ordRetTotal));
@@ -1674,7 +1667,7 @@ function updateKPIs(m) {
   setText('k3s', 'packs/cajas ret. vendidos (líneas con precio)');
 
   setText('k4v', FMTn(m.ticket));
-  setText('k4s', '₲ por orden retornable');
+  setText('k4s', 'Gs. por orden retornable');
   const k4bEl = document.getElementById('k4b');
   if (k4bEl) { k4bEl.textContent = `vs ${FMTn(m.storeTicket)} tienda`; flash('k4b'); }
 
@@ -1683,7 +1676,7 @@ function updateKPIs(m) {
   setText('k5b', `${m.pctNewOfAll} del base total`);
 
   setText('k6v', m.pctRevPart);
-  setText('k6s', `ret. sobre ₲ ${FMT(m.totalRevTot)} total`);
+  setText('k6s', `ret. sobre Gs. ${FMT(m.totalRevTot)} total`);
 
   document.getElementById('s1Title').textContent = `KPIs principales · retornables · ${m.periodLabel}`;
 
@@ -1696,12 +1689,12 @@ function updateKPIs(m) {
   setText('n2s', `de ${NUM(m.uniqueStoreClients)} clientes únicos del período`);
 
   setText('n3v', FMT(m.newRevTotal));
-  setText('n3s', `₲ ${NUM(m.newRevTotal)} generados`);
+  setText('n3s', `Gs. ${NUM(m.newRevTotal)} generados`);
   setText('n3b', `${PCT(m.newRevTotal, m.retRevTotal)} del rev. ret.`);
 
   const tktDiff = m.ticket ? ((m.newTicket - m.ticket)/m.ticket*100).toFixed(1) : null;
   setText('n4v', FMTn(m.newTicket));
-  setText('n4s', '₲ primer orden promedio');
+  setText('n4s', 'Gs. primer orden promedio');
   setText('n4b', tktDiff === null ? '' : `${tktDiff > 0 ? '+' : ''}${tktDiff}% vs ticket ret.`);
 
   setText('n5v', NUM(m.crossSellExact));
@@ -1742,7 +1735,7 @@ function updateKPIs(m) {
   setText('ins3', m.newClients === 0 ? NA_TXT :
     `El ${m.reuse30}% (${NUM(m.n30)} clientes) volvió a comprar dentro de los 30 días de su 1ª compra retornable.`);
   setText('ins4', m.reuseN > 0
-    ? `${NUM(m.reuseN)} clientes del período registran 2+ compras ret. y concentran ₲ ${FMT(m.segRev.s2 + m.segRev.s35 + m.segRev.s6)} del revenue ret. del período.`
+    ? `${NUM(m.reuseN)} clientes del período registran 2+ compras ret. y concentran Gs. ${FMT(m.segRev.s2 + m.segRev.s35 + m.segRev.s6)} del revenue ret. del período.`
     : (m.newClients === 0 ? NA_TXT : 'Ningún cliente nuevo del período registra recompra todavía.'));
 
   document.getElementById('s3Title').textContent = `Recompra y comportamiento de los ${NUM(m.newClients)} compradores de retornables`;
@@ -1787,7 +1780,7 @@ function updateKPIs(m) {
   const fl = m.filtersLabel ? ' · ' + m.filtersLabel : '';
   setText('rangeLabel', m.periodLabel + fl);
   setText('rangeOrders', NUM(m.ordRetTotal));
-  setText('rangeRevenue', '₲ ' + FMT(m.retRevTotal));
+  setText('rangeRevenue', 'Gs. ' + FMT(m.retRevTotal));
   document.getElementById('headerPeriodChip').textContent = m.periodLabel;
   document.getElementById('pageSub').textContent =
     `${NUM(m.ordTotal)} órdenes · Período: ${m.periodLabel}` + fl +
@@ -1815,14 +1808,14 @@ function updateSRKpis(m) {
     const seen = new Set();
     RETLINES.forEach(l => { if (l.cat === 'unknown' && !seen.has(l.skuName)) { seen.add(l.skuName); ukNames.push(l.skuName); } });
     const shown = ukNames.slice(0,4).map(nm => '“' + esc(nm) + '”').join(', ');
-    covEl.innerHTML = `<div class="warn-chip"><span>⚠️</span><span><strong>₲ ${FMT(m.ukRev)}</strong> (${PCT(m.ukRev, m.retRevTotal)} del revenue ret. del período) corresponden a SKU(s) retornables <strong>sin clasificar</strong>: ${shown}${ukNames.length>4 ? ` y ${ukNames.length-4} más` : ''}. Se muestran aparte, sin asignarlos a ninguna categoría.</span></div>`;
+    covEl.innerHTML = `<div class="warn-chip"><span>⚠️</span><span><strong>Gs. ${FMT(m.ukRev)}</strong> (${PCT(m.ukRev, m.retRevTotal)} del revenue ret. del período) corresponden a SKU(s) retornables <strong>sin clasificar</strong>: ${shown}${ukNames.length>4 ? ` y ${ukNames.length-4} más` : ''}. Se muestran aparte, sin asignarlos a ninguna categoría.</span></div>`;
   } else {
     covEl.innerHTML = `<div class="ok-chip"><span>✓</span><span>Clasificación completa: el 100% del revenue retornable del período está identificado como Starter o Refill por el nombre del SKU.</span></div>`;
   }
 
   // Starter
   setText('st1v', FMT(m.stRev));
-  setText('st1s', `₲ ${NUM(m.stRev)} en el período`);
+  setText('st1s', `Gs. ${NUM(m.stRev)} en el período`);
   setText('st1b', `${PCT(m.stRev, m.retRevTotal)} del rev. ret.`);
   setText('st2v', NUM(m.ordStarter));
   setText('st2s', `de ${NUM(m.ordRetTotal)} órdenes ret.`);
@@ -1830,15 +1823,15 @@ function updateSRKpis(m) {
   setText('st3v', NUM(m.stUnits));
   setText('st3s', `${PCT(m.stUnits, m.unitsTotal)} de unidades ret.`);
   if (m.stTicket === null) setNAcard('st4', 'sin órdenes Starter en el período');
-  else { setText('st4v', FMTn(m.stTicket)); setText('st4s', '₲ de Starter por orden con Starter'); }
+  else { setText('st4v', FMTn(m.stTicket)); setText('st4s', 'Gs. de Starter por orden con Starter'); }
   setText('st5v', PCT(m.stRev, m.retRevTotal));
-  setText('st5s', `sobre ₲ ${FMT(m.retRevTotal)} retornables`);
+  setText('st5s', `sobre Gs. ${FMT(m.retRevTotal)} retornables`);
   setText('st6v', NUM(m.newStarterClients));
   setText('st6s', `de ${NUM(m.newClients)} nuevos ret. del período`);
 
   // Refill
   setText('rf1v', FMT(m.rfRev));
-  setText('rf1s', `₲ ${NUM(m.rfRev)} en el período`);
+  setText('rf1s', `Gs. ${NUM(m.rfRev)} en el período`);
   setText('rf1b', `${PCT(m.rfRev, m.retRevTotal)} del rev. ret.`);
   setText('rf2v', NUM(m.ordRefill));
   setText('rf2s', `de ${NUM(m.ordRetTotal)} órdenes ret.`);
@@ -1846,9 +1839,9 @@ function updateSRKpis(m) {
   setText('rf3v', NUM(m.rfUnits));
   setText('rf3s', `${PCT(m.rfUnits, m.unitsTotal)} de unidades ret.`);
   if (m.rfTicket === null) setNAcard('rf4', 'sin órdenes Refill en el período');
-  else { setText('rf4v', FMTn(m.rfTicket)); setText('rf4s', '₲ de Refill por orden con Refill'); }
+  else { setText('rf4v', FMTn(m.rfTicket)); setText('rf4s', 'Gs. de Refill por orden con Refill'); }
   setText('rf5v', PCT(m.rfRev, m.retRevTotal));
-  setText('rf5s', `sobre ₲ ${FMT(m.retRevTotal)} retornables`);
+  setText('rf5s', `sobre Gs. ${FMT(m.retRevTotal)} retornables`);
   setText('rf6v', NUM(m.recRefillClients));
   setText('rf6s', 'compraron refill con compra ret. previa');
 
@@ -1893,12 +1886,12 @@ function renderSRInsights(m) {
       if (stP > 0 && stL >= 0) {
         const d = ((stL - stP) / stP * 100).toFixed(1);
         items.push({ tag:'📈 Tendencia Starter', color:'var(--red)',
-          body:`El revenue Starter pasó de ₲ ${FMT(stP)} en ${m.months[iP]} a ₲ ${FMT(stL)} en ${m.months[iL]} (${d >= 0 ? '+' : ''}${d}%).` });
+          body:`El revenue Starter pasó de Gs. ${FMT(stP)} en ${m.months[iP]} a Gs. ${FMT(stL)} en ${m.months[iL]} (${d >= 0 ? '+' : ''}${d}%).` });
       }
       if (rfP > 0 && rfL >= 0) {
         const d = ((rfL - rfP) / rfP * 100).toFixed(1);
         items.push({ tag:'📈 Tendencia Refill', color:'#00AF55',
-          body:`El revenue Refill pasó de ₲ ${FMT(rfP)} en ${m.months[iP]} a ₲ ${FMT(rfL)} en ${m.months[iL]} (${d >= 0 ? '+' : ''}${d}%).` });
+          body:`El revenue Refill pasó de Gs. ${FMT(rfP)} en ${m.months[iP]} a Gs. ${FMT(rfL)} en ${m.months[iL]} (${d >= 0 ? '+' : ''}${d}%).` });
       }
     }
     // Conversión (solo si hay base)
@@ -1913,13 +1906,13 @@ function renderSRInsights(m) {
     // Alerta de clasificación parcial
     if (m.ukRev > 0) {
       items.push({ tag:'⚠️ Alerta de datos', color:'#FF8700',
-        body:`₲ ${FMT(m.ukRev)} (${PCT(m.ukRev, m.retRevTotal)}) del revenue retornable del período quedaron sin clasificar por el nombre del SKU y se muestran aparte.` });
+        body:`Gs. ${FMT(m.ukRev)} (${PCT(m.ukRev, m.retRevTotal)}) del revenue retornable del período quedaron sin clasificar por el nombre del SKU y se muestran aparte.` });
     }
     // Ciudad líder (solo si la fuente trae ciudad y hay datos)
     if (HAS_CITY && m.cityAgg && m.cityAgg.length) {
       const c = m.cityAgg[0];
       items.push({ tag:'📍 Ciudad líder', color:'#6B6B6B',
-        body:`${esc(c.city)} concentra ₲ ${FMT(c.tot)} del revenue retornable del período (Starter ${PCT(c.st, c.tot)} · Refill ${PCT(c.rf, c.tot)}).` });
+        body:`${esc(c.city)} concentra Gs. ${FMT(c.tot)} del revenue retornable del período (Starter ${PCT(c.st, c.tot)} · Refill ${PCT(c.rf, c.tot)}).` });
     }
   }
 
@@ -1977,7 +1970,7 @@ function buildCharts() {
         borderWidth:2, pointRadius:4, pointBackgroundColor:PALETTE[2], tension:.4}
     ]},
     options: baseOpts({plugins:{legend:{display:false},
-      tooltip:{callbacks:{label:ctx=>' ₲ '+ctx.parsed.y.toLocaleString('es-PY')}}},
+      tooltip:{callbacks:{label:ctx=>' Gs. '+ctx.parsed.y.toLocaleString()}}},
       scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
               y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}}}})
   });
@@ -2038,7 +2031,7 @@ function buildCharts() {
     ]},
     options:baseOpts({
       plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:14,font:{size:11}}},
-               tooltip:{callbacks:{label:ctx=>' ₲ '+FMT(ctx.parsed.y)}}},
+               tooltip:{callbacks:{label:ctx=>' Gs. '+FMT(ctx.parsed.y)}}},
       scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
               y:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}}}})
   });
@@ -2109,15 +2102,15 @@ function buildCharts() {
   // S6 – Seg value
   charts['c_segValue'] = new Chart('c_segValue',{ type:'bar', data:{
     labels:['Solo 1 compra','2 compras','3–5 compras','6+ compras'],
-    datasets:[{label:'Revenue (₲)',data:[0,0,0,0],
+    datasets:[{label:'Revenue (Gs.)',data:[0,0,0,0],
       backgroundColor:PALETTE.slice(0,4).reverse(),borderRadius:6,borderSkipped:false}]},
-    options:baseOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' ₲ '+FMT(ctx.parsed.y)}}},
+    options:baseOpts({plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' Gs. '+FMT(ctx.parsed.y)}}},
       scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A'}},
               y:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}}}})
   });
 
   // ── S0 STARTER VS REFILL ──
-  const srTip = { callbacks:{ label:ctx=>` ${ctx.dataset.label}: ₲ ${(ctx.parsed.y ?? ctx.parsed.x ?? 0).toLocaleString('es-PY')}` } };
+  const srTip = { callbacks:{ label:ctx=>` ${ctx.dataset.label}: Gs. ${(ctx.parsed.y ?? ctx.parsed.x ?? 0).toLocaleString('es-PY')}` } };
 
   charts['c_srMonth'] = new Chart('c_srMonth',{ type:'bar', data:{
     labels:[],
@@ -2169,7 +2162,7 @@ function buildCharts() {
     ]},
     options:baseOpts({indexAxis:'y',
       plugins:{legend:{labels:{color:'#6B6B6B',boxWidth:10,padding:12,font:{size:11}}},
-               tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: ₲ ${(ctx.parsed.x||0).toLocaleString('es-PY')}`}}},
+               tooltip:{callbacks:{label:ctx=>` ${ctx.dataset.label}: Gs. ${(ctx.parsed.x||0).toLocaleString('es-PY')}`}}},
       scales:{x:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}},
               y:{stacked:true,grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#6B6B6B',font:{size:10}}}}})
   });
@@ -2180,7 +2173,7 @@ function buildCharts() {
     options:baseOpts({indexAxis:'y',
       plugins:{legend:{display:false},
                tooltip:{callbacks:{
-                 label:ctx=>` ₲ ${(ctx.parsed.x||0).toLocaleString('es-PY')}`,
+                 label:ctx=>` Gs. ${(ctx.parsed.x||0).toLocaleString('es-PY')}`,
                  afterLabel:ctx=>' ' + (ctx.dataset.cats ? CAT_LABEL[ctx.dataset.cats[ctx.dataIndex]] : '')
                }}},
       scales:{x:{grid:{color:'rgba(0,0,0,0.03)'},ticks:{color:'#9A9A9A',callback:v=>FMT(v)}},
@@ -2374,7 +2367,7 @@ function buildTable(skus) {
       <td><div style="font-size:12px;font-weight:500;color:#1A1A1A;line-height:1.3">${dot(s.cat)}${esc(s.name)}</div>
           <div class="bar-mini" style="width:${pct}%"></div></td>
       <td class="val-primary">${FMT(s.revenue)}</td>
-      <td class="val-secondary">${s.units.toLocaleString('es-PY')}</td>`;
+      <td class="val-secondary">${s.units.toLocaleString()}</td>`;
     tb.appendChild(tr);
   });
   table.appendChild(tb);
@@ -2566,8 +2559,8 @@ function exportExcel() {
 
   // Hoja 1 — Resumen mensual (según filtros activos)
   const resumenRows = [[
-    'Mes','Revenue Ret. (₲)','Revenue Total Tienda (₲)','Órdenes Ret.','Órdenes No-Ret.',
-    'Unidades Ret.','Nuevos Clientes Ret.','Recurrentes Ret.','Revenue Nuevos (₲)','Revenue Recurrentes (₲)','Cross-sell'
+    'Mes','Revenue Ret. (Gs.)','Revenue Total Tienda (Gs.)','Órdenes Ret.','Órdenes No-Ret.',
+    'Unidades Ret.','Nuevos Clientes Ret.','Recurrentes Ret.','Revenue Nuevos (Gs.)','Revenue Recurrentes (Gs.)','Cross-sell'
   ]];
   m.months.forEach((mes,i) => {
     resumenRows.push([
@@ -2586,7 +2579,7 @@ function exportExcel() {
     srRows.push(['Motivo', 'Ningún nombre de SKU retornable coincide con los patrones "con envase" / "sin envase". No se estima.']);
     srRows.push(['SKUs retornables detectados', UNK_SKUS.map(u=>u.name).join(' | ')]);
   } else {
-    srRows.push(['Mes','Rev Starter (₲)','Unds Starter','Órdenes Starter','Rev Refill (₲)','Unds Refill','Órdenes Refill','Rev Sin clasif. (₲)','% Starter','% Refill']);
+    srRows.push(['Mes','Rev Starter (Gs.)','Unds Starter','Órdenes Starter','Rev Refill (Gs.)','Unds Refill','Órdenes Refill','Rev Sin clasif. (Gs.)','% Starter','% Refill']);
     m.months.forEach((mes,i) => {
       const tot = m.stRevM[i] + m.rfRevM[i] + m.ukRevM[i];
       srRows.push([
@@ -2611,15 +2604,15 @@ function exportExcel() {
     srRows.push(['Clientes nuevos Starter (período)', m.newStarterClients]);
     srRows.push(['Clientes recurrentes Refill (período)', m.recRefillClients]);
     srRows.push(['Frecuencia de compra ret. (compras/cliente, período)', m.avgFreq === null ? NA_TXT : +m.avgFreq.toFixed(2)]);
-    srRows.push(['Ticket promedio Starter (₲/orden con Starter)', m.stTicket === null ? NA_TXT : Math.round(m.stTicket)]);
-    srRows.push(['Ticket promedio Refill (₲/orden con Refill)', m.rfTicket === null ? NA_TXT : Math.round(m.rfTicket)]);
+    srRows.push(['Ticket promedio Starter (Gs./orden con Starter)', m.stTicket === null ? NA_TXT : Math.round(m.stTicket)]);
+    srRows.push(['Ticket promedio Refill (Gs./orden con Refill)', m.rfTicket === null ? NA_TXT : Math.round(m.rfTicket)]);
   }
   const wsSR = XLSX.utils.aoa_to_sheet(srRows);
   wsSR['!cols'] = [{wch:44},{wch:16},{wch:12},{wch:14},{wch:16},{wch:12},{wch:14},{wch:18},{wch:10},{wch:10}];
   XLSX.utils.book_append_sheet(wb, wsSR, 'Starter vs Refill');
 
   // Hoja 3 — Top SKUs del período (con tipo)
-  const skuRows = [['#','Producto','Tipo','Revenue (₲)','Unidades','Órdenes']];
+  const skuRows = [['#','Producto','Tipo','Revenue (Gs.)','Unidades','Órdenes']];
   m.skusP.forEach((s,i) => skuRows.push([i+1, s.name, CAT_LABEL[s.cat] || '', Math.round(s.revenue), s.units, s.orders]));
   const wsSkus = XLSX.utils.aoa_to_sheet(skuRows);
   wsSkus['!cols'] = [{wch:4},{wch:55},{wch:22},{wch:16},{wch:12},{wch:10}];
@@ -2644,7 +2637,7 @@ function exportExcel() {
   const totSeg = m.f1 + m.f2 + m.f3 + m.f4;
   const pct = n => totSeg ? (n/totSeg*100).toFixed(1)+'%' : '—';
   const segRows = [
-    ['Segmento','Clientes','% del total','Revenue del período (₲)'],
+    ['Segmento','Clientes','% del total','Revenue del período (Gs.)'],
     ['Solo 1 compra', m.freq.f1, pct(m.freq.f1), Math.round(m.segRev.s1)],
     ['2 compras',     m.freq.f2, pct(m.freq.f2), Math.round(m.segRev.s2)],
     ['3–5 compras',   m.freq.f3 + m.freq.f45, pct(m.freq.f3 + m.freq.f45), Math.round(m.segRev.s35)],
@@ -2657,7 +2650,7 @@ function exportExcel() {
   // Hoja 6 — Comparativo 2026 vs 2025 + proyección (año completo, independiente del filtro)
   if (YEARLY['2025'] && YEARLY['2026'] && window._RETPROJ) {
     const y25 = YEARLY['2025'], y26 = YEARLY['2026'], P = window._RETPROJ;
-    const cmpRows = [['Mes','Revenue Ret. 2025 (₲)','Revenue Ret. 2026 (₲)','Variación (%)','Proyección 2026 (₲)','Total estimado 2026 (₲)']];
+    const cmpRows = [['Mes','Revenue Ret. 2025 (Gs.)','Revenue Ret. 2026 (Gs.)','Variación (%)','Proyección 2026 (Gs.)','Total estimado 2026 (Gs.)']];
     MES_ABR.forEach((mn,i) => cmpRows.push([
       mn, Math.round(y25.mRev[i]), Math.round(y26.mRev[i]),
       (y25.mRev[i] > 0 && y26.mRev[i] > 0) ? +((y26.mRev[i]/y25.mRev[i]-1)*100).toFixed(1) : '',
@@ -2675,7 +2668,7 @@ function exportExcel() {
     ['Período exportado', m.periodLabel],
     ['Filtros activos', m.filtersLabel || 'Ninguno (solo período)'],
     ['Órdenes retornables (período)', m.ordRetTotal],
-    ['Revenue retornables (período, ₲)', Math.round(m.retRevTotal)],
+    ['Revenue retornables (período, Gs.)', Math.round(m.retRevTotal)],
     ['Clientes únicos retornables (período)', m.uniqueRetClients],
     ['Clientes nuevos en ret. (1ª compra en período)', m.newClients],
     ['Clasificación Starter/Refill', 'Por nombre de SKU: "con envase" → Starter · "sin envase" → Refill. Sin coincidencia → "Sin clasificar" (nunca se estima).'],
@@ -2817,7 +2810,7 @@ function renderRetYoY(y25, y26) {
   const cutoff25 = new Date(2025, cutoff26.getMonth(), cutoff26.getDate(), 23, 59, 59);
   const a = statsUpTo(y26, cutoff26), b = statsUpTo(y25, cutoff25);
   document.getElementById('yoyKpis').innerHTML = `
-    <div class="mk"><div class="lab">Revenue ret. al ${fmtFullD(cutoff26)}</div><div class="val">₲ ${FMT(a.rev)}</div>${deltaHTML(a.rev, b.rev)}</div>
+    <div class="mk"><div class="lab">Revenue ret. al ${fmtFullD(cutoff26)}</div><div class="val">Gs. ${FMT(a.rev)}</div>${deltaHTML(a.rev, b.rev)}</div>
     <div class="mk"><div class="lab">Órdenes ret.</div><div class="val">${NUM(a.n)}</div>${deltaHTML(a.n, b.n)}</div>
     <div class="mk"><div class="lab">Unidades ret.</div><div class="val">${NUM(a.units)}</div>${deltaHTML(a.units, b.units)}</div>
     <div class="mk"><div class="lab">Clientes ret. únicos</div><div class="val">${NUM(a.clients)}</div>${deltaHTML(a.clients, b.clients)}</div>`;
@@ -2826,7 +2819,7 @@ function renderRetYoY(y25, y26) {
     { label:'2026', data:y26.mRev.map(v => Math.round(v) || null), backgroundColor:RED, borderRadius:5 }]};
   const opts = { responsive:true, maintainAspectRatio:false,
     plugins:{ legend:{ position:'top', labels:{ boxWidth:12, usePointStyle:true } },
-      tooltip:{ callbacks:{ label:c => ' ' + c.dataset.label + ': ₲ ' + (c.raw||0).toLocaleString('es-PY'),
+      tooltip:{ callbacks:{ label:c => ' ' + c.dataset.label + ': Gs. ' + (c.raw||0).toLocaleString('es-PY'),
         footer:items => { const v25=y25.mRev[items[0].dataIndex], v26=y26.mRev[items[0].dataIndex];
           return (v25>0 && v26>0) ? 'Variación: ' + fmtPct1((v26/v25-1)*100) : ''; } } } },
     scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'rgba(0,0,0,0.03)' }, ticks:{ callback:v => FMT(v) } } } };
@@ -2838,9 +2831,9 @@ function renderRetProj(y25, y26) {
   const P = computeRetProjection(y25, y26);
   window._RETPROJ = P;
   document.getElementById('projKpis').innerHTML = `
-    <div class="mk"><div class="lab">Cierre proyectado 2026</div><div class="val">₲ ${FMT(P.cierre)}</div>${deltaHTML(P.cierre, P.total25)}</div>
+    <div class="mk"><div class="lab">Cierre proyectado 2026</div><div class="val">Gs. ${FMT(P.cierre)}</div>${deltaHTML(P.cierre, P.total25)}</div>
     <div class="mk"><div class="lab">Ritmo actual vs 2025</div><div class="val">${fmtPct1((P.ratio-1)*100)}</div></div>
-    <div class="mk"><div class="lab">Cierre 2025</div><div class="val">₲ ${FMT(P.total25)}</div></div>`;
+    <div class="mk"><div class="lab">Cierre 2025</div><div class="val">Gs. ${FMT(P.total25)}</div></div>`;
   const data = { labels: MES_ABR, datasets: [
     { type:'bar', label:'Real 2026', data:P.real.map(Math.round), backgroundColor:RED, borderRadius:5, stack:'s' },
     { type:'bar', label:'Proyección', data:P.proy, backgroundColor:'#FBC0BA', borderRadius:5, stack:'s' },
@@ -2848,9 +2841,9 @@ function renderRetProj(y25, y26) {
       borderDash:[5,4], pointRadius:0, pointHoverRadius:4, tension:.3, fill:false }]};
   const opts = { responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
     plugins:{ legend:{ position:'top', labels:{ boxWidth:12, usePointStyle:true } },
-      tooltip:{ callbacks:{ label:c => ' ' + c.dataset.label + ': ₲ ' + (c.raw||0).toLocaleString('es-PY'),
+      tooltip:{ callbacks:{ label:c => ' ' + c.dataset.label + ': Gs. ' + (c.raw||0).toLocaleString('es-PY'),
         footer:items => { const i = items[0].dataIndex, t = P.real[i] + P.proy[i];
-          return P.proy[i] > 0 ? 'Total estimado: ₲ ' + Math.round(t).toLocaleString('es-PY') : ''; } } } },
+          return P.proy[i] > 0 ? 'Total estimado: Gs. ' + Math.round(t).toLocaleString('es-PY') : ''; } } } },
     scales:{ x:{ stacked:true, grid:{ display:false } },
              y:{ stacked:true, grid:{ color:'rgba(0,0,0,0.03)' }, ticks:{ callback:v => FMT(v) } } } };
   if (projRetChart) { projRetChart.data = data; projRetChart.update(); }

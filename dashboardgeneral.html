@@ -1,11 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<!-- ===== OFFLINE / PWA — capa agregada, no toca la lógica del dashboard ===== -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0D0D0D">
-<script src="offline-core.js"></script>
-<!-- ===== FIN OFFLINE / PWA ===== -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mi Portal · Dashboard Ejecutivo</title>
@@ -80,9 +75,7 @@
   .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;box-shadow:var(--shadow)}
   .panel h2{font-size:15px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:9px}
   .panel h2 .dot{width:8px;height:8px;border-radius:3px;background:var(--red)}
-  .panel .hint{font-size:12px;color:var(--muted);margin-top:2px;margin-bottom:6px}
-  .cols{font-size:10.5px;color:var(--muted);margin-bottom:12px;line-height:1.9}
-  .cols code{font-family:ui-monospace,'SF Mono',Consolas,monospace;font-size:10px;background:#F4F4F5;border:1px solid var(--line);border-radius:4px;padding:1px 5px;white-space:nowrap}
+  .panel .hint{font-size:12px;color:var(--muted);margin-top:2px;margin-bottom:14px}
   .ph{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
   .section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;
     flex-wrap:wrap;margin-top:18px;margin-bottom:-4px}
@@ -200,8 +193,6 @@
   .pk .d.up{color:var(--ok)}.pk .d.dn{color:var(--bad)}
   @media(max-width:900px){.proy-kpis{grid-template-columns:repeat(2,1fr)}}
 </style>
-<link rel="stylesheet" href="mp-standard.css">
-<script src="mp-standard.js" defer></script>
 </head>
 <body>
 <div id="loadOverlay">
@@ -245,19 +236,13 @@
     </div>
     <div class="fg"><label>Desde</label><select id="desde"></select></div>
     <div class="fg"><label>Hasta</label><select id="hasta"></select></div>
-    <div class="fg"><label>Estado del pedido</label><select id="festado">
-      <option value="">Todos</option>
-      <option value="Facturado" selected>Facturados</option>
-      <option value="Pronto">Pronto para o manuseio</option>
-      <option value="Cancelado">Cancelados</option></select></div>
     <div class="fg"><label>Canal</label><select id="fcanal"><option value="">Todos</option></select></div>
     <div class="fg"><label>Ciudad</label><select id="fciudad"><option value="">Todas</option></select></div>
     <div class="fg"><label>&nbsp;</label>
       <button class="xls" id="btnXls" onclick="exportarTodo()">&#8681; Descargar Excel</button></div>
     <button class="reset" id="reset">Limpiar filtros</button>
     <div class="rule-chips">
-      <span class="hint-chip">Ventas <b>sólo Status Faturado</b> · cancelados <b>hoja Canceladas_Probables</b> · Pronto para o manuseio <b>aparte</b></span>
-      <span class="hint-chip" id="chipEstado">Paneles: <b>sólo facturados</b> · KPIs siempre con desglose</span>
+      <span class="hint-chip">Pedidos válidos <b>Faturado + Pronto para o manuseio</b></span>
       <span class="fac-tag" id="facTag"><span class="pip"></span>Mostrando: <b>facturación con envío</b></span>
       <span class="hint-chip" id="chipFac">Facturación <b>&Sigma; SKU + &Sigma; envío por fila</b></span>
       <span class="hint-chip">Descuento <b>ya neteado en el precio</b></span>
@@ -273,7 +258,6 @@
   </details>
 
   <div class="kpis" id="kpis"></div>
-  <p class="cols" style="margin-top:8px">Columnas de los KPIs: <code>Order</code> <code>Status</code> <code>Creation Date</code> <code>Total Value</code> <code>Shipping Value*</code> <code>Email</code> <code>Discounts Totals</code> &nbsp;·&nbsp; <b>*</b> <code>Shipping Value</code> se resta sólo en modo “sin envío” (Facturación = <code>Total Value</code> − Σ <code>Shipping Value</code> del pedido) &nbsp;·&nbsp; Estados: <b>Facturado</b> = <code>Status = Faturado</code> (hoja Base) · <b>Cancelado</b> = fila de la hoja <code>Canceladas_Probables</code> · <b>Pronto para o manuseio</b> se cuenta aparte y no entra en ventas</p>
   <p class="footnote" style="text-align:left;margin-top:10px" id="ctx"></p>
 
   <div class="section-head">
@@ -283,58 +267,14 @@
   <div class="grid g2">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Facturación y ticket por mes</h2>
-        <p class="hint" id="hintEvol">Barras = facturación · línea = ticket promedio</p><p class="cols">Columnas: <code>Creation Date</code> <code>Order</code> <code>Total Value</code> <code>Shipping Value*</code></p></div>
+        <p class="hint" id="hintEvol">Barras = facturación · línea = ticket promedio</p></div>
         <button class="exp-btn" onclick="bajar('mensual')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cEvol"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Ritmo semanal</h2>
-        <p class="hint">Detecta quiebres que el corte mensual esconde</p><p class="cols">Columnas: <code>Creation Date</code> <code>Order</code> <code>Total Value</code> <code>Shipping Value*</code></p></div>
+        <p class="hint">Detecta quiebres que el corte mensual esconde</p></div>
         <button class="exp-btn" onclick="bajar('semanal')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cSem"></canvas></div></div>
-  </div>
-
-  <div class="section-head">
-    <h2><span class="dot"></span>Facturados vs. cancelados</h2>
-    <span class="note" id="notaCanc"></span>
-  </div>
-  <div class="grid g2">
-    <div class="panel">
-      <div class="ph"><div><h2><span class="dot"></span>Comparativo por período</h2>
-        <p class="hint">Facturados vs. cancelados · elegí granularidad y métrica · ignora el filtro de estado</p>
-        <p class="cols">Columnas: <code>Order</code> <code>Status</code> <code>Creation Date</code> <code>Total Value</code> <code>Shipping Value*</code> + hoja <code>Canceladas_Probables</code></p></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-          <div class="seg" id="segGranC"><button class="on" data-v="mes">Mes</button><button data-v="sem">Semana</button><button data-v="dia">Día</button></div>
-          <div class="seg" id="segMetC"><button class="on" data-v="p">Pedidos</button><button data-v="m">Monto</button></div>
-          <button class="exp-btn" onclick="bajar('fvc')">&#8681; Excel</button></div></div>
-      <div class="cwrap alto"><canvas id="cFvC"></canvas></div></div>
-    <div class="panel">
-      <div class="ph"><div><h2><span class="dot"></span>Cancelaciones por ciudad</h2>
-        <p class="hint">Pedidos cancelados · el tooltip muestra el monto</p>
-        <p class="cols">Columnas: <code>City</code> <code>Order</code> <code>Total Value</code> (hoja <code>Canceladas_Probables</code>)</p></div>
-        <button class="exp-btn" onclick="bajar('cancCiudades')">&#8681; Excel</button></div>
-      <div class="cwrap alto"><canvas id="cCancCiudad"></canvas></div></div>
-  </div>
-  <div class="grid g2e">
-    <div class="panel">
-      <div class="ph"><div><h2><span class="dot"></span>Cancelaciones por canal</h2>
-        <p class="hint">% de cancelación = cancelados ÷ pedidos totales del canal</p>
-        <p class="cols">Columnas: <code>UtmSource</code> <code>Order</code> <code>Total Value</code></p></div>
-        <button class="exp-btn" onclick="bajar('cancCanales')">&#8681; Excel</button></div>
-      <div class="tscroll" id="tCancCanal"></div></div>
-    <div class="panel">
-      <div class="ph"><div><h2><span class="dot"></span>Cancelaciones por producto</h2>
-        <p class="hint" id="hintCancSku">Monto cancelado por SKU · sólo líneas con precio &gt; 0</p>
-        <p class="cols">Columnas: <code>SKU Name</code> <code>SKU Total Price</code> <code>Quantity_SKU</code> (hoja <code>Canceladas_Probables</code>)</p></div>
-        <button class="exp-btn" onclick="bajar('cancSkus')">&#8681; Excel</button></div>
-      <div class="cwrap alto"><canvas id="cCancSku"></canvas></div></div>
-  </div>
-  <div class="grid">
-    <div class="panel">
-      <div class="ph"><div><h2><span class="dot"></span>Cancelaciones por cupón / promoción</h2>
-        <p class="hint">Sólo si el pedido cancelado trae el dato en la fuente</p>
-        <p class="cols">Columnas: <code>Coupon</code> <code>Discounts Names</code> <code>Order</code> <code>Total Value</code></p></div>
-        <button class="exp-btn" onclick="bajar('cancCupones')">&#8681; Excel</button></div>
-      <div class="tscroll" id="tCancCupon"></div></div>
   </div>
 
   <div class="section-head">
@@ -344,18 +284,18 @@
   <div class="grid g2">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Facturación mes a mes</h2>
-        <p class="hint" id="hintYoY">Rojo = 2026 · gris = 2025 · rosado = mes 2026 en curso</p><p class="cols">Columnas: <code>Creation Date</code> <code>Order</code> <code>Total Value</code> <code>Shipping Value*</code></p></div>
+        <p class="hint" id="hintYoY">Rojo = 2026 · gris = 2025 · rosado = mes 2026 en curso</p></div>
         <button class="exp-btn" onclick="bajar('yoy')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cYoY"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Detalle comparativo</h2>
-        <p class="hint">Variación calculada sólo donde hay dato en los dos años</p><p class="cols">Columnas: <code>Creation Date</code> <code>Order</code> <code>Total Value</code> <code>Shipping Value*</code></p></div></div>
+        <p class="hint">Variación calculada sólo donde hay dato en los dos años</p></div></div>
       <div class="tscroll" id="tYoY"></div></div>
   </div>
   <div class="grid">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Proyección de cierre 2026</h2>
-        <p class="hint">Estimación calculada, no dato de la fuente · respeta canal, ciudad y modo de facturación</p><p class="cols">Columnas: <code>Creation Date</code> <code>Order</code> <code>Total Value</code> <code>Shipping Value*</code></p></div>
+        <p class="hint">Estimación calculada, no dato de la fuente · respeta canal, ciudad y modo de facturación</p></div>
         <button class="exp-btn" onclick="bajar('proyeccion')">&#8681; Excel</button></div>
       <div class="proy-kpis" id="proyKpis"></div>
       <div class="cwrap alto"><canvas id="cProy"></canvas></div>
@@ -366,23 +306,23 @@
   <div class="grid g2">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Canales</h2>
-        <p class="hint">Origen UTM del pedido · el resto entra como “Sin UTM”</p><p class="cols">Columnas: <code>UtmSource</code> <code>Order</code> <code>Total Value</code> <code>Email</code></p></div>
+        <p class="hint">Origen UTM del pedido · el resto entra como “Sin UTM”</p></div>
         <button class="exp-btn" onclick="bajar('canales')">&#8681; Excel</button></div>
       <div class="tscroll" id="tCanal"></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Participación por canal</h2>
-        <p class="hint" id="hintPartCanal">Sobre facturación del período</p><p class="cols">Columnas: <code>UtmSource</code> <code>Total Value</code></p></div></div>
+        <p class="hint" id="hintPartCanal">Sobre facturación del período</p></div></div>
       <div class="cwrap"><canvas id="cCanal"></canvas></div></div>
   </div>
   <div class="grid g2e">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Ciudades</h2>
-        <p class="hint" id="hintCiudad">Facturación por ciudad normalizada</p><p class="cols">Columnas: <code>City</code> <code>UF</code> <code>Order</code> <code>Total Value</code></p></div>
+        <p class="hint" id="hintCiudad">Facturación por ciudad normalizada</p></div>
         <button class="exp-btn" onclick="bajar('ciudades')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cCiudad"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Medio de pago</h2>
-        <p class="hint">Define cuándo se cobra realmente</p><p class="cols">Columnas: <code>Payment System Name</code> <code>Order</code> <code>Total Value</code></p></div>
+        <p class="hint">Define cuándo se cobra realmente</p></div>
         <button class="exp-btn" onclick="bajar('pagos')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cPago"></canvas></div></div>
   </div>
@@ -395,12 +335,12 @@
   <div class="grid g2">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span><span id="tituloProd">Top SKUs por facturación</span></h2>
-        <p class="hint" id="hintProd">Solo líneas con precio &gt; 0 · excluye componentes de combo</p><p class="cols">Columnas: <code>SKU Name</code> <code>SKU Total Price</code> <code>Quantity_SKU</code></p></div>
+        <p class="hint" id="hintProd">Solo líneas con precio &gt; 0 · excluye componentes de combo</p></div>
         <button class="exp-btn" onclick="bajar('productos')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cSku"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Retornable vs. no retornable</h2>
-        <p class="hint" id="hintRet">Participación en facturación de producto</p><p class="cols">Columnas: <code>SKU Name (detecta “retornable”)</code> <code>SKU Total Price</code> <code>Quantity_SKU</code></p></div>
+        <p class="hint" id="hintRet">Participación en facturación de producto</p></div>
         <button class="exp-btn" onclick="bajar('retornables')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cRet"></canvas></div></div>
   </div>
@@ -409,7 +349,7 @@
   <div class="grid">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Cupones más usados</h2>
-        <p class="hint" id="cupTot">—</p><p class="cols">Columnas: <code>Coupon</code> <code>Order</code> <code>Total Value</code> <code>Discounts Totals</code> <code>Discounts Names</code></p></div>
+        <p class="hint" id="cupTot">—</p></div>
         <button class="exp-btn" onclick="bajar('cupones')">&#8681; Excel</button></div>
       <div class="tscroll" id="tCupon"></div></div>
   </div>
@@ -421,12 +361,12 @@
   <div class="grid g2e">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Nuevos vs. recurrentes</h2>
-        <p class="hint">Pedidos por tipo de cliente y mes</p><p class="cols">Columnas: <code>Email</code> <code>Creation Date</code> <code>Order</code></p></div>
+        <p class="hint">Pedidos por tipo de cliente y mes</p></div>
         <button class="exp-btn" onclick="bajar('clientes')">&#8681; Excel</button></div>
       <div class="cwrap"><canvas id="cClientes"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Frecuencia de compra</h2>
-        <p class="hint">Clientes según cantidad de pedidos en el período</p><p class="cols">Columnas: <code>Email</code> <code>Order</code></p></div>
+        <p class="hint">Clientes según cantidad de pedidos en el período</p></div>
         <button class="exp-btn" onclick="bajar('frecuencia')">&#8681; Excel</button></div>
       <div class="cwrap"><canvas id="cFreq"></canvas></div></div>
   </div>
@@ -441,15 +381,13 @@
 const GSHEET = {
   id:  '1oDuPtSdspEqvoo_0RDWg2eku2zrejNhrp711oqBgUp8',   // Fuente General VTEX 2026 — NO MODIFICAR
   gid: '2098720537',                                      // hoja Base
-  gidCanceladas: '',                                      // opcional: gid de Canceladas_Probables (si queda vacío se busca por nombre)
-  hojaCanceladas: 'Canceladas_Probables'
+  gidCanceladas: ''                                       // opcional: gid de Canceladas_Probables
 };
 /* Fuente del año anterior · debe tener las mismas columnas que la 2026 */
 const GSHEET25 = {
   id:  '1PfSeehY2EFMVU3VZfG0ICIHT3GZNnjIDlZbkbKn5Bxo',   // Fuente VTEX General 2025 — NO MODIFICAR
   gid: '',        // si queda vacío, se busca la hoja por nombre y después gid 0
-  sheet: 'Base',  // nombre de la pestaña con los pedidos
-  hojaCanceladas: 'Canceladas_Probables'
+  sheet: 'Base'   // nombre de la pestaña con los pedidos
 };
 /* Columnas que se piden al Sheet. Si alguien reordena columnas en la hoja,
    el select por letra falla y el código cae automáticamente a traer todo
@@ -459,19 +397,6 @@ const REQUERIDAS = ['Order','Creation Date','Email','UF','City','Status','UtmSou
   'Payment System Name','Quantity_SKU','SKU Name','SKU Total Price','Shipping Value',
   'Total Value','Discounts Totals','Discounts Names'];
 const ESTADOS_VALIDOS = ['Faturado','Pronto para o manuseio'];
-/* ============================================================
-   CLASIFICACIÓN DE ESTADOS (campo real: columna `Status`)
-   · Facturado  = Status 'Faturado' en la hoja Base
-   · Pronto     = Status 'Pronto para o manuseio' en la hoja Base
-                  (estado propio: NO se mezcla con facturados)
-   · Cancelado  = toda fila de la hoja Canceladas_Probables,
-                  cualquiera sea el valor que traiga en `Status`
-                  (los valores reales se listan en el control de calidad)
-   · Cualquier otro valor de Status en Base se identifica aparte
-     en el control de calidad y NO entra en ningún cálculo.
-   ============================================================ */
-const ETIQ_EST={'':'todos los estados','Facturado':'sólo facturados',
-  'Pronto':'sólo “Pronto para o manuseio”','Cancelado':'sólo cancelados'};
 
 /* ===== gviz ===== */
 function gvizNormDate(v){
@@ -544,25 +469,6 @@ async function traerFuente(cfg, etiqueta, locs){
   });
   return r.rows;
 }
-/* Hoja Canceladas: se trae completa (sin select por letra) y sólo se exigen
-   las columnas mínimas; si falta alguna dimensión (SKU, ciudad, cupón…)
-   el desglose correspondiente se omite avisando, sin inventar datos. */
-async function traerCanceladas(cfg, etiqueta, locs){
-  let r=null, err=null;
-  for(const loc of locs){
-    try{ r=await gvizRaw(cfg.id, loc, null); err=null; break; }
-    catch(e){ err=e; r=null; }
-  }
-  if(!r) throw err||new Error('No se pudo leer '+etiqueta);
-  const MIN=['Order','Creation Date','Total Value'];
-  const faltan=MIN.filter(c=>!r.headers.includes(c));
-  if(faltan.length) throw new Error(etiqueta+': faltan columnas mínimas: '+faltan.join(', '));
-  r.rows.forEach(o=>{
-    if(o['Order']!=null) o['Order']=String(o['Order']).trim();
-    if(o['Creation Date']) o['Creation Date']=normCreationDate(o['Creation Date']);
-  });
-  return r.rows;
-}
 
 /* ===== normalización ===== */
 const sinTilde=s=>String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase().replace(/\s+/g,' ');
@@ -583,45 +489,17 @@ const nOf=v=>{const n=typeof v==='number'?v:parseFloat(String(v).replace(/[^\d.-
 /* ===== modelo ===== */
 let LINEAS=[], PEDIDOS=[], MESES=[], QC={};
 let HAY25=false, ERR25='';
-let HAYC=false, ERRC='', HAYC25=false;
-function construir(rows, rows25, canc, canc25){
+function construir(rows, rows25){
   paso('Reconstruyendo pedidos y aplicando las reglas de la fuente…');
-  rows25=rows25||[]; canc=canc||[]; canc25=canc25||[];
+  rows25=rows25||[];
   const filasCrudas=rows.length, filas25Crudas=rows25.length;
-  const filasCanc=canc.length, filasCanc25=canc25.length;
-
-  /* estado por fila de Base según el valor REAL de `Status` */
-  const otros=new Map();
-  const tagBase=arr=>arr.filter(o=>{
-    const s=String(o['Status']).trim();
-    if(s==='Faturado'){o._estado='Facturado';return true}
-    if(s==='Pronto para o manuseio'){o._estado='Pronto';return true}
-    otros.set(s||'(vacío)',(otros.get(s||'(vacío)')||0)+1);
-    return false;
-  });
-  const lineas26=tagBase(rows);
-  const lineas25Todas=tagBase(rows25);
-  /* canceladas: pertenecer a la hoja Canceladas_Probables define el estado;
-     se registran los valores reales de Status que traiga la hoja */
-  const stCanc=new Map();
-  const tagCanc=arr=>{arr.forEach(o=>{o._estado='Cancelado';
-    const k=String(o['Status']==null?'':o['Status']).trim()||'(vacío)';
-    stCanc.set(k,(stCanc.get(k)||0)+1)});return arr};
-  const canc26=tagCanc(canc), canc25Todas=tagCanc(canc25);
-
+  const lineas26=rows.filter(o=>ESTADOS_VALIDOS.includes(String(o['Status']).trim()));
+  const lineas25Todas=rows25.filter(o=>ESTADOS_VALIDOS.includes(String(o['Status']).trim()));
   /* si un pedido aparece en ambas fuentes se toma la versión 2026 (foto más nueva) */
   const ordenes26=new Set(lineas26.map(o=>o['Order']).filter(Boolean));
   const lineas25=lineas25Todas.filter(o=>!ordenes26.has(o['Order']));
   const dupCruz=new Set(lineas25Todas.filter(o=>ordenes26.has(o['Order'])).map(o=>o['Order'])).size;
-  const ordC26=new Set(canc26.map(o=>o['Order']).filter(Boolean));
-  const cancL25=canc25Todas.filter(o=>!ordC26.has(o['Order']));
-  /* conflicto Base ∩ Canceladas: se conserva la versión de Base (foto vigente) y se avisa */
-  const ordBase=new Set(lineas26.concat(lineas25).map(o=>o['Order']).filter(Boolean));
-  const cancTodas=canc26.concat(cancL25);
-  const cancL=cancTodas.filter(o=>!ordBase.has(o['Order']));
-  const dupBC=new Set(cancTodas.filter(o=>ordBase.has(o['Order'])).map(o=>o['Order'])).size;
-
-  const lineas=lineas25.concat(lineas26).concat(cancL);
+  const lineas=lineas25.concat(lineas26);
   const mapa=new Map();
   lineas.forEach(o=>{
     const id=o['Order']; if(!id) return;
@@ -643,7 +521,6 @@ function construir(rows, rows25, canc, canc25){
          promos:String(o['Discounts Names']||'').split(',').map(s=>s.trim()).filter(Boolean),
          facturacion:nOf(o['Total Value']),
          descuento:nOf(o['Discounts Totals']),
-         estado:o._estado,
          envio:0, filas:0};
       mapa.set(id,p);
     }
@@ -652,44 +529,31 @@ function construir(rows, rows25, canc, canc25){
   });
   const pedidos=[...mapa.values()];
   pedidos.forEach(p=>{p.canje=p.facturacion<=0});
-  // primera compra del año por email · SÓLO sobre pedidos FACTURADOS
-  // (un pedido cancelado o en preparación no define cliente nuevo/recurrente)
+  // primera compra del año por email (por año, para no mezclar 2025 con 2026)
   const prim=new Map();
-  pedidos.filter(p=>p.estado==='Facturado').forEach(p=>{if(!p.email)return;
-    const k=p.mes.slice(0,4)+'|'+p.email;
+  pedidos.forEach(p=>{if(!p.email)return;const k=p.mes.slice(0,4)+'|'+p.email;
     const v=prim.get(k);if(!v||p.fecha<v)prim.set(k,p.fecha)});
   pedidos.forEach(p=>p.nuevo=(prim.get(p.mes.slice(0,4)+'|'+p.email)===p.fecha));
 
   LINEAS=lineas; PEDIDOS=pedidos;
   MESES=[...new Set(pedidos.map(p=>p.mes))].filter(Boolean).sort();
-  const fact=pedidos.filter(p=>p.estado==='Facturado');
-  const pron=pedidos.filter(p=>p.estado==='Pronto');
-  const cancP=pedidos.filter(p=>p.estado==='Cancelado');
-  const base=pedidos.filter(p=>p.estado!=='Cancelado');
-  const conVenta=fact.filter(p=>!p.canje);        // VENTA = sólo Facturado, sin canjes ₲0
+  const conVenta=pedidos.filter(p=>!p.canje);
   const ped25=pedidos.filter(p=>p.mes.slice(0,4)==='2025');
-  QC={filasCrudas, filas25Crudas, filasCanc, filasCanc25, dupCruz, dupBC,
-      otros:[...otros.entries()].sort((a,b)=>b[1]-a[1]),
-      stCanc:[...stCanc.entries()].sort((a,b)=>b[1]-a[1]),
+  QC={filasCrudas, filas25Crudas, dupCruz,
       pedidos25:ped25.length,
-      fechaMax26:base.filter(p=>p.mes.slice(0,4)==='2026').reduce((m,p)=>p.fecha>m?p.fecha:m,''),
-      filas:lineas.length, pedidos:pedidos.length,
-      pedFact:fact.length, pedPronto:pron.length, pedCanc:cancP.length,
-      pedidosVenta:conVenta.length,
-      canjes:fact.length-conVenta.length,
+      fechaMax26:pedidos.filter(p=>p.mes.slice(0,4)==='2026').reduce((m,p)=>p.fecha>m?p.fecha:m,''),
+      filas:lineas.length, pedidos:pedidos.length, pedidosVenta:conVenta.length,
+      canjes:pedidos.length-conVenta.length,
       filasCero:lineas.filter(o=>o._precio===0).length,
-      clientes:new Set(conVenta.map(p=>p.email)).size,
+      clientes:new Set(pedidos.map(p=>p.email)).size,
       facturacion:conVenta.reduce((s,p)=>s+p.facturacion,0),
       facturacionSinEnvio:conVenta.reduce((s,p)=>s+p.facturacion-p.envio,0),
-      montoCanc:cancP.reduce((s,p)=>s+p.facturacion,0),
-      montoCancSinEnvio:cancP.reduce((s,p)=>s+p.facturacion-p.envio,0),
       envioVenta:conVenta.reduce((s,p)=>s+p.envio,0),
-      envio:base.reduce((s,p)=>s+p.envio,0),
-      descuento:-base.reduce((s,p)=>s+p.descuento,0),
+      envio:pedidos.reduce((s,p)=>s+p.envio,0),
+      descuento:-pedidos.reduce((s,p)=>s+p.descuento,0),
       desde:MESES[0], hasta:MESES[MESES.length-1],
-      fechaMax:base.reduce((m,p)=>p.fecha>m?p.fecha:m,'')};
+      fechaMax:pedidos.reduce((m,p)=>p.fecha>m?p.fecha:m,'')};
   QC.ticket=QC.pedidosVenta?QC.facturacion/QC.pedidosVenta:0;
-  QC.pctCanc=QC.pedidos?QC.pedCanc/QC.pedidos*100:0;
   // control: la facturación tiene que reconstruirse desde las líneas
   const porPedido=new Map();
   lineas.forEach(o=>porPedido.set(o['Order'],(porPedido.get(o['Order'])||0)+o._precio));
@@ -701,11 +565,6 @@ function construir(rows, rows25, canc, canc25){
 
 /* ===== estado ===== */
 let A=0,B=0,FC='',FCI='',MODO='f';
-/* Filtro de estado del pedido. Por defecto los paneles muestran SÓLO
-   pedidos Facturados: las ventas nunca incluyen cancelados. Los KPIs
-   principales muestran siempre el desglose completo (ignoran este filtro). */
-let FE='Facturado';
-let GRANC='mes', METC='p';   // comparativo facturados vs cancelados
 
 /* ------------------------------------------------------------------
    MODO DE FACTURACIÓN · 'con' = total pagado (producto + envío)
@@ -724,7 +583,7 @@ const C={red:'#E31837',red2:'#E8241B',amber:'#FFB300',ink:'#111315',gris:'#B0BEC
   cyan:'#82E1FF',verde:'#78E6A0',naranja:'#FF8700',rojoClaro:'#FBC0BA'};
 const PAL=[C.red,C.amber,C.verde,C.cyan,C.naranja,C.gris,C.rojoClaro,'#5BDDE8'];
 const fmt=n=>'\u20b2\u00a0'+Math.round(n).toLocaleString('es-PY');
-const fmtK=n=>n>=1e9?'\u20b2 '+(n/1e9).toFixed(2).replace('.',',')+' MM':n>=1e6?'\u20b2 '+(n/1e6).toFixed(0)+' M':fmt(n);
+const fmtK=n=>n>=1e9?'\u20b2'+(n/1e9).toFixed(2)+'MM':n>=1e6?'\u20b2'+(n/1e6).toFixed(0)+'M':fmt(n);
 const num=n=>Math.round(n).toLocaleString('es-PY');
 const pct=n=>(n>=0?'+':'')+n.toFixed(1)+'%';
 const nomMes=m=>{const[y,mo]=m.split('-');
@@ -735,20 +594,17 @@ const semanaDe=f=>{const d=new Date(f+'T00:00:00Z');const t=new Date(d);
   const y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));
   return String(t.getUTCFullYear()).slice(2)+'-S'+String(Math.ceil(((t-y0)/864e5+1)/7)).padStart(2,'0')};
 
-/* filtros: ahora SÍ se cruzan entre sí, porque tenemos el detalle en memoria.
-   `ignorar` admite varias claves separadas por coma, ej. 'canal,estado'. */
+/* filtros: ahora SÍ se cruzan entre sí, porque tenemos el detalle en memoria */
 function sel(a,b,ignorar){
-  a=a===undefined?A:a; b=b===undefined?B:b; ignorar=ignorar||'';
+  a=a===undefined?A:a; b=b===undefined?B:b;
   return PEDIDOS.filter(p=>{
     const i=MESES.indexOf(p.mes);
     if(i<a||i>b) return false;
-    if(FC&&!ignorar.includes('canal')&&p.canal!==FC) return false;
-    if(FCI&&!ignorar.includes('ciudad')&&p.ciudad!==FCI) return false;
-    if(FE&&!ignorar.includes('estado')&&p.estado!==FE) return false;
+    if(FC&&ignorar!=='canal'&&p.canal!==FC) return false;
+    if(FCI&&ignorar!=='ciudad'&&p.ciudad!==FCI) return false;
     return true;
   });
 }
-const soloEstado=(arr,e)=>arr.filter(p=>p.estado===e);
 const conVenta=arr=>arr.filter(p=>!p.canje);
 const idsDe=arr=>new Set(arr.map(p=>p.id));
 const lineasDe=arr=>{const s=idsDe(arr);return LINEAS.filter(o=>s.has(o['Order']))};
@@ -760,54 +616,29 @@ function rank(arr,clave,valor,top){
   return top?r.slice(0,top):r;
 }
 
-/* ===== KPIs =====
-   Los KPIs ignoran el filtro de estado (muestran siempre el desglose
-   Facturados / Pronto / Cancelados). La facturación y el ticket usan
-   ÚNICAMENTE pedidos Facturados (sin canjes ₲0). */
+/* ===== KPIs ===== */
 function kpis(){
-  const uT=sel(A,B,'estado');
-  const len=B-A+1, pa=A-len, pb=A-1, hay=pa>=0;
-  const uP=hay?sel(pa,pb,'estado'):[];
-  const fa=soloEstado(uT,'Facturado'), faP=soloEstado(uP,'Facturado');
-  const pr=soloEstado(uT,'Pronto');
-  const ca=soloEstado(uT,'Cancelado'), caP=soloEstado(uP,'Cancelado');
-  const cur=conVenta(fa), prev=conVenta(faP);
-  const f=suma(cur,p=>FAC(p)), fp=suma(prev,x=>FAC(x));
-  const mc=suma(ca,p=>FAC(p)), mcP=suma(caP,p=>FAC(p));
-  const tot=uT.length, totP=uP.length;
-  const pctC=tot?ca.length/tot*100:0, pctCP=totP?caP.length/totP*100:null;
+  const cur=conVenta(sel()), len=B-A+1, pa=A-len, pb=A-1, hay=pa>=0;
+  const prev=hay?conVenta(sel(pa,pb)):[];
+  const f=suma(cur,p=>FAC(p)), p=cur.length;
+  const fp=suma(prev,x=>FAC(x)), pp=prev.length;
   const cl=new Set(cur.map(x=>x.email)).size, clP=new Set(prev.map(x=>x.email)).size;
-  const tk=cur.length?f/cur.length:0, tkP=prev.length?fp/prev.length:0;
-  const noC=!HAYC; // hoja de canceladas no disponible: no se afirma "0 cancelados"
-  /* [etiqueta, valor, delta|null, invertir color (subir=malo), sub fijo opcional] */
   const items=[
-    [ETIQL()+' · facturados',fmt(f),fp?f/fp-1:null,false,null],
-    ['Ticket promedio · facturados',fmt(tk),tkP&&tk?tk/tkP-1:null,false,null],
-    ['Pedidos totales',num(tot),null,false,
-      `F ${num(fa.length)} · P ${num(pr.length)} · C ${noC?'—':num(ca.length)}`],
-    ['Pedidos facturados',num(fa.length),faP.length?fa.length/faP.length-1:null,false,null],
-    ['Pedidos cancelados',noC?'—':num(ca.length),noC?null:(caP.length?ca.length/caP.length-1:null),true,
-      noC?'hoja Canceladas no disponible':null],
-    ['% de cancelación',noC?'—':pctC.toFixed(1)+'%',null,true,
-      noC?'hoja Canceladas no disponible':(pctCP!==null?pctCP.toFixed(1)+'% en período previo':'Sin período previo')],
-    ['Monto cancelado',noC?'—':fmt(mc),noC?null:(mcP?mc/mcP-1:null),true,
-      noC?'hoja Canceladas no disponible':null],
-    ['Clientes únicos · facturados',num(cl),clP?cl/clP-1:null,false,null]];
-  document.getElementById('kpis').innerHTML=items.map(([l,v,d,inv,fijo])=>{
-    let s=fijo!=null?`<div class="sub flat">${fijo}</div>`:'<div class="sub flat">Sin período previo</div>';
-    if(d!==null&&d!==undefined&&isFinite(d)){
-      const bueno=inv?d<0:d>0;
-      const c=Math.abs(d)<.005?'flat':bueno?'up':'dn';
+    [ETIQL(),fmt(f),fp?f/fp-1:null],
+    ['Pedidos',num(p),pp?p/pp-1:null],
+    ['Ticket promedio',fmt(p?f/p:0),pp&&p?(f/p)/(fp/pp)-1:null],
+    ['Clientes únicos',num(cl),clP?cl/clP-1:null]];
+  document.getElementById('kpis').innerHTML=items.map(([l,v,d])=>{
+    let s='<div class="sub flat">Sin período previo</div>';
+    if(d!==null&&isFinite(d)){const c=Math.abs(d)<.005?'flat':d>0?'up':'dn';
       const fl=Math.abs(d)<.005?'\u25CF':d>0?'\u25B2':'\u25BC';
       s=`<div class="sub ${c}">${fl} ${pct(d*100)} <span style="color:#8b9096">vs. previo</span></div>`}
     return `<div class="kpi"><div class="lab">${l}</div><div class="val">${v}</div>${s}</div>`}).join('');
-  const filtro=(FC?` · canal ${FC}`:'')+(FCI?` · ciudad ${FCI}`:'')+
-    (FE?` · estado: ${ETIQ_EST[FE]}`:' · todos los estados');
+  const filtro=(FC?` · canal ${FC}`:'')+(FCI?` · ciudad ${FCI}`:'');
   document.getElementById('periodTag').textContent=nomMes(MESES[A])+' \u2013 '+nomMes(MESES[B]);
   document.getElementById('ctx').textContent=
     `${nomMes(MESES[A])} \u2013 ${nomMes(MESES[B])} · ${len} ${len>1?'meses':'mes'}${filtro}. `+
-    `Comparativo contra los ${len} ${len>1?'meses':'mes'} inmediatamente anteriores. `+
-    `Los KPIs muestran siempre el desglose por estado; los paneles de abajo responden al filtro de estado.`;
+    `Comparativo contra los ${len} ${len>1?'meses':'mes'} inmediatamente anteriores.`;
 }
 
 /* ===== charts ===== */
@@ -841,8 +672,6 @@ function pintarModo(){
   document.querySelectorAll('#segFac button').forEach(b=>{
     const on=b.dataset.v===MODOFAC;
     b.classList.toggle('on',on); b.setAttribute('aria-pressed',on?'true':'false')});
-  const ce=document.getElementById('chipEstado');
-  if(ce) ce.innerHTML='Paneles: <b>'+ETIQ_EST[FE]+'</b> · KPIs siempre con desglose';
 }
 
 function render(){
@@ -964,135 +793,9 @@ function render(){
 
   tablasPeriodo(cur,todos);
   armarBloques(cur,todos,mesesSel,lin,conPrecio);
-  renderCancel();
   renderYoY();
   renderProy();
   notaParcial();
-}
-
-/* ============================================================
-   FACTURADOS VS. CANCELADOS · sección propia
-   Ignora el filtro de estado (compara ambos universos) y respeta
-   período, canal, ciudad y modo de facturación.
-   ============================================================ */
-function claveGran(p){
-  return GRANC==='mes'?p.mes:(GRANC==='sem'?semanaDe(p.fecha):p.fecha);
-}
-function renderCancel(){
-  const nota=document.getElementById('notaCanc');
-  const limpiar=()=>{['cFvC','cCancCiudad','cCancSku'].forEach(id=>{
-      if(charts[id]){charts[id].destroy();delete charts[id]}});
-    document.getElementById('tCancCanal').innerHTML='<p class="hint">Sin datos de cancelaciones.</p>';
-    document.getElementById('tCancCupon').innerHTML='<p class="hint">Sin datos de cancelaciones.</p>';
-    ['fvc','cancCiudades','cancCanales','cancSkus','cancCupones'].forEach(k=>delete BLOQUES[k]);};
-  if(!nota) return;
-  if(!HAYC){
-    nota.textContent='Hoja "Canceladas_Probables" no disponible'+(ERRC?' ('+ERRC+')':'')+
-      ' — no se puede analizar cancelaciones ni afirmar que sean cero.';
-    limpiar(); return;
-  }
-  const uni=sel(A,B,'estado');
-  const fa=conVenta(soloEstado(uni,'Facturado'));
-  const ca=soloEstado(uni,'Cancelado');
-  const tot=uni.length;
-  nota.textContent=`${num(ca.length)} pedidos cancelados · ${fmt(suma(ca,p=>FAC(p)))} · `+
-    `${tot?(ca.length/tot*100).toFixed(1):'0.0'}% de los ${num(tot)} pedidos del período · modo: facturación ${ETIQ()}`;
-
-  /* --- comparativo por período (mes / semana / día · pedidos / monto) --- */
-  const kf=new Map(), kc=new Map();
-  fa.forEach(p=>{const k=claveGran(p);const v=kf.get(k)||{p:0,f:0};v.p++;v.f+=FAC(p);kf.set(k,v)});
-  ca.forEach(p=>{const k=claveGran(p);const v=kc.get(k)||{p:0,f:0};v.p++;v.f+=FAC(p);kc.set(k,v)});
-  const claves=[...new Set([...kf.keys(),...kc.keys()])].sort();
-  const lab=GRANC==='mes'?claves.map(nomMes):claves;
-  const esM=METC==='m';
-  const dF=claves.map(k=>{const v=kf.get(k);return v?(esM?v.f:v.p):0});
-  const dC=claves.map(k=>{const v=kc.get(k);return v?(esM?v.f:v.p):0});
-  draw('cFvC',{type:'bar',data:{labels:lab,datasets:[
-    {label:esM?'Monto facturado':'Pedidos facturados',data:dF,backgroundColor:C.red,borderRadius:4,maxBarThickness:22},
-    {label:esM?'Monto cancelado':'Pedidos cancelados',data:dC,backgroundColor:C.gris,borderRadius:4,maxBarThickness:22}]},
-    options:{...BASE,plugins:{...BASE.plugins,tooltip:{callbacks:{
-      label:c=>c.dataset.label+': '+(esM?fmt(c.parsed.y):num(c.parsed.y))}}},
-    scales:{...BASE.scales,y:{...BASE.scales.y,ticks:{font:F11,callback:esM?fmtK:num}}}}});
-  BLOQUES.fvc={arch:'Facturados_vs_cancelados',hoja:'Fact vs Cancel',anchos:[14,16,20,16,20,16],
-    aoa:[['Período ('+({mes:'mes',sem:'semana ISO',dia:'día'})[GRANC]+')','Pedidos facturados',HFAC()+' facturados',
-          'Pedidos cancelados','Monto cancelado','% cancelación del período']]
-      .concat(claves.map(k=>{const vf=kf.get(k)||{p:0,f:0}, vc=kc.get(k)||{p:0,f:0};
-        const t=vf.p+vc.p;
-        return [k,vf.p,vf.f,vc.p,vc.f,t?vc.p/t:0]}))
-      .concat([(()=>{const tp=suma(claves,k=>(kf.get(k)||{p:0}).p), tc=suma(claves,k=>(kc.get(k)||{p:0}).p);
-        return ['TOTAL',tp,suma(claves,k=>(kf.get(k)||{f:0}).f),tc,
-                suma(claves,k=>(kc.get(k)||{f:0}).f),(tp+tc)?tc/(tp+tc):0]})()])};
-
-  /* --- cancelaciones por ciudad --- */
-  const ciu=rank(ca,p=>p.ciudad,()=>1,12);
-  const ciuM=new Map(); ca.forEach(p=>ciuM.set(p.ciudad,(ciuM.get(p.ciudad)||0)+FAC(p)));
-  draw('cCancCiudad',{type:'bar',data:{labels:ciu.map(x=>x[0]),datasets:[{data:ciu.map(x=>x[1]),
-    backgroundColor:C.gris,borderRadius:6,barThickness:'flex',maxBarThickness:26}]},
-    options:{...BASE,indexAxis:'y',plugins:{legend:{display:false},
-      tooltip:{callbacks:{label:c=>num(c.parsed.x)+' pedidos · '+fmt(ciuM.get(c.label)||0)}}},
-    scales:{x:{grid:{color:'#F0F0F0'},border:{display:false},ticks:{font:F11,callback:num}},
-      y:{grid:{display:false},border:{display:false},ticks:{font:F11}}}}});
-  const todasCiu=rank(ca,p=>p.ciudad,()=>1);
-  BLOQUES.cancCiudades={arch:'Cancelaciones_ciudades',hoja:'Cancel ciudades',anchos:[22,18,20],
-    aoa:[['Ciudad','Pedidos cancelados','Monto cancelado']]
-      .concat(todasCiu.map(([k,v])=>[k,v,ciuM.get(k)||0]))
-      .concat([['TOTAL',ca.length,suma(ca,p=>FAC(p))]])};
-
-  /* --- cancelaciones por canal (con tasa de cancelación del canal) --- */
-  const cm=new Map();
-  uni.forEach(p=>{const v=cm.get(p.canal)||{t:0,c:0,f:0};v.t++;
-    if(p.estado==='Cancelado'){v.c++;v.f+=FAC(p)}cm.set(p.canal,v)});
-  const filasCan=[...cm.entries()].filter(([,v])=>v.c>0).sort((a,b)=>b[1].c-a[1].c);
-  document.getElementById('tCancCanal').innerHTML=filasCan.length?
-    '<table><thead><tr><th>Canal</th><th>Cancelados</th><th>Monto cancelado</th>'+
-    '<th>% de cancelación del canal</th></tr></thead><tbody>'+
-    filasCan.map(([k,v],i)=>`<tr><td><span class="rank">${i+1}</span>${k}</td>`+
-      `<td>${num(v.c)}</td><td>${fmt(v.f)}</td><td>${(v.c/v.t*100).toFixed(1)}%</td></tr>`).join('')+
-    '</tbody></table>'
-    :'<p class="hint">Sin pedidos cancelados en el período seleccionado.</p>';
-  BLOQUES.cancCanales={arch:'Cancelaciones_canales',hoja:'Cancel canales',anchos:[22,14,20,26],
-    aoa:[['Canal','Pedidos cancelados','Monto cancelado','% de cancelación del canal (cancelados / pedidos totales del canal)']]
-      .concat([...cm.entries()].sort((a,b)=>b[1].c-a[1].c).map(([k,v])=>[k,v.c,v.f,v.t?v.c/v.t:0]))
-      .concat([['TOTAL',ca.length,suma(ca,p=>FAC(p)),tot?ca.length/tot:0]])};
-
-  /* --- cancelaciones por producto / SKU --- */
-  const linC=lineasDe(ca).filter(o=>o._precio>0);
-  const topSku=rank(linC,o=>o['SKU Name'],o=>o._precio,12);
-  const uSku=new Map(); linC.forEach(o=>{const k=o['SKU Name'];
-    uSku.set(k,(uSku.get(k)||0)+o._unid)});
-  if(topSku.length){
-    draw('cCancSku',{type:'bar',data:{labels:topSku.map(x=>corta(String(x[0]),36)),
-      datasets:[{data:topSku.map(x=>x[1]),backgroundColor:C.gris,borderRadius:6,
-        barThickness:'flex',maxBarThickness:24}]},
-      options:{...BASE,indexAxis:'y',plugins:{legend:{display:false},
-        tooltip:{callbacks:{label:c=>fmt(c.parsed.x)+' · '+num(uSku.get(topSku[c.dataIndex][0])||0)+' un.'}}},
-      scales:{x:{grid:{color:'#F0F0F0'},border:{display:false},ticks:{font:{family:'Inter',size:10},callback:fmtK}},
-        y:{grid:{display:false},border:{display:false},ticks:{font:{family:'Inter',size:10}}}}}});
-  }else if(charts.cCancSku){charts.cCancSku.destroy();delete charts.cCancSku}
-  document.getElementById('hintCancSku').textContent=topSku.length
-    ?'Monto cancelado por SKU · sólo líneas con precio > 0'
-    :'Sin líneas de SKU con precio en los pedidos cancelados del período (o la hoja no trae SKU Name).';
-  const todosSku=rank(linC,o=>o['SKU Name'],o=>o._precio);
-  BLOQUES.cancSkus={arch:'Cancelaciones_SKU',hoja:'Cancel SKUs',anchos:[48,20,18],
-    aoa:[['SKU','Monto cancelado (producto, sin envío)','Unidades canceladas']]
-      .concat(todosSku.map(([k,v])=>[k,v,uSku.get(k)||0]))};
-
-  /* --- cancelaciones por cupón / promoción --- */
-  const cu=new Map();
-  ca.filter(p=>p.cupon).forEach(p=>{const v=cu.get(p.cupon)||{p:0,f:0};v.p++;v.f+=FAC(p);cu.set(p.cupon,v)});
-  const cupC=[...cu.entries()].sort((a,b)=>b[1].p-a[1].p);
-  const prM=new Map();
-  ca.forEach(p=>p.promos.forEach(k=>{const v=prM.get(k)||{p:0,f:0};v.p++;v.f+=FAC(p);prM.set(k,v)}));
-  document.getElementById('tCancCupon').innerHTML=cupC.length?
-    '<table><thead><tr><th>Cupón</th><th>Pedidos cancelados</th><th>Monto cancelado</th></tr></thead><tbody>'+
-    cupC.slice(0,12).map(([k,v],i)=>`<tr><td><span class="rank">${i+1}</span>${corta(k,30)}</td>`+
-      `<td>${num(v.p)}</td><td>${fmt(v.f)}</td></tr>`).join('')+'</tbody></table>'
-    :'<p class="hint">Sin cupones en los pedidos cancelados del período (dato de la columna <code>Coupon</code>).</p>';
-  BLOQUES.cancCupones={arch:'Cancelaciones_cupones',hoja:'Cancel cupones',anchos:[34,18,20],
-    aoa:[['Cupón','Pedidos cancelados','Monto cancelado']]
-      .concat(cupC.map(([k,v])=>[k,v.p,v.f]))
-      .concat([[],['Mecánica promocional (Discounts Names)','Pedidos cancelados','Monto cancelado']]
-        .concat([...prM.entries()].sort((a,b)=>b[1].p-a[1].p).map(([k,v])=>[k,v.p,v.f])))};
 }
 
 /* ============================================================
@@ -1101,11 +804,8 @@ function renderCancel(){
    canal, ciudad y modo de facturación.
    ============================================================ */
 const MESES_CORTOS=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-/* Ventas para comparar y proyectar: ÚNICAMENTE pedidos Facturados
-   (sin canjes ₲0). Ignora el filtro de estado a propósito: proyectar
-   cancelaciones o pedidos en preparación no tiene sentido. */
 function pedidosAnio(y){
-  return PEDIDOS.filter(p=>p.mes.slice(0,4)===y&&!p.canje&&p.estado==='Facturado'&&
+  return PEDIDOS.filter(p=>p.mes.slice(0,4)===y&&!p.canje&&
     (!FC||p.canal===FC)&&(!FCI||p.ciudad===FCI));
 }
 function renderYoY(){
@@ -1118,7 +818,7 @@ function renderYoY(){
     document.getElementById('tYoY').innerHTML='<p class="hint">Falta la fuente 2025 para comparar.</p>';
     delete BLOQUES.yoy; return;
   }
-  aviso.textContent='Años completos'+filtro+' · sólo pedidos Facturados · modo: facturación '+ETIQ();
+  aviso.textContent='Años completos'+filtro+' · modo: facturación '+ETIQ();
   const p25=pedidosAnio('2025'), p26=pedidosAnio('2026');
   const f25=[],f26=[],n25=[],n26=[];
   for(let i=1;i<=12;i++){const mm=String(i).padStart(2,'0');
@@ -1425,11 +1125,9 @@ function cabecera(titulo){
     ['Período',`${MESES[A]} a ${MESES[B]}`],
     ['Filtro canal',FC||'Todos'],
     ['Filtro ciudad',FCI||'Todas'],
-    ['Filtro estado del pedido',FE?ETIQ_EST[FE]:'Todos'],
     ['Modo de facturación',ETIQL()],
     ['Generado',new Date().toLocaleString('es-PY')],
-    ['Fuente','Fuente General VTEX 2026 (gid '+GSHEET.gid+', Base'+(HAYC?' + Canceladas_Probables':'')+')'+
-      (HAY25?' + Fuente VTEX General 2025':'')],
+    ['Fuente','Fuente General VTEX 2026 (gid '+GSHEET.gid+')'+(HAY25?' + Fuente VTEX General 2025':'')],
     []];
 }
 
@@ -1440,9 +1138,8 @@ function bajar(clave){
     const wb=XLSX.utils.book_new();
     hoja(wb,b.hoja,cabecera(b.hoja).concat(b.aoa),b.anchos);
     const f=FC?'_'+FC.replace(/\W+/g,''):'', c=FCI?'_'+FCI.replace(/\W+/g,''):'';
-    const e=FE?'_'+FE:'_TodosEstados';
     const mo=MODOFAC==='con'?'_conEnvio':'_sinEnvio';
-    XLSX.writeFile(wb,`MiPortal_${b.arch}_${MESES[A]}_a_${MESES[B]}${f}${c}${e}${mo}.xlsx`);
+    XLSX.writeFile(wb,`MiPortal_${b.arch}_${MESES[A]}_a_${MESES[B]}${f}${c}${mo}.xlsx`);
   }catch(e){alert('No se pudo generar el Excel: '+(e.message||e))}
 }
 
@@ -1451,48 +1148,31 @@ function qcRender(){
   const v=QC, ok=v.cuadre>=95;
   document.getElementById('qcBadge').textContent=ok?'cuadra':'revisar';
   document.getElementById('qcBadge').className='badge '+(ok?'ok':'warn');
-  const identidad=(v.pedFact+v.pedPronto+v.pedCanc)===v.pedidos;
   document.getElementById('qcBody').innerHTML=[
-    ['ok','Filas leídas de Base 2026',num(v.filasCrudas)],
-    ['ok','Filas leídas de la fuente 2025',num(v.filas25Crudas||0)],
-    [HAYC?'ok':'bad','Hoja Canceladas_Probables '+(HAYC?'conectada':'no disponible'+(ERRC?' · '+ERRC:'')),
-      HAYC?num(v.filasCanc||0)+' + '+num(v.filasCanc25||0)+' filas':'\u2014'],
-    ['ok','Pedidos únicos <small>una sola vez por Order</small>',num(v.pedidos)],
-    ['ok','Facturados <small>Status = Faturado</small>',num(v.pedFact)],
-    ['ok','Pronto para o manuseio <small>aparte, no entra en ventas</small>',num(v.pedPronto)],
-    [HAYC?'ok':'warn','Cancelados <small>hoja Canceladas_Probables</small>',HAYC?num(v.pedCanc):'\u2014'],
-    [identidad?'ok':'bad','Identidad Facturados + Pronto + Cancelados = total',identidad?'cuadra':'NO cuadra'],
-    [HAYC?'ok':'warn','% de cancelación sobre pedidos totales',HAYC?v.pctCanc.toFixed(1)+'%':'\u2014'],
-    [(v.otros&&v.otros.length)?'warn':'ok','Otros valores de Status en Base <small>excluidos de todo</small>',
-      (v.otros&&v.otros.length)?v.otros.map(([k,n])=>k+' ('+num(n)+')').join(' · '):'ninguno'],
-    [HAYC?'ok':'warn','Valores de Status en la hoja Canceladas',
-      (v.stCanc&&v.stCanc.length)?v.stCanc.map(([k,n])=>k+' ('+num(n)+')').join(' · '):'\u2014'],
-    [(v.dupBC||0)>0?'warn':'ok','Pedidos en Base y en Canceladas a la vez <small>se conserva Base</small>',num(v.dupBC||0)],
-    ['ok','Pedidos con venta <small>Facturados sin canjes ₲0</small>',num(v.pedidosVenta)],
+    ['ok','Filas leídas del Sheet',num(v.filasCrudas)],
+    ['ok','Filas con estado válido',num(v.filas)],
+    ['ok','Pedidos únicos',num(v.pedidos)],
+    ['ok','Pedidos con venta',num(v.pedidosVenta)],
     [ok?'ok':'bad','Facturación reconstruida desde líneas <small>Σ SKU + Σ envío</small>',v.cuadre.toFixed(1)+'% cuadra'],
     ['warn','Canjes / premios en ₲0 <small>fuera del ticket</small>',num(v.canjes)],
     ['warn','Filas de componente de combo <small>precio 0</small>',num(v.filasCero)],
-    ['ok','Clientes únicos <small>de pedidos facturados</small>',num(v.clientes)],
-    ['ok','Facturación facturados con envío <small>Total Value</small>',fmt(v.facturacion)],
-    ['ok','Facturación facturados sin envío <small>Total Value \u2212 Shipping Value</small>',fmt(v.facturacionSinEnvio)],
-    [HAYC?'ok':'warn','Monto cancelado <small>con envío / sin envío</small>',
-      HAYC?fmt(v.montoCanc)+' / '+fmt(v.montoCancSinEnvio):'\u2014'],
-    ['ok','Ticket promedio <small>sólo facturados, con envío</small>',fmt(v.ticket)],
-    ['ok','Envío total <small>Base, sumado por fila</small>',fmt(v.envio)],
-    ['ok','Descuento nominal <small>Base</small>',fmt(v.descuento)],
+    ['ok','Clientes únicos',num(v.clientes)],
+    ['ok','Facturación con envío <small>Total Value</small>',fmt(v.facturacion)],
+    ['ok','Facturación sin envío <small>Total Value \u2212 Shipping Value</small>',fmt(v.facturacionSinEnvio)],
+    ['ok','Ticket promedio <small>con envío</small>',fmt(v.ticket)],
+    ['ok','Envío total <small>sumado por fila</small>',fmt(v.envio)],
+    ['ok','Descuento nominal',fmt(v.descuento)],
     ['ok','Rango de datos',v.desde+' \u2192 '+v.fechaMax],
+    ['ok','Filas leídas de la fuente 2025',num(v.filas25Crudas||0)],
     [HAY25?'ok':'bad','Fuente 2025 '+(HAY25?'conectada':'no disponible'+(ERR25?' · '+ERR25:'')),
       HAY25?num(v.pedidos25||0)+' pedidos':'\u2014'],
     [(v.dupCruz||0)>0?'warn':'ok','Pedidos repetidos entre fuentes <small>se toma la versión 2026</small>',num(v.dupCruz||0)]
   ].map(([t,k,val])=>`<div class="qc-item ${t}"><span class="ic">${t==='ok'?'\u2713':'!'}</span>`+
     `<span>${k}</span><b>${val}</b></div>`).join('');
   document.getElementById('foot').innerHTML=
-    'Lectura en vivo de <b>Fuente General VTEX 2026</b> (gid '+GSHEET.gid+', '+num(v.filasCrudas)+' filas Base'+
-    (HAYC?' + '+num(v.filasCanc||0)+' filas Canceladas_Probables':'')+')'+
-    (HAY25?' + <b>Fuente VTEX General 2025</b> ('+num(v.filas25Crudas||0)+' filas'+
-      (HAYC25?' + '+num(v.filasCanc25||0)+' canceladas':'')+')':' · <b>fuente 2025 no disponible</b>')+
-    (HAYC?'':' · <b>hoja Canceladas_Probables no disponible</b>')+
-    ' · ventas = <b>sólo Status Faturado</b> · Pronto para o manuseio aparte · cancelado = fila de Canceladas_Probables · '+
+    'Lectura en vivo de <b>Fuente General VTEX 2026</b> (gid '+GSHEET.gid+', '+num(v.filasCrudas)+' filas)'+
+    (HAY25?' + <b>Fuente VTEX General 2025</b> ('+num(v.filas25Crudas||0)+' filas)':' · <b>fuente 2025 no disponible</b>')+
+    ' · pedidos <b>Faturado</b> y <b>Pronto para o manuseio</b> · '+
     'modo activo: <b>facturación '+ETIQ()+'</b> = '+
     (MODOFAC==='con'
       ?'Total Value (producto + envío)'
@@ -1513,15 +1193,6 @@ function controles(){
   [...new Set(PEDIDOS.map(p=>p.ciudad))].sort().forEach(c=>fci.add(new Option(c,c)));
   fc.onchange=()=>{FC=fc.value;render()};
   fci.onchange=()=>{FCI=fci.value;render()};
-  const fe=document.getElementById('festado');
-  fe.value=FE;
-  fe.onchange=()=>{FE=fe.value;render()};
-  document.querySelectorAll('#segGranC button').forEach(b=>b.onclick=()=>{
-    document.querySelectorAll('#segGranC button').forEach(x=>x.classList.remove('on'));
-    b.classList.add('on');GRANC=b.dataset.v;renderCancel()});
-  document.querySelectorAll('#segMetC button').forEach(b=>b.onclick=()=>{
-    document.querySelectorAll('#segMetC button').forEach(x=>x.classList.remove('on'));
-    b.classList.add('on');METC=b.dataset.v;renderCancel()});
   const n=MESES.length;
   const es26=m=>m.slice(0,4)==='2026', es25=m=>m.slice(0,4)==='2025';
   const i26=MESES.findIndex(es26), hay26=i26>=0;
@@ -1539,8 +1210,8 @@ function controles(){
   const cont=document.getElementById('presets'); cont.innerHTML='';
   P.forEach(([t,a,b],i)=>{const btn=document.createElement('button');btn.className='chip';btn.textContent=t;
     btn.onclick=()=>{A=a;B=b;dz.value=a;hz.value=b;marcar(i);render()};cont.appendChild(btn)});
-  document.getElementById('reset').onclick=()=>{A=DEF.a;B=DEF.b;FC='';FCI='';FE='Facturado';
-    dz.value=A;hz.value=B;fc.value='';fci.value='';fe.value=FE;marcar(DEF.i);render()};
+  document.getElementById('reset').onclick=()=>{A=DEF.a;B=DEF.b;FC='';FCI='';
+    dz.value=A;hz.value=B;fc.value='';fci.value='';marcar(DEF.i);render()};
   /* selector de modo de facturación: recalcula todo el tablero */
   document.querySelectorAll('#segFac button').forEach(b=>b.onclick=()=>{
     if(MODOFAC===b.dataset.v) return;
@@ -1558,16 +1229,11 @@ const marcar=i=>[...document.querySelectorAll('#presets button')]
 const paso=t=>{const e=document.getElementById('loadSub');if(e)e.textContent=t};
 async function iniciar(){
   try{
-    paso('Leyendo Base y Canceladas de 2026 y 2025 en paralelo…');
+    paso('Leyendo las fuentes 2026 y 2025 en paralelo…');
     const locs25=GSHEET25.gid?[{gid:GSHEET25.gid}]:[{sheet:GSHEET25.sheet||'Base'},{gid:'0'}];
-    const locsC26=GSHEET.gidCanceladas?[{gid:GSHEET.gidCanceladas}]:
-      [{sheet:GSHEET.hojaCanceladas||'Canceladas_Probables'},{sheet:'Canceladas_probables'},{sheet:'Canceladas'}];
-    const locsC25=[{sheet:GSHEET25.hojaCanceladas||'Canceladas_Probables'},{sheet:'Canceladas_probables'},{sheet:'Canceladas'}];
-    const [r26,r25,rc26,rc25]=await Promise.allSettled([
+    const [r26,r25]=await Promise.allSettled([
       traerFuente(GSHEET,'Fuente 2026',[{gid:GSHEET.gid}]),
-      traerFuente(GSHEET25,'Fuente 2025',locs25),
-      traerCanceladas(GSHEET,'Canceladas 2026',locsC26),
-      traerCanceladas(GSHEET25,'Canceladas 2025',locsC25)
+      traerFuente(GSHEET25,'Fuente 2025',locs25)
     ]);
     if(r26.status==='rejected') throw r26.reason;
     const rows=r26.value;
@@ -1576,13 +1242,7 @@ async function iniciar(){
     HAY25=false; ERR25='';
     if(r25.status==='fulfilled'&&r25.value.length){rows25=r25.value; HAY25=true;}
     else ERR25=r25.status==='rejected'?String(r25.reason&&(r25.reason.message||r25.reason)):'la hoja respondió sin filas';
-    /* canceladas: opcionales, no rompen el tablero */
-    let canc26=[], canc25=[];
-    HAYC=false; ERRC=''; HAYC25=false;
-    if(rc26.status==='fulfilled'){canc26=rc26.value; HAYC=true;}
-    else ERRC='2026: '+String(rc26.reason&&(rc26.reason.message||rc26.reason));
-    if(rc25.status==='fulfilled'&&rc25.value.length){canc25=rc25.value; HAYC25=true; HAYC=true;}
-    construir(rows,rows25,canc26,canc25);
+    construir(rows,rows25);
     if(!MESES.length) throw new Error('No se pudo leer ninguna fecha válida en "Creation Date".');
     controles(); qcRender(); render();
     document.getElementById('loadOverlay').style.display='none';
@@ -1609,9 +1269,8 @@ function hoja(wb,nombre,aoa,anchos){
 }
 function nombreArchivo(){
   const f=FC?'_'+FC.replace(/\W+/g,''):'', c=FCI?'_'+FCI.replace(/\W+/g,''):'';
-  const e=FE?'_'+FE:'_TodosEstados';
   const mo=MODOFAC==='con'?'_conEnvio':'_sinEnvio';
-  return `MiPortal_Ejecutivo_${MESES[A]}_a_${MESES[B]}${f}${c}${e}${mo}.xlsx`;
+  return `MiPortal_Ejecutivo_${MESES[A]}_a_${MESES[B]}${f}${c}${mo}.xlsx`;
 }
 function exportarTodo(){
   const btn=document.getElementById('btnXls');
@@ -1630,32 +1289,18 @@ function exportarTodo(){
     const rec=cur.filter(p=>!p.nuevo).length;
     const cl=new Set(cur.map(p=>p.email)).size;
     const va=(a,b)=>b?(a/b-1):'';
-    /* desglose de estados del período (ignora el filtro de estado) */
-    const uEst=sel(A,B,'estado');
-    const eF=uEst.filter(p=>p.estado==='Facturado'), eP=uEst.filter(p=>p.estado==='Pronto'),
-          eC=uEst.filter(p=>p.estado==='Cancelado');
     hoja(wb,'Resumen',[
       ['Mi Portal · Dashboard Ejecutivo'],
       ['Período',`${MESES[A]} a ${MESES[B]}`],
       ['Filtro canal',FC||'Todos'],
       ['Filtro ciudad',FCI||'Todas'],
-      ['Filtro estado del pedido',FE?ETIQ_EST[FE]:'Todos'],
       ['Modo de facturación',ETIQL()],
       ['Generado',new Date().toLocaleString('es-PY')],
-      ['Fuente','Fuente General VTEX 2026 (gid '+GSHEET.gid+', Base'+(HAYC?' + Canceladas_Probables':'')+')'+
-        (HAY25?' + Fuente VTEX General 2025':'')],
-      [],
-      ['Estados del período (independiente del filtro de estado)'],
-      ['Pedidos totales',uEst.length],
-      ['Pedidos facturados (Status = Faturado)',eF.length],
-      ['Pedidos Pronto para o manuseio (aparte, no entran en ventas)',eP.length],
-      ['Pedidos cancelados (hoja Canceladas_Probables)',HAYC?eC.length:'hoja no disponible'],
-      ['% de cancelación sobre pedidos totales',HAYC&&uEst.length?eC.length/uEst.length:'—'],
-      ['Monto cancelado',HAYC?suma(eC,p=>FAC(p)):'hoja no disponible'],
+      ['Fuente','Fuente General VTEX 2026 (gid '+GSHEET.gid+')'+(HAY25?' + Fuente VTEX General 2025':'')],
       [],
       ['Indicador','Valor','Período previo','Variación'],
-      [HFAC()+' (sólo facturados)',f,hay?fp:'',hay?va(f,fp):''],
-      ['Pedidos (según filtro de estado activo)',cur.length,hay?prev.length:'',hay?va(cur.length,prev.length):''],
+      [HFAC(),f,hay?fp:'',hay?va(f,fp):''],
+      ['Pedidos',cur.length,hay?prev.length:'',hay?va(cur.length,prev.length):''],
       ['Ticket promedio',cur.length?f/cur.length:0,hay&&prev.length?fp/prev.length:'',
         hay&&prev.length?va(f/cur.length,fp/prev.length):''],
       ['Clientes únicos',cl,hay?new Set(prev.map(p=>p.email)).size:'',''],
@@ -1672,10 +1317,7 @@ function exportarTodo(){
       ['Facturación de producto','siempre sin envío: el envío no se atribuye a un SKU en la fuente'],
       ['Descuento','ya neteado dentro del precio de venta; no se resta'],
       ['Envío','viene prorrateado por fila: se suma, no se toma de una sola fila'],
-      ['Estado Facturado','columna Status = "Faturado" (hoja Base)'],
-      ['Estado Pronto para o manuseio','columna Status = "Pronto para o manuseio" (hoja Base); se identifica aparte y NO entra en ventas'],
-      ['Estado Cancelado','toda fila de la hoja Canceladas_Probables, cualquiera sea su Status'],
-      ['Ventas / facturación / ticket','calculados únicamente sobre pedidos Facturados'],
+      ['Estados válidos',ESTADOS_VALIDOS.join(' / ')],
       ['Canjes','pedidos con Total Value ≤ 0, excluidos del ticket']
     ],[38,20,18,14]);
 
@@ -1695,11 +1337,9 @@ function exportarTodo(){
     hoja(wb,'Semanal',[['Semana ISO','Pedidos',HFAC(),'Ticket promedio']].concat(
       [...sm.keys()].sort().map(k=>{const v=sm.get(k);return [k,v.p,v.f,v.p?v.f/v.p:0]})),[14,10,16,16]);
 
-    /* --- 2026 vs 2025, proyección y cancelaciones (si están armados) --- */
+    /* --- 2026 vs 2025 y proyección (si están armados) --- */
     if(BLOQUES.yoy) hoja(wb,BLOQUES.yoy.hoja,BLOQUES.yoy.aoa,BLOQUES.yoy.anchos);
     if(BLOQUES.proyeccion) hoja(wb,BLOQUES.proyeccion.hoja,BLOQUES.proyeccion.aoa,BLOQUES.proyeccion.anchos);
-    ['fvc','cancCiudades','cancCanales','cancSkus','cancCupones'].forEach(k=>{
-      if(BLOQUES[k]) hoja(wb,BLOQUES[k].hoja,BLOQUES[k].aoa,BLOQUES[k].anchos)});
 
     /* --- Canales --- */
     const baseCan=conVenta(sel(A,B,'canal'));
@@ -1782,13 +1422,13 @@ function exportarTodo(){
       dist.map((c,i)=>[i===5?'6 o más':i+1,c,cnt.size?c/cnt.size:0])),[26,24,22,16]);
 
     /* --- Detalle --- */
-    hoja(wb,'Detalle pedidos',[['Pedido','Estado','Fecha','Mes','Email','Ciudad','Departamento','Canal',
+    hoja(wb,'Detalle pedidos',[['Pedido','Fecha','Mes','Email','Ciudad','Departamento','Canal',
       'Medio de pago','Cupón','Promociones',HFAC(),'Envío','Descuento nominal',
       'Líneas','Cliente nuevo','Canje ₲0']].concat(
       todos.slice().sort((a,b)=>a.fecha<b.fecha?-1:1).map(p=>
-        [p.id,p.estado==='Pronto'?'Pronto para o manuseio':p.estado,p.fecha,p.mes,p.email,p.ciudad,p.depto,p.canal,p.pago,p.cupon,p.promos.join(' | '),
+        [p.id,p.fecha,p.mes,p.email,p.ciudad,p.depto,p.canal,p.pago,p.cupon,p.promos.join(' | '),
          FAC(p),p.envio,-p.descuento,p.filas,p.nuevo?'Sí':'No',p.canje?'Sí':'No'])),
-      [22,16,12,10,30,18,16,18,22,18,40,14,12,18,8,14,10]);
+      [22,12,10,30,18,16,18,22,18,40,14,12,18,8,14,10]);
 
     XLSX.writeFile(wb,nombreArchivo());
   }catch(e){

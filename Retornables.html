@@ -62,13 +62,6 @@
     font-weight:600; padding:5px 11px; border-radius:20px;
     border:1px solid rgba(255,255,255,.1); letter-spacing:0.2px;
   }
-  .live-chip {
-    display:flex; align-items:center; gap:5px;
-    background:rgba(120,230,160,.12); color:#78E6A0;
-    font-size:11px; font-weight:600; padding:4px 10px;
-    border-radius:20px; border:1px solid rgba(120,230,160,.25);
-  }
-  .live-dot { width:5px; height:5px; background:#78E6A0; border-radius:50%; animation:blink 2s ease infinite; }
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
   @media(max-width:760px){ .h-vsep, .h-title { display:none; } .header { padding:0 16px; } }
 
@@ -333,6 +326,9 @@
   }
   .btn-clear:hover { border-color:var(--black); color:var(--black); }
 
+  /* fecha de corte de la fuente · dato chico y discreto en el header */
+  .h-datachip{font-size:11px;font-weight:600;color:rgba(255,255,255,.42);letter-spacing:.2px;white-space:nowrap}
+  @media(max-width:760px){.h-datachip{display:none}}
   /* ── ESTADO "INFORMACIÓN NO DISPONIBLE" ── */
   .na-box {
     display:flex; align-items:center; justify-content:center; flex-direction:column; gap:6px;
@@ -374,7 +370,7 @@
 <div class="data-overlay" id="dataOverlay">
   <div class="overlay-spinner" id="ovSpinner"></div>
   <div class="overlay-err-icon hidden" id="ovErrIcon">⚠️</div>
-  <div class="overlay-title" id="ovTitle">Cargando datos desde Google Sheets…</div>
+  <div class="overlay-title" id="ovTitle">Cargando datos…</div>
   <div class="overlay-sub" id="ovSub">Trayendo la hoja de retornables y reconstruyendo las métricas del período.</div>
   <div class="overlay-code hidden" id="ovCode"></div>
   <button class="overlay-retry hidden" id="ovRetry" onclick="init()">Reintentar</button>
@@ -390,7 +386,7 @@
     <div class="h-title">Dashboard <span>Retornables</span></div>
   </div>
   <div class="header-right">
-    <div class="live-chip" id="liveChip" title=""><div class="live-dot"></div> <span id="liveChipText">Datos reales</span></div>
+    <span class="h-datachip" id="dataMaxTag"></span>
     <div class="period-chip" id="headerPeriodChip">Cargando…</div>
   </div>
 </div>
@@ -1056,6 +1052,8 @@ let CITY_LIST = [], CHANNEL_LIST = [], SKU_LIST = [], CLIENT_LIST = [];
 let CLASS_TOTALS = { st:0, rf:0, uk:0 };  // revenue ret. de TODA la fuente por categoría
 let UNK_SKUS = [];                        // SKUs retornables que no matchean ningún patrón
 let TOTAL_CLIENTS = 0;
+function fmtDMY(iso){ if(!iso) return ''; const s=String(iso).slice(0,10);
+  const p=s.split('-'); return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0] : s; }
 let DATA_MIN_DATE = null, DATA_MAX_DATE = null, LAST_ORDER_DATE = null, LOADED_AT = null;
 let PRESETS = {};
 let charts = {};
@@ -2522,9 +2520,11 @@ function updateSourceChip() {
   const fmtHM = d => String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
   chip.href = url;
   chip.textContent = `📄 Google Sheet ${YEAR} · datos al ${fmtFull(LAST_ORDER_DATE)} · cargado ${fmtFull(LOADED_AT)} ${fmtHM(LOADED_AT)}`;
-  const liveChip = document.getElementById('liveChip');
-  document.getElementById('liveChipText').textContent = 'Datos en vivo';
-  liveChip.title = 'Última actualización: ' + fmtFull(LOADED_AT) + ' ' + fmtHM(LOADED_AT);
+  const _dm = document.getElementById('dataMaxTag');
+  if (_dm && DATA_MAX_DATE) {
+    _dm.textContent = 'Datos al ' + fmtDMY(isoLocal(DATA_MAX_DATE));
+    _dm.title = 'Última fecha con pedidos en la fuente: ' + fmtDMY(isoLocal(DATA_MAX_DATE));
+  }
 }
 
 function showOverlay(mode, msg) {
@@ -2539,7 +2539,7 @@ function showOverlay(mode, msg) {
     document.getElementById('ovSub').textContent = 'Revisá que la hoja esté compartida como "Cualquiera con el enlace · Lector" y volvé a intentar.';
     document.getElementById('ovCode').textContent = msg || '';
   } else {
-    document.getElementById('ovTitle').textContent = 'Cargando datos desde Google Sheets…';
+    document.getElementById('ovTitle').textContent = 'Cargando datos…';
     document.getElementById('ovSub').textContent = 'Trayendo la hoja de retornables y reconstruyendo las métricas del período.';
   }
 }

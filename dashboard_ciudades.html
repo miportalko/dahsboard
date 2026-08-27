@@ -192,6 +192,8 @@
     <div class="fg">
       <label>Rango de fechas</label>
       <div class="presets" id="presets">
+        <button class="chip chip-year" data-y="2023">2023</button>
+        <button class="chip chip-year" data-y="2024">2024</button>
         <button class="chip chip-year" data-y="2025">2025</button>
         <button class="chip chip-year year-on" data-y="2026">2026</button>
         <span class="ysep"></span>
@@ -323,7 +325,7 @@
   <!-- COMPARATIVO Y PROYECCION -->
   <div class="grid g2">
     <div class="panel">
-      <div class="ph"><div><h2><span class="dot"></span>Comparativo 2026 vs 2025</h2>
+      <div class="ph"><div><h2><span class="dot"></span>Comparativo 2026 vs años anteriores</h2>
         <p class="hint">Toda la base anual con estados facturables, independiente de los filtros de arriba.</p></div>
         <div class="exp">
           <button class="exp-btn" data-exp="comparativo" data-fmt="csv">⬇ CSV</button>
@@ -798,8 +800,18 @@ const GSHEETS = {
   '2025': {
     id:  '1PfSeehY2EFMVU3VZfG0ICIHT3GZNnjIDlZbkbKn5Bxo',   // Fuente VTEX General 2025
     gid: '1013977220'
+  },
+  '2024': {
+    id:  '1vvl0G3BBBGJu8Tst-KdqpqspUNu8yCy77pn-AXpnjLQ',   // Fuente VTEX 2024 (pestaña "Report")
+    gid: '1738442477'
+  },
+  '2023': {
+    id:  '1mbn3ySHAn3LhWneFV-fkh7ciBt1NxpJ8vDO2eHj_AtM',   // Fuente VTEX 2023 (pestaña "Hoja 1")
+    gid: '0'
   }
 };
+const HIST_YEARS = ['2024','2023'];   // años históricos del comparativo (además de 2025)
+const HIST_COLORS = { '2023':'#E3E8EC', '2024':'#CBD3D9', '2025':'#B0BEC5' };
 let YEAR = '2026';
 
 /* Fecha gviz "Date(YYYY,M,D[,h,m,s])" (mes 0-indexado) → ISO exacto,
@@ -1493,7 +1505,8 @@ function deltaHTML(v26,v25){
   return `<div class="delta ${d>=0?'up':'dn'}">${fmtPct1(d)} vs 2025</div>`;
 }
 
-function renderYoY(y25,y26){
+function renderYoY(y25,y26,hist){
+  hist=hist||{};
   if(!y26||!y26.orders.length||!y26.maxD){
     $('yoyKpis').innerHTML='<div class="mk"><div class="lab">Aún no hay pedidos facturables 2026.</div></div>'; return;
   }
@@ -1506,9 +1519,13 @@ function renderYoY(y25,y26){
     <div class="mk"><div class="lab">Ticket promedio</div><div class="val">${fmtG(a.ticket)}</div>${deltaHTML(a.ticket,b.ticket)}</div>
     <div class="mk"><div class="lab">Clientes únicos</div><div class="val">${fmtInt(a.clients)}</div>${deltaHTML(a.clients,b.clients)}</div>`;
   if(!chartsOK()) return;
-  const cfg={type:'bar',data:{labels:MESES,datasets:[
-      {label:'2025',data:m25.map(Math.round),backgroundColor:'#B0BEC5',borderRadius:4},
-      {label:'2026',data:m26.map(v=>Math.round(v)||null),backgroundColor:'#E31837',borderRadius:4}]},
+  const datasets=[];
+  ['2023','2024'].forEach(y=>{ if(hist[y]) datasets.push(
+    {label:y,data:monthlySales(hist[y].orders,y).map(Math.round),backgroundColor:HIST_COLORS[y],borderRadius:4}); });
+  datasets.push(
+      {label:'2025',data:m25.map(Math.round),backgroundColor:HIST_COLORS['2025'],borderRadius:4},
+      {label:'2026',data:m26.map(v=>Math.round(v)||null),backgroundColor:'#E31837',borderRadius:4});
+  const cfg={type:'bar',data:{labels:MESES,datasets},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12,usePointStyle:true}},
         tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmtG(c.raw||0),
@@ -1550,6 +1567,13 @@ async function renderYoYProj(){
     const [y25,y26]=await Promise.all([ensureYearCache('2025'),ensureYearCache('2026')]);
     renderYoY(y25,y26);
     renderProj(y25,y26);
+    /* Años históricos (2024, 2023): se cargan después para no demorar el comparativo principal.
+       Si alguno falla, el gráfico queda con los años que sí respondieron. */
+    const res=await Promise.allSettled(HIST_YEARS.map(y=>ensureYearCache(y)));
+    const hist={};
+    res.forEach((r,i)=>{ if(r.status==='fulfilled') hist[HIST_YEARS[i]]=r.value;
+                         else console.warn('Fuente '+HIST_YEARS[i]+' no disponible:',r.reason); });
+    if(Object.keys(hist).length) renderYoY(y25,y26,hist);
   }catch(err){
     console.error(err);
     const msg='<div class="mk"><div class="lab" style="color:#D8342E">No se pudo cargar el otro año: '+esc(err.message)+'</div></div>';
@@ -1562,9 +1586,11 @@ function expYoY(){
   const y25=YEARLY['2025'], y26=YEARLY['2026'];
   if(!y25||!y26) return {name:'Comparativo 2026 vs 2025',header:['Aviso'],rows:[['Datos aún no cargados']]};
   const m25=monthlySales(y25.orders,'2025'), m26=monthlySales(y26.orders,'2026');
+  const histY=['2023','2024'].filter(y=>YEARLY[y]);
+  const mh=histY.map(y=>monthlySales(YEARLY[y].orders,y));
   return {name:'Comparativo 2026 vs 2025',
-    header:['Mes','Ventas 2025 (Gs)','Ventas 2026 (Gs)','Variación (%)'],
-    rows:MESES.map((m,i)=>[m,Math.round(m25[i]),Math.round(m26[i]),
+    header:['Mes',...histY.map(y=>'Ventas '+y+' (Gs)'),'Ventas 2025 (Gs)','Ventas 2026 (Gs)','Variación 26/25 (%)'],
+    rows:MESES.map((m,i)=>[m,...mh.map(a=>Math.round(a[i])),Math.round(m25[i]),Math.round(m26[i]),
       (m25[i]>0&&m26[i]>0)? +((m26[i]/m25[i]-1)*100).toFixed(1) : ''])};
 }
 function expProj(){
@@ -1576,7 +1602,7 @@ function expProj(){
 }
 
 /* ============================================================
-   SELECTOR DE AÑO (2025 / 2026) — cada año lee SOLO su Sheet.
+   SELECTOR DE AÑO (2023 / 2024 / 2025 / 2026) — cada año lee SOLO su Sheet.
    ============================================================ */
 function syncYearUI(){
   document.querySelectorAll('#presets .chip-year').forEach(x=>x.classList.toggle('year-on', x.dataset.y===YEAR));

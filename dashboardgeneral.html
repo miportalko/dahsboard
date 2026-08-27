@@ -2,13 +2,21 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<!-- ===== PWA / OFFLINE-FIRST · Tablero Mi Portal (no toca la lógica del tablero) ===== -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0D0D0D">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<script>window.MP_RESYNC='iniciar';</script>
+<script src="offline-core.js"></script>
+<!-- ===== FIN PWA / OFFLINE-FIRST ===== -->
+
+<link rel="stylesheet" href="vendor/inter.css">
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mi Portal · Dashboard Ejecutivo</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="vendor/chart-4.4.1.umd.min.js"></script>
+<script src="vendor/xlsx-0.18.5.full.min.js"></script>
 <style>
 
   :root{

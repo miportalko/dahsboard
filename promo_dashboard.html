@@ -2,11 +2,21 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- ===== PWA / OFFLINE-FIRST · Tablero Mi Portal (no toca la lógica del tablero) ===== -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0D0D0D">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<script>window.MP_RESYNC='autoSyncPromo';</script>
+<script src="offline-core.js"></script>
+<!-- ===== FIN PWA / OFFLINE-FIRST ===== -->
+
+<link rel="stylesheet" href="vendor/inter.css">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mi Portal CC — Resumen de Promos</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="vendor/chart-4.4.0.umd.min.js"></script>
+<script src="vendor/xlsx-0.18.5.full.min.js"></script>
 <style>
 :root{--red:#E8241B;--orange:#F5821F;--yellow:#F5C518;--green:#A8D95A;--cyan:#5BDDE8;--dark:#0D0D0D;--bg:#F2F2F2;--card:#fff;--text:#1a1a1a;--muted:#666;--border:#e0e0e0;--shadow:0 2px 12px rgba(0,0,0,.08);--r:10px}
 *{box-sizing:border-box;margin:0;padding:0}

@@ -2,10 +2,20 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<!-- ===== PWA / OFFLINE-FIRST · Tablero Mi Portal (no toca la lógica del tablero) ===== -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0D0D0D">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<script>window.MP_RESYNC='loadData';</script>
+<script src="offline-core.js"></script>
+<!-- ===== FIN PWA / OFFLINE-FIRST ===== -->
+
+<link rel="stylesheet" href="vendor/inter.css">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mi Portal CC — Campañas Automatizadas</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="vendor/chart-4.4.0.umd.min.js"></script>
 <style>
   :root {
     --red:    #E8241B;

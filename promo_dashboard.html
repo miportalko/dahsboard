@@ -22,6 +22,31 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-
 @keyframes syncPulse{0%{box-shadow:0 0 0 0 rgba(120,230,160,.55)}70%{box-shadow:0 0 0 7px rgba(120,230,160,0)}100%{box-shadow:0 0 0 0 rgba(120,230,160,0)}}
 #syncDot{animation:syncPulse 2.4s infinite}
 #syncDot.busy{background:#FFB400!important;animation:syncPulse 1s infinite}
+
+/* ===== ESTADO DE CARGA (overlay inicial + barra de refresco) ===== */
+#loadBar{position:fixed;top:0;left:0;right:0;height:4px;z-index:200;overflow:hidden;display:none;background:var(--dark)}
+#loadBar.on{display:block}
+#loadBar::after{content:'';position:absolute;top:0;bottom:0;left:0;width:38%;background:linear-gradient(90deg,var(--cyan),var(--green),var(--orange),var(--red));animation:loadSlide 1.15s ease-in-out infinite}
+@keyframes loadSlide{0%{transform:translateX(-110%)}100%{transform:translateX(360%)}}
+#loadOverlay{position:fixed;inset:0;z-index:300;background:rgba(242,242,242,.97);display:flex;align-items:center;justify-content:center;padding:20px;transition:opacity .35s ease,visibility .35s}
+#loadOverlay.hide{opacity:0;visibility:hidden;pointer-events:none}
+.load-card{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);padding:32px 34px 24px;text-align:center;max-width:390px;width:100%;position:relative;overflow:hidden}
+.load-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--cyan),var(--green),var(--orange),var(--red))}
+.load-spin{width:42px;height:42px;margin:4px auto 16px;border-radius:50%;border:3px solid var(--border);border-top-color:var(--red);animation:loadSpin .8s linear infinite}
+@keyframes loadSpin{to{transform:rotate(360deg)}}
+.load-title{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.2px}
+.load-step{font-size:12px;color:var(--muted);margin-top:7px;min-height:18px}
+.load-dots::after{content:'';animation:loadDots 1.4s steps(4,end) infinite}
+@keyframes loadDots{0%{content:''}25%{content:'.'}50%{content:'..'}75%{content:'...'}}
+.load-slow{display:none;font-size:11px;color:#E65100;background:#FFF3E0;border-radius:8px;padding:7px 10px;margin-top:12px;line-height:1.5}
+.load-card.slow .load-slow{display:block}
+.load-hint{font-size:10.5px;color:#999;margin-top:16px;border-top:1px dashed var(--border);padding-top:11px;line-height:1.7}
+.load-ico{display:none;font-size:30px;line-height:1;margin:0 auto 12px}
+.load-retry{display:none;margin:14px auto 0}
+.load-card.err .load-spin,.load-card.err .load-slow{display:none}
+.load-card.err .load-ico,.load-card.err .load-retry{display:block}
+.load-card.err .load-title{color:var(--red)}
+.load-card.err .load-step{color:#8a5a56;font-size:11.5px;line-height:1.6}
 .hnav{display:flex;align-items:center;gap:10px}
 .hnav-link{color:#aaa;font-size:12px;font-weight:600;text-decoration:none;padding:5px 14px;border-radius:18px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);transition:background .2s,color .2s;white-space:nowrap}
 .hnav-link:hover{background:rgba(255,255,255,.12);color:#fff}
@@ -137,6 +162,18 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
 </style>
 </head>
 <body>
+<div id="loadBar"></div>
+<div id="loadOverlay">
+  <div class="load-card" id="loadCard">
+    <div class="load-ico">&#9888;&#65039;</div>
+    <div class="load-spin"></div>
+    <div class="load-title" id="loadTitle">Cargando datos</div>
+    <div class="load-step" id="loadStep">Conectando con Google Sheets</div>
+    <div class="load-slow">Est&aacute; tardando m&aacute;s de lo normal. Revis&aacute; tu conexi&oacute;n o que el Sheet siga compartido como &laquo;Cualquiera con el enlace &middot; Lector&raquo;.</div>
+    <button class="btn btn-red load-retry" onclick="autoSyncPromo('retry')">&#8635; Reintentar</button>
+    <div class="load-hint">Mi Portal CC &middot; Resumen de Promos<br>Leyendo las bases VTEX 2023 &ndash; 2026 en vivo</div>
+  </div>
+</div>
 <div class="top-bar"></div>
 <header class="header">
   <div class="h-left">
@@ -1074,7 +1111,7 @@ function populateCampSelect(){
   const valid=[ALL_ID].concat(RAW.campaigns.filter(function(c){return c.status==='activa'||c.status==='desactivado';}).map(function(c){return c.id;}));
   sel.value = valid.indexOf(cur)>=0 ? cur : ALL_ID;
 }
-window.addEventListener('DOMContentLoaded',function(){loadCustomCampaigns();populateCampSelect();refreshDataBanner();showPromoUploadMsg('⏳ Cargando datos del Sheet…','ok');autoSyncPromo('init');});
+window.addEventListener('DOMContentLoaded',function(){showLoader();loadCustomCampaigns();populateCampSelect();refreshDataBanner();showPromoUploadMsg('⏳ Cargando datos del Sheet…','ok');autoSyncPromo('init');});
 
 function refreshDataBanner(){
   let minD=null, maxD=null;
@@ -1278,6 +1315,54 @@ function handlePromoFile(file){
   if(ext==='csv') reader.readAsText(file,'utf-8'); else reader.readAsArrayBuffer(file);
 }
 
+/* ============================================================
+   ESTADO DE CARGA  ·  overlay en la primera carga + barra en refrescos
+   ============================================================ */
+let _loaderDone = false;      // ya se mostro al menos una carga exitosa
+let _slowTimer = null;
+
+function loaderEls(){
+  return {ov:document.getElementById('loadOverlay'), card:document.getElementById('loadCard'),
+          tit:document.getElementById('loadTitle'), step:document.getElementById('loadStep')};
+}
+function showLoader(){
+  const {ov,card,tit,step}=loaderEls(); if(!ov) return;
+  card.classList.remove('err','slow');
+  tit.textContent='Cargando datos';
+  step.innerHTML='<span class="load-dots">Conectando con Google Sheets</span>';
+  ov.classList.remove('hide');
+  clearTimeout(_slowTimer);
+  _slowTimer=setTimeout(()=>{const c=document.getElementById('loadCard'); if(c) c.classList.add('slow');},12000);
+}
+function loaderStep(txt){
+  const {ov,step}=loaderEls();
+  if(!step || !ov || ov.classList.contains('hide')) return;
+  step.innerHTML='<span class="load-dots">'+txt+'</span>';
+}
+function hideLoader(){
+  const {ov,card}=loaderEls(); if(!ov) return;
+  clearTimeout(_slowTimer);
+  card.classList.remove('slow');
+  ov.classList.add('hide');
+  _loaderDone=true;
+}
+function loaderError(msg){
+  const {ov,card,tit,step}=loaderEls(); if(!ov) return;
+  clearTimeout(_slowTimer);
+  if(_loaderDone) return;                 // ya hay datos en pantalla: no tapamos el tablero
+  card.classList.remove('slow');
+  card.classList.add('err');
+  tit.textContent='No se pudieron cargar los datos';
+  step.textContent=msg+' — Verifica tu conexion y que el Sheet este compartido como «Cualquiera con el enlace · Lector».';
+  ov.classList.remove('hide');
+}
+function loadBar(on){
+  const b=document.getElementById('loadBar');
+  if(b) b.classList.toggle('on', !!on);
+}
+/* deja respirar al navegador para que pinte el mensaje antes de seguir */
+function uiTick(){ return new Promise(r=>requestAnimationFrame(()=>setTimeout(r,0))); }
+
 function showPromoUploadMsg(msg, kind){
   const el=document.getElementById('uploadMsg');
   if(!el) return;
@@ -1395,7 +1480,10 @@ async function fetchHistRows(){
 async function loadPromoFromSheet(){
   try{
     showPromoUploadMsg('⏳ Cargando desde Google Sheet…','ok');
+    loaderStep('Conectando con Google Sheets');
     const [rowsActRaw, rowsHist] = await Promise.all([gvizFetchRows(GSHEET), fetchHistRows()]);
+    loaderStep('Procesando pedidos');
+    await uiTick();
     /* Mismo criterio para todos los años: sólo pedidos facturables.
        Si la pestaña del año en curso ya viene filtrada, esto no cambia nada. */
     const rowsAct = rowsActRaw.filter(esFacturable);
@@ -1408,13 +1496,17 @@ async function loadPromoFromSheet(){
     recomputeImportMeta(rows);
     applyAutoDeactivation();
     populateCampSelect();
+    loaderStep('Armando el tablero');
+    await uiTick();
     renderAll();
     refreshDataBanner();
+    hideLoader();
     const fall = (window.HIST_FALLIDOS||[]);
     showPromoUploadMsg('✓ Sheets sincronizados (2023–2026): +'+addedCount+' líneas nuevas en '+touchedCampaigns.size+' campaña(s).'+
       (fall.length?'  ⚠ Sin datos de: '+fall.join(', '):''), fall.length?'err':'ok');
   }catch(err){
     console.error(err);
+    loaderError(err.message);
     showPromoUploadMsg('✗ No se pudo leer el Sheet: '+err.message+'  (verificá que esté compartido como "Cualquiera con el enlace · Lector")','err');
   }
 }
@@ -1434,10 +1526,13 @@ let _lastSync = 0;
 async function autoSyncPromo(reason){
   const dot = document.getElementById('syncDot');
   if(dot) dot.classList.add('busy');
+  /* primera carga (o reintento sin datos) -> overlay; refrescos -> barra fina arriba */
+  if(!_loaderDone || reason==='init' || reason==='retry') showLoader(); else loadBar(true);
   try{
     await loadPromoFromSheet();
     _lastSync = Date.now();
   } finally {
+    loadBar(false);
     if(dot) dot.classList.remove('busy');
   }
 }

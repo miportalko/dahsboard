@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="es-PY">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Clientes VTEX 2023–2026 · Mi Portal</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --red:#E8241B; --red2:#E61A27; --ink:#111315; --black:#0D0D0D; --amber:#FFB300;
+  --bg:#F2F2F2; --card:#FFFFFF; --line:#E4E4E7; --muted:#6B7280;
+  --g1:#82E1FF; --g2:#78E6A0; --g3:#FFB400; --g4:#FF8700; --g5:#E8241B;
+  --ok:#1E9E5A; --warn:#E6A100; --bad:#D8342E; --cyan:#5BDDE8;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.05);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;font-size:14px;-webkit-font-smoothing:antialiased}
+.topbar{height:4px;background:linear-gradient(90deg,var(--g1) 0%,var(--g2) 33%,var(--g4) 66%,var(--g5) 100%)}
+header{position:sticky;top:0;z-index:60;background:var(--black);height:64px;display:flex;align-items:center;gap:14px;padding:0 20px}
+header .logo{height:30px;display:block}
+header .wordmark{color:#fff;font-weight:800;letter-spacing:-.3px;font-size:15px;white-space:nowrap}
+header .sep{width:1px;height:26px;background:#2A2D31}
+header h1{color:#fff;font-size:15px;font-weight:700;margin:0;letter-spacing:-.2px}
+header h1 span{color:var(--cyan)}
+header .cut{margin-left:auto;color:#8A9099;font-size:11px;font-weight:600;white-space:nowrap}
+header .cut b{color:#D6D9DD;font-weight:700}
+.wrap{max-width:1500px;margin:0 auto;padding:18px 20px 60px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:16px 18px;margin-bottom:16px}
+h2{font-size:15px;font-weight:800;margin:0 0 4px;display:flex;align-items:center;gap:8px;letter-spacing:-.2px}
+h2 .dot{width:8px;height:8px;border-radius:50%;background:var(--red);flex:none}
+.hint{color:var(--muted);font-size:12px;margin:0 0 14px;line-height:1.5}
+.cols{color:#9AA0A6;font-size:11px;margin:-8px 0 14px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+/* filtros */
+.frow{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}
+.fgroup{display:flex;flex-direction:column;gap:6px}
+.fgroup label{font-size:11px;font-weight:700;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:5px 13px;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink);transition:.12s}
+.chip:hover{border-color:#C9CBCF}
+.chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+select,input[type=text]{border:1px solid var(--line);border-radius:9px;padding:7px 10px;font-size:13px;font-family:inherit;background:#fff;color:var(--ink);min-width:150px;max-width:230px}
+select:focus,input:focus{outline:2px solid var(--cyan);outline-offset:1px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:9px;padding:7px 13px;font-size:12px;font-weight:700;cursor:pointer;color:var(--ink)}
+.btn:hover{background:#FAFAFA}
+.btn.dark{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.xs{padding:4px 9px;font-size:11px}
+/* tabs */
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 0 10px;position:sticky;top:64px;z-index:50;background:var(--bg)}
+.tab{border:1px solid var(--line);background:#fff;border-radius:20px;padding:8px 15px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap;color:var(--ink)}
+.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+/* KPIs */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(168px,1fr));gap:12px;margin-bottom:16px}
+.kpi{background:var(--ink);border-radius:14px;padding:15px 16px 17px;position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;background:linear-gradient(90deg,var(--g1),var(--g2),var(--g4),var(--g5))}
+.kpi .k{color:#9BA1A8;font-size:11px;font-weight:700;margin-bottom:6px;line-height:1.3}
+.kpi .v{color:var(--amber);font-size:23px;font-weight:800;letter-spacing:-.6px;line-height:1.1}
+.kpi .d{font-size:11px;font-weight:700;margin-top:6px}
+.up{color:#68D391}.down{color:#FC8181}.flat{color:#9BA1A8}
+/* tablas */
+.tw{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{position:sticky;top:0;background:#FAFAFA;text-align:left;padding:9px 11px;font-weight:700;font-size:11px;color:var(--muted);border-bottom:1px solid var(--line);white-space:nowrap;z-index:2}
+td{padding:8px 11px;border-bottom:1px solid #F1F1F3;white-space:nowrap}
+tbody tr:hover{background:#FAFBFC}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid transparent}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+@media(max-width:980px){.grid2,.grid3{grid-template-columns:1fr}}
+.chartbox{position:relative;height:300px}
+.chartbox.tall{height:380px}
+.qcbox{background:#FAFAFA;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:12px;margin-top:12px}
+.qcbox summary{cursor:pointer;font-weight:700;color:var(--muted);font-size:12px}
+.qcbox .body{padding-top:10px;line-height:1.7;color:#3F4247}
+.qcbox code{background:#EFEFF1;padding:1px 5px;border-radius:4px;font-size:11px}
+.footnote{text-align:center;color:var(--muted);font-size:11px;margin-top:26px;line-height:1.7}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.warn{background:#FFF8E6;border:1px solid #F2DFA8;color:#7A5B00;border-radius:10px;padding:9px 13px;font-size:12px;margin-bottom:12px;line-height:1.5}
+.err{background:#FDECEA;border:1px solid #F5C2BD;color:#8A241E;border-radius:10px;padding:9px 13px;font-size:12.5px;margin-bottom:12px;line-height:1.5}
+/* overlay */
+#ov{position:fixed;inset:0;background:rgba(13,13,13,.96);z-index:200;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;color:#fff;padding:24px;text-align:center}
+#ov .bar{width:min(440px,80vw);height:5px;background:#26292D;border-radius:6px;overflow:hidden}
+#ov .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--g1),var(--g2),var(--g4),var(--g5));transition:width .3s}
+#ov .t{font-size:14px;font-weight:700}
+#ov .s{font-size:12px;color:#9BA1A8;max-width:520px;line-height:1.6}
+.pg{display:flex;gap:6px;align-items:center;justify-content:flex-end;margin-top:10px;font-size:12px;color:var(--muted)}
+.seg-clickable{cursor:pointer}
+.seg-clickable:hover td{background:#F4F9FB}
+.legendnote{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.6}
+</style>
+</head>
+<body>
+<div class="topbar"></div>
+<header>
+  <img id="logo" class="logo" alt="" style="display:none">
+  <span id="wordmark" class="wordmark">Mi Portal</span>
+  <span class="sep"></span>
+  <h1>Clientes <span>2023–2026</span></h1>
+  <div class="cut">Datos hasta <b id="cut">—</b></div>
+</header>
+
+<div id="ov">
+  <div class="t" id="ovt">Conectando con las fuentes VTEX…</div>
+  <div class="bar"><i id="ovb"></i></div>
+  <div class="s" id="ovs">Se leen las cuatro planillas 2023, 2024, 2025 y 2026. La primera carga puede tardar según el volumen.</div>
+</div>
+
+<div class="wrap">
+  <div id="errbox"></div>
+
+  <!-- FILTROS -->
+  <div class="card">
+    <h2><span class="dot"></span>Filtros</h2>
+    <p class="hint">Todos los módulos responden a estos filtros. Los filtros de producto y categoría seleccionan los <b>pedidos que contienen</b> ese ítem; la facturación mostrada es la del pedido completo, salvo en el módulo Productos, donde se usa el importe de la línea.</p>
+    <div class="frow">
+      <div class="fgroup"><label>Año</label><div class="chips" id="fYears"></div></div>
+      <div class="fgroup"><label>Mes</label><select id="fMonth"></select></div>
+      <div class="fgroup"><label>Ciudad</label><select id="fCity"></select></div>
+      <div class="fgroup"><label>Categoría (Category Ids Sku)</label><select id="fCat"></select></div>
+      <div class="fgroup"><label>Producto (SKU Name)</label><input type="text" id="fSku" placeholder="ej. retornable 1 L"></div>
+      <div class="fgroup"><label>Cliente</label><input type="text" id="fCli" placeholder="nombre o email"></div>
+      <div class="fgroup"><label>Segmento RFM</label><select id="fSeg"></select></div>
+      <div class="fgroup"><label>Estado del cliente</label><select id="fEst"></select></div>
+      <div class="fgroup"><label>Estado del pedido</label><select id="fOst">
+        <option value="ok">Sin cancelados</option><option value="all">Todos</option><option value="canc">Sólo cancelados</option></select></div>
+      <div class="fgroup"><label>Facturación</label><select id="fShip">
+        <option value="con">Con envío</option><option value="sin">Sin envío</option></select></div>
+      <div class="fgroup"><label>Comparar</label><select id="fCmp"></select></div>
+      <div class="fgroup"><label>&nbsp;</label><button class="btn" id="btnReset">Limpiar filtros</button></div>
+      <div class="fgroup"><label>&nbsp;</label><button class="btn dark" id="btnReload">Actualizar datos</button></div>
+    </div>
+    <details class="qcbox"><summary>Control de calidad y definiciones</summary><div class="body" id="qc"></div></details>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div id="panels"></div>
+
+  <div class="footnote" id="foot"></div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIGURACIÓN — cambiá acá si movés una pestaña de lugar
+   ============================================================ */
+const CFG = {
+  logoBase64: "", // pegá acá el mismo base64 del logo que usan los demás tableros
+  sources: [
+    {year:2026, name:"Fuente General VTEX 2026", id:"1oDuPtSdspEqvoo_0RDWg2eku2zrejNhrp711oqBgUp8", gid:"980819985"},
+    {year:2025, name:"Fuente VTEX General 2025", id:"1PfSeehY2EFMVU3VZfG0ICIHT3GZNnjIDlZbkbKn5Bxo", gid:"1013977220"},
+    {year:2024, name:"Fuente VTEX 2024",         id:"1vvl0G3BBBGJu8Tst-KdqpqspUNu8yCy77pn-AXpnjLQ", gid:"1738442477"},
+    {year:2023, name:"Fuente VTEX 2023",         id:"1mbn3ySHAn3LhWneFV-fkh7ciBt1NxpJ8vDO2eHj_AtM", gid:"0"}
+  ],
+  // umbrales del estado del cliente, en días desde la última compra
+  estado: {activo:90, riesgo:180, dormido:365}
+};
+
+/* Campos de la fuente VTEX. Se buscan por nombre exacto de encabezado
+   (normalizado: sin acentos, sin espacios, minúsculas). Si un año trae
+   columnas extra, simplemente no se leen. */
+const FIELD_DEFS = {
+  order:   {col:"Order",              req:true},
+  date:    {col:"Creation Date",      req:true},
+  status:  {col:"Status",             req:true},
+  total:   {col:"Total Value",        req:true},
+  email:   {col:"Email",              req:false},
+  doc:     {col:"Client Document",    req:false},
+  fname:   {col:"Client Name",        req:false},
+  lname:   {col:"Client Last Name",   req:false},
+  city:    {col:"City",               req:false},
+  uf:      {col:"UF",                 req:false},
+  qty:     {col:"Quantity_SKU",       req:false},
+  sku:     {col:"SKU Name",           req:false},
+  ref:     {col:"Reference Code",     req:false},
+  cat:     {col:"Category Ids Sku",   req:false},
+  lineTot: {col:"SKU Total Price",    req:false},
+  ship:    {col:"Shipping Value",     req:false},
+  coupon:  {col:"Coupon",             req:false}
+};
+
+const SEGMENTS = [
+  {k:"campeones",  n:"🏆 Campeones",        c:"#E8241B"},
+  {k:"fieles",     n:"💎 Clientes fieles",  c:"#FF8700"},
+  {k:"altovalor",  n:"💰 Alto valor",       c:"#FFB300"},
+  {k:"riesgo",     n:"⚠️ En riesgo",        c:"#D8342E"},
+  {k:"perdidos",   n:"❌ Perdidos",         c:"#6B7280"},
+  {k:"dormidos",   n:"😴 Dormidos",         c:"#B0BEC5"},
+  {k:"potfieles",  n:"🚀 Potenciales fieles",c:"#78E6A0"},
+  {k:"nuevos",     n:"🌱 Nuevos",           c:"#82E1FF"},
+  {k:"prometedores",n:"⭐ Prometedores",    c:"#FBC0BA"}
+];
+const SEGNAME = Object.fromEntries(SEGMENTS.map(s=>[s.k,s.n]));
+const SEGCOLOR = Object.fromEntries(SEGMENTS.map(s=>[s.k,s.c]));
+const MESES=["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+
+/* ============================================================ HELPERS */
+const NORM = s => (s==null?"":String(s)).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]/g,"");
+const KEYCITY = s => (s==null?"":String(s)).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toUpperCase().replace(/\s+/g," ").trim();
+const str = v => v==null?"":String(v).trim();
+const D=86400000;
+
+function titleCase(s){return String(s||"").toLowerCase().replace(/\s+/g," ").trim().replace(/(^|\s|-)([a-záéíóúñü])/g,(m,a,b)=>a+b.toUpperCase());}
+function num(v){ if(v==null||v==="")return 0; if(typeof v==="number")return v;
+  let s=String(v).trim().replace(/\s/g,""); if(/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s))s=s.replace(/\./g,"").replace(",","."); else s=s.replace(",",".");
+  const n=parseFloat(s); return isNaN(n)?0:n; }
+function parseDate(v){ if(v==null||v==="")return null; if(v instanceof Date)return isNaN(v)?null:v;
+  const s=String(v).trim(); let m;
+  if((m=s.match(/^Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?\)$/))) return new Date(+m[1],+m[2],+m[3],+(m[4]||0),+(m[5]||0),+(m[6]||0));
+  if((m=s.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?/))) return new Date(+m[1],+m[2]-1,+m[3],+(m[4]||0),+(m[5]||0),+(m[6]||0));
+  if((m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/))) return new Date(+m[3],+m[2]-1,+m[1]);
+  const d=new Date(s); return isNaN(d)?null:d; }
+function fmtD(d){ if(!d)return"—"; const p=n=>String(n).padStart(2,"0"); return p(d.getDate())+"/"+p(d.getMonth()+1)+"/"+d.getFullYear(); }
+function fmtN(n){ return (Math.round(n||0)).toLocaleString("es-PY"); }
+function fmtG(n){ return "₲ "+(Math.round(n||0)).toLocaleString("es-PY"); }
+function gC(n){ const a=Math.abs(n||0);
+  if(a>=1e9) return "₲ "+(n/1e9).toLocaleString("es-PY",{maximumFractionDigits:2})+" MM";
+  if(a>=1e6) return "₲ "+(n/1e6).toLocaleString("es-PY",{maximumFractionDigits:1})+" M";
+  return fmtG(n); }
+function fmtP(n,d){ return (n==null||!isFinite(n))?"—":(n).toLocaleString("es-PY",{minimumFractionDigits:d==null?1:d,maximumFractionDigits:d==null?1:d})+"%"; }
+function fmtF(n,d){ return (n==null||!isFinite(n))?"—":(n).toLocaleString("es-PY",{minimumFractionDigits:d==null?1:d,maximumFractionDigits:d==null?1:d}); }
+function median(a){ if(!a.length)return null; const s=[...a].sort((x,y)=>x-y); const m=s.length>>1; return s.length%2?s[m]:(s[m-1]+s[m])/2; }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function delta(cur,prev){ if(prev==null||prev===0)return null; return (cur-prev)/Math.abs(prev)*100; }
+function dHtml(v){ if(v==null)return '<div class="d flat">sin base comparable</div>';
+  const c=v>0.05?"up":(v<-0.05?"down":"flat"); const a=v>0.05?"▲":(v<-0.05?"▼":"■");
+  return '<div class="d '+c+'">'+a+" "+fmtP(Math.abs(v))+" vs año anterior</div>"; }
+
+/* CSV (se abre directo en Excel: UTF-8 BOM + separador ;) */
+function download(name, rows){
+  if(!rows||!rows.length){ alert("No hay datos para exportar con los filtros actuales."); return; }
+  const cell=v=>{ let s=(v==null?"":String(v)); if(/[;"\n]/.test(s)) s='"'+s.replace(/"/g,'""')+'"'; return s; };
+  const csv=rows.map(r=>r.map(cell).join(";")).join("\r\n");
+  const b=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(b); a.download=name+".csv"; a.click(); URL.revokeObjectURL(a.href);
+}
+const EXP={}; // registro de exportadores por id de botón
+function expBtn(id,label){ return '<button class="btn xs" data-exp="'+id+'">'+(label||"Excel")+'</button>'; }
+document.addEventListener("click",e=>{ const b=e.target.closest("[data-exp]"); if(!b)return; const f=EXP[b.dataset.exp]; if(f)f(); });
+
+/* Chart.js */
+const CH={};
+Chart.defaults.font.family="Inter,-apple-system,Segoe UI,Roboto,Arial,sans-serif";
+Chart.defaults.font.size=11; Chart.defaults.color="#6B7280";
+function chart(id,cfg){ const el=document.getElementById(id); if(!el)return;
+  if(CH[id]){CH[id].destroy();delete CH[id];}
+  cfg.options=Object.assign({responsive:true,maintainAspectRatio:false,animation:false},cfg.options||{});
+  CH[id]=new Chart(el.getContext("2d"),cfg); }
+const BAR={borderRadius:5,maxBarThickness:26};
+const C1="#E31837", C2="#FFB300", C3="#B0BEC5", C4="#FBC0BA", C5="#5BDDE8";
+
+/* ============================================================ CARGA gviz */
+function gvizUrl(id,gid,tq){
+  return "https://docs.google.com/spreadsheets/d/"+id+"/gviz/tq?tqx=out:json&gid="+encodeURIComponent(gid)
+       +"&headers=1&tq="+encodeURIComponent(tq)+"&_ts="+Date.now();
+}
+async function gviz(id,gid,tq){
+  const r=await fetch(gvizUrl(id,gid,tq),{cache:"no-store"});
+  if(!r.ok) throw new Error("HTTP "+r.status+" — revisá que la planilla esté compartida como «cualquier persona con el enlace».");
+  const t=await r.text(); const a=t.indexOf("{"), b=t.lastIndexOf("}");
+  if(a<0) throw new Error("Respuesta inesperada de Google Sheets.");
+  const j=JSON.parse(t.slice(a,b+1));
+  if(j.status==="error") throw new Error((j.errors||[]).map(x=>x.detailed_message||x.message).join(" | "));
+  return j.table;
+}
+function mapCols(cols){
+  const byName={}; cols.forEach(c=>{ const k=NORM(c.label); if(k && !(k in byName)) byName[k]={id:c.id,label:c.label}; });
+  const out={},missing=[];
+  for(const [f,def] of Object.entries(FIELD_DEFS)){
+    const hit=byName[NORM(def.col)];
+    if(hit) out[f]=hit; else { out[f]=null; missing.push(def.col); }
+  }
+  return {map:out, missing, all:cols.map(c=>c.label)};
+}
+
+let LINES=[], ORDERS=new Map(), CLG=new Map(), META={};
+const QC={sources:[],statuses:new Map(),dupOrders:0,noDate:0,noClient:0,errors:[]};
+
+async function loadAll(){
+  LINES=[]; ORDERS=new Map(); CLG=new Map();
+  QC.sources=[]; QC.statuses=new Map(); QC.dupOrders=0; QC.noDate=0; QC.noClient=0; QC.errors=[];
+  const cityDisp=new Map();
+  let step=0, total=CFG.sources.length*2;
+  const prog=(t)=>{ document.getElementById("ovt").textContent=t; document.getElementById("ovb").style.width=Math.round(step/total*100)+"%"; };
+
+  for(const s of CFG.sources){
+    const rec={year:s.year,name:s.name,gid:s.gid,rows:0,orders:0,missing:[],error:null,cols:0};
+    try{
+      prog("Leyendo encabezados · "+s.name); step++;
+      const head=await gviz(s.id,s.gid,"limit 1");
+      const mc=mapCols(head.cols); rec.cols=head.cols.length; rec.missing=mc.missing;
+      const reqMissing=Object.entries(FIELD_DEFS).filter(([f,d])=>d.req && !mc.map[f]).map(([f,d])=>d.col);
+      if(reqMissing.length) throw new Error("Faltan columnas obligatorias: "+reqMissing.join(", "));
+
+      const letters=[...new Set(Object.values(mc.map).filter(Boolean).map(c=>c.id))];
+      const pos={}; Object.entries(mc.map).forEach(([f,c])=>{ pos[f]=c?letters.indexOf(c.id):-1; });
+
+      prog("Descargando datos · "+s.name); step++;
+      const tb=await gviz(s.id,s.gid,"select "+letters.join(","));
+      const rows=tb.rows||[]; rec.rows=rows.length;
+
+      for(const r of rows){
+        if(!r||!r.c) continue;
+        const g=f=>{ const i=pos[f]; if(i<0)return null; const c=r.c[i]; return (c&&c.v!==undefined&&c.v!==null)?c.v:null; };
+        const ord=str(g("order")); if(!ord) continue;
+        const dt=parseDate(g("date")); if(!dt){ QC.noDate++; continue; }
+        const stt=str(g("status"))||"(vacío)";
+        QC.statuses.set(stt,(QC.statuses.get(stt)||0)+1);
+        const cancel=/cancel/i.test(stt);
+
+        const email=str(g("email")).toLowerCase();
+        const doc=str(g("doc"));
+        const nm=(str(g("fname"))+" "+str(g("lname"))).replace(/\s+/g," ").trim();
+        const cid = email || (doc?("doc:"+doc):(nm?("nom:"+NORM(nm)):""));
+        if(!cid){ QC.noClient++; continue; }
+
+        const cityRaw=str(g("city")); const ck=KEYCITY(cityRaw)||"(SIN CIUDAD)";
+        if(cityRaw && !cityDisp.has(ck)) cityDisp.set(ck,titleCase(cityRaw));
+
+        const known=ORDERS.get(ord);
+        if(known && known.src!==s.year){ QC.dupOrders++; continue; }
+
+        const line={
+          y:dt.getFullYear(), m:dt.getMonth()+1, ts:dt.getTime(), order:ord, cid, cancel, status:stt,
+          city:ck, uf:str(g("uf")), qty:num(g("qty")), sku:str(g("sku")), skuU:NORM(str(g("sku"))),
+          ref:str(g("ref")), cat:str(g("cat"))||"(sin categoría)", lineTot:num(g("lineTot"))
+        };
+        LINES.push(line);
+
+        if(!known){
+          ORDERS.set(ord,{order:ord,src:s.year,ts:dt.getTime(),y:line.y,m:line.m,cid,cname:nm||email||doc,email,doc,
+            city:ck,uf:line.uf,status:stt,cancel,total:num(g("total")),ship:num(g("ship")),coupon:str(g("coupon"))});
+          rec.orders++;
+        }
+      }
+    }catch(err){ rec.error=err.message||String(err); QC.errors.push(s.name+": "+rec.error); }
+    QC.sources.push(rec);
+  }
+  document.getElementById("ovb").style.width="100%";
+
+  META.cityDisp=cityDisp;
+  META.maxTs=Math.max(0,...[...ORDERS.values()].filter(o=>!o.cancel).map(o=>o.ts));
+  META.minTs=Math.min(...[...ORDERS.values()].map(o=>o.ts));
+  META.years=[...new Set([...ORDERS.values()].map(o=>o.y))].sort();
+
+  // Índice global de clientes (histórico completo, sin filtros) — define primera compra y años activos
+  for(const o of ORDERS.values()){
+    if(o.cancel) continue;
+    let c=CLG.get(o.cid);
+    if(!c){ c={cid:o.cid,first:o.ts,last:o.ts,years:new Set(),n:0,rev:0}; CLG.set(o.cid,c); }
+    c.first=Math.min(c.first,o.ts); c.last=Math.max(c.last,o.ts);
+    c.years.add(o.y); c.n++; c.rev+=o.total;
+  }
+  for(const c of CLG.values()) c.firstYear=new Date(c.first).getFullYear();
+}
+
+/* ============================================================ ESTADO / FILTROS */
+const S={years:[],month:"",city:"",cat:"",sku:"",cli:"",seg:"",est:"",ost:"ok",ship:"con",cmp:"",tab:"resumen",segDrill:"",page:0};
+
+function buildFilterUI(){
+  const yc=document.getElementById("fYears"); yc.innerHTML="";
+  META.years.forEach(y=>{ const b=document.createElement("button"); b.className="chip on"; b.textContent=y; b.dataset.y=y;
+    b.onclick=()=>{ const i=S.years.indexOf(y); if(i<0)S.years.push(y); else S.years.splice(i,1); if(!S.years.length)S.years=[...META.years]; syncYears(); refresh(); }; yc.appendChild(b); });
+  S.years=[...META.years]; syncYears();
+
+  const mo=document.getElementById("fMonth"); mo.innerHTML='<option value="">Todos los meses</option>'+MESES.map((m,i)=>'<option value="'+(i+1)+'">'+m+'</option>').join("");
+
+  const cities=[...new Set(LINES.map(l=>l.city))].sort((a,b)=>a.localeCompare(b,"es"));
+  document.getElementById("fCity").innerHTML='<option value="">Todas las ciudades</option>'+cities.map(c=>'<option value="'+esc(c)+'">'+esc(META.cityDisp.get(c)||c)+'</option>').join("");
+
+  const catCount=new Map(); LINES.forEach(l=>catCount.set(l.cat,(catCount.get(l.cat)||0)+1));
+  const cats=[...catCount.entries()].sort((a,b)=>b[1]-a[1]).map(e=>e[0]);
+  document.getElementById("fCat").innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>'<option value="'+esc(c)+'">'+esc(c)+'</option>').join("");
+
+  document.getElementById("fSeg").innerHTML='<option value="">Todos los segmentos</option>'+SEGMENTS.map(s=>'<option value="'+s.k+'">'+s.n+'</option>').join("");
+  document.getElementById("fEst").innerHTML='<option value="">Todos los estados</option>'+["Activo","En riesgo","Dormido","Perdido"].map(e=>'<option value="'+e+'">'+e+'</option>').join("");
+
+  const pairs=[]; for(let i=0;i<META.years.length;i++) for(let j=i+1;j<META.years.length;j++) pairs.push(META.years[i]+"|"+META.years[j]);
+  const dflt=META.years.length>1?META.years[META.years.length-2]+"|"+META.years[META.years.length-1]:"";
+  document.getElementById("fCmp").innerHTML=pairs.map(p=>'<option value="'+p+'"'+(p===dflt?" selected":"")+'>'+p.replace("|"," vs ")+'</option>').join("");
+  S.cmp=dflt;
+
+  const bind=(id,key,deb)=>{ const el=document.getElementById(id); let t;
+    el.addEventListener(deb?"input":"change",()=>{ clearTimeout(t); t=setTimeout(()=>{ S[key]=el.value; S.page=0; S.segDrill=""; refresh(); },deb?350:0); }); };
+  bind("fMonth","month"); bind("fCity","city"); bind("fCat","cat"); bind("fSku","sku",1); bind("fCli","cli",1);
+  bind("fSeg","seg"); bind("fEst","est"); bind("fOst","ost"); bind("fShip","ship"); bind("fCmp","cmp");
+  document.getElementById("btnReset").onclick=()=>{ S.years=[...META.years]; syncYears();
+    ["fMonth","fCity","fCat","fSku","fCli","fSeg","fEst"].forEach(i=>document.getElementById(i).value="");
+    document.getElementById("fOst").value="ok"; Object.assign(S,{month:"",city:"",cat:"",sku:"",cli:"",seg:"",est:"",ost:"ok",segDrill:"",page:0}); refresh(); };
+  document.getElementById("btnReload").onclick=()=>boot(true);
+}
+function syncYears(){ document.querySelectorAll("#fYears .chip").forEach(b=>b.classList.toggle("on",S.years.includes(+b.dataset.y))); }
+
+/* ============================================================ CÁLCULO */
+function estadoCliente(dias){
+  const E=CFG.estado;
+  if(dias<=E.activo)return"Activo"; if(dias<=E.riesgo)return"En riesgo"; if(dias<=E.dormido)return"Dormido"; return"Perdido";
+}
+function scoreQuintiles(vals){ // rank-percentil con empates → mismo score
+  const sorted=[...vals].sort((a,b)=>a-b); const n=sorted.length;
+  const rank=new Map(); let i=0;
+  while(i<n){ let j=i; while(j+1<n && sorted[j+1]===sorted[i]) j++; const mid=(i+j)/2; rank.set(sorted[i],mid/Math.max(1,n-1)); i=j+1; }
+  return v=>{ const p=rank.get(v)||0; return Math.min(5,Math.floor(p*5)+1); };
+}
+function segmentar(R,F,M){
+  if(R>=4&&F>=4&&M>=4) return "campeones";
+  if(F>=4&&R>=3)        return "fieles";
+  if(M===5)             return "altovalor";
+  if(F>=3&&R<=2)        return "riesgo";
+  if(R===1)             return "perdidos";
+  if(R===2)             return "dormidos";
+  if(R>=4&&F===3)       return "potfieles";
+  if(F===1&&R>=4)       return "nuevos";
+  return "prometedores";
+}
+function buildClients(orders, refTs){
+  const map=new Map(); const sinEnvio=S.ship==="sin";
+  for(const o of orders){
+    if(o.cancel) continue;
+    let c=map.get(o.cid);
+    if(!c){ c={cid:o.cid,name:o.cname||o.email||o.cid,email:o.email,city:o.city,ts:[],rev:0}; map.set(o.cid,c); }
+    c.ts.push(o.ts); c.rev += o.total - (sinEnvio?o.ship:0); c.city=o.city;
+  }
+  const out=[];
+  for(const c of map.values()){
+    c.ts.sort((a,b)=>a-b); c.n=c.ts.length; c.first=c.ts[0]; c.last=c.ts[c.n-1];
+    c.rec=Math.max(0,Math.round((refTs-c.last)/D));
+    c.ticket=c.n?c.rev/c.n:0;
+    c.span=(c.last-c.first)/D;
+    c.ciclo = c.n>1 ? c.span/(c.n-1) : null;
+    c.to2nd = c.n>1 ? Math.round((c.ts[1]-c.ts[0])/D) : null;
+    const g=CLG.get(c.cid); c.firstYear = g?g.firstYear:new Date(c.first).getFullYear();
+    c.estado=estadoCliente(c.rec);
+    out.push(c);
+  }
+  if(out.length){
+    const sR=scoreQuintiles(out.map(c=>-c.rec)), sF=scoreQuintiles(out.map(c=>c.n)), sM=scoreQuintiles(out.map(c=>c.rev));
+    out.forEach(c=>{ c.R=sR(-c.rec); c.F=sF(c.n); c.M=sM(c.rev); c.seg=segmentar(c.R,c.F,c.M); });
+  }
+  return out;
+}
+
+let V={}; // vista calculada
+function compute(){
+  const yset=new Set(S.years.length?S.years:META.years);
+  const mo=S.month?+S.month:0, skuQ=NORM(S.sku);
+  const lines=LINES.filter(l=>{
+    if(!yset.has(l.y))return false;
+    if(mo && l.m!==mo)return false;
+    if(S.city && l.city!==S.city)return false;
+    if(S.cat && l.cat!==S.cat)return false;
+    if(skuQ && !l.skuU.includes(skuQ))return false;
+    if(S.ost==="ok" && l.cancel)return false;
+    if(S.ost==="canc" && !l.cancel)return false;
+    return true;
+  });
+  const okeys=new Set(); lines.forEach(l=>okeys.add(l.order));
+  const orders=[...okeys].map(k=>ORDERS.get(k)).filter(Boolean);
+  const valid=orders.filter(o=>!o.cancel);
+  const refTs = valid.length ? Math.max(...valid.map(o=>o.ts)) : META.maxTs;
+
+  let clients=buildClients(orders,refTs);
+  const cliQ=NORM(S.cli);
+  const clientsF=clients.filter(c=>{
+    if(S.seg && c.seg!==S.seg)return false;
+    if(S.est && c.estado!==S.est)return false;
+    if(cliQ && !(NORM(c.name).includes(cliQ)||NORM(c.email).includes(cliQ)||NORM(c.cid).includes(cliQ)))return false;
+    return true;
+  });
+  const keep=new Set(clientsF.map(c=>c.cid));
+  const ordersF=orders.filter(o=>keep.has(o.cid));
+  const linesF=(S.seg||S.est||cliQ)?lines.filter(l=>keep.has(l.cid)):lines;
+
+  V={lines:linesF, orders:ordersF, valid:ordersF.filter(o=>!o.cancel), clients:clientsF, allClients:clients, refTs, years:[...yset].sort()};
+  V.rev=V.valid.reduce((a,o)=>a+o.total-(S.ship==="sin"?o.ship:0),0);
+  return V;
+}
+
+/* métricas por año sobre el set filtrado */
+function yearMetrics(){
+  const byYear=new Map();
+  const sinEnvio=S.ship==="sin";
+  for(const o of V.valid){
+    let r=byYear.get(o.y); if(!r){ r={y:o.y,orders:0,rev:0,cli:new Set()}; byYear.set(o.y,r); }
+    r.orders++; r.rev+=o.total-(sinEnvio?o.ship:0); r.cli.add(o.cid);
+  }
+  const ordCli=new Map(); // pedidos por cliente por año (para recompra intra-año)
+  for(const o of V.valid){ const k=o.y+"|"+o.cid; ordCli.set(k,(ordCli.get(k)||0)+1); }
+  const years=[...byYear.keys()].sort();
+  const yearsSet=new Set(years);
+  const activeByYear=new Map(); years.forEach(y=>activeByYear.set(y,byYear.get(y).cli));
+  const out=years.map(y=>{
+    const r=byYear.get(y); const act=r.cli;
+    let nuevos=0,recur=0; act.forEach(cid=>{ const g=CLG.get(cid); if(g&&g.firstYear===y)nuevos++; else recur++; });
+    let rep=0; act.forEach(cid=>{ if((ordCli.get(y+"|"+cid)||0)>=2)rep++; });
+    const prev=activeByYear.get(y-1);
+    let perdidos=0,react=0;
+    if(prev) prev.forEach(cid=>{ if(!act.has(cid))perdidos++; });
+    if(yearsSet.has(y-1)) act.forEach(cid=>{ if(!prev.has(cid)){ const g=CLG.get(cid); if(g && [...g.years].some(yy=>yy<y-1)) react++; } });
+    return {y, clientes:act.size, nuevos, recur, orders:r.orders, rev:r.rev,
+      ticket:r.orders?r.rev/r.orders:0, freq:act.size?r.orders/act.size:0, recompra:act.size?rep/act.size*100:0,
+      perdidos, react};
+  });
+  return out;
+}
+
+/* ============================================================ TABS */
+const TABS=[
+  ["resumen","Resumen"],["clientes","Evolución de clientes"],["retencion","Retención y recompra"],
+  ["rfm","RFM"],["cohortes","Cohortes"],["valor","Alto valor"],["productos","Productos"],
+  ["ciudades","Ciudades"],["crm","Oportunidades CRM"],["tabla","Tabla de clientes"]
+];
+function buildTabs(){
+  const t=document.getElementById("tabs"); t.innerHTML="";
+  TABS.forEach(([k,n])=>{ const b=document.createElement("button"); b.className="tab"+(S.tab===k?" on":""); b.textContent=n;
+    b.onclick=()=>{ S.tab=k; S.page=0; buildTabs(); refresh(); }; t.appendChild(b); });
+}
+function panel(title,hint,cols,body){
+  return '<div class="card"><h2><span class="dot"></span>'+title+'</h2>'
+    +(hint?'<p class="hint">'+hint+'</p>':'')
+    +(cols?'<p class="cols">Columnas: '+cols+'</p>':'')+body+'</div>';
+}
+function tbl(headers,rows,cls){
+  return '<div class="tw"><table><thead><tr>'+headers.map(h=>'<th'+(h.n?' class="n"':'')+'>'+h.t+'</th>').join("")+'</tr></thead><tbody>'
+    +rows.map(r=>'<tr'+(r.cls?' class="'+r.cls+'"':'')+(r.attr||"")+'>'+r.c.map((c,i)=>'<td'+(headers[i]&&headers[i].n?' class="n"':'')+'>'+c+'</td>').join("")+'</tr>').join("")
+    +'</tbody></table></div>';
+}
+function segPill(k){ return '<span class="pill" style="background:'+SEGCOLOR[k]+'22;color:#111315;border-color:'+SEGCOLOR[k]+'">'+SEGNAME[k]+'</span>'; }
+function estPill(e){ const c={"Activo":"#1E9E5A","En riesgo":"#E6A100","Dormido":"#B0BEC5","Perdido":"#D8342E"}[e]||"#6B7280";
+  return '<span class="pill" style="background:'+c+'1A;color:#111315;border-color:'+c+'">'+e+'</span>'; }
+
+/* ============================================================ RENDER */
+function refresh(){
+  compute();
+  document.getElementById("cut").textContent=fmtD(new Date(META.maxTs));
+  renderQC();
+  const P=document.getElementById("panels");
+  const fn={resumen:rResumen,clientes:rClientes,retencion:rRetencion,rfm:rRFM,cohortes:rCohortes,
+            valor:rValor,productos:rProductos,ciudades:rCiudades,crm:rCRM,tabla:rTabla}[S.tab];
+  Object.keys(CH).forEach(k=>{CH[k].destroy();delete CH[k];});
+  P.innerHTML=fn.html();
+  if(fn.after)fn.after();
+  document.getElementById("foot").innerHTML=
+    "Mi Portal Coca-Cola · Clientes VTEX 2023–2026 · Fuente: Google Sheets (VTEX)<br>"
+    +fmtN(V.valid.length)+" pedidos válidos · "+fmtN(V.clients.length)+" clientes · recencia calculada al "+fmtD(new Date(V.refTs));
+}
+
+/* ---------- 1. RESUMEN ---------- */
+const rResumen={html(){
+  const Y=yearMetrics(); V._Y=Y;
+  const last=Y[Y.length-1]||{}, prev=Y[Y.length-2]||null;
+  const cl=V.clients, n=cl.length;
+  const activos=cl.filter(c=>c.estado==="Activo").length;
+  const nuevos=cl.filter(c=>c.firstYear===(last.y||0)).length;
+  const recur=cl.filter(c=>c.n>=2).length;
+  const orders=V.valid.length, rev=V.rev;
+  const ticket=orders?rev/orders:0, freq=n?orders/n:0, recompra=n?recur/n*100:0;
+  const K=(k,v,d)=>'<div class="kpi"><div class="k">'+k+'</div><div class="v">'+v+'</div>'+(d||"")+'</div>';
+  const kpis='<div class="kpis">'
+    +K("👥 Clientes totales",fmtN(n),prev?dHtml(delta(last.clientes,prev.clientes)):"")
+    +K("🟢 Clientes activos (≤"+CFG.estado.activo+" días)",fmtN(activos),'<div class="d flat">'+fmtP(n?activos/n*100:0)+" de la base</div>")
+    +K("🌱 Clientes nuevos ("+(last.y||"")+")",fmtN(nuevos),prev?dHtml(delta(last.nuevos,prev.nuevos)):"")
+    +K("🔄 Clientes recurrentes",fmtN(recur),'<div class="d flat">'+fmtP(recompra)+" de la base</div>")
+    +K("🛒 Pedidos",fmtN(orders),prev?dHtml(delta(last.orders,prev.orders)):"")
+    +K("💰 Facturación",gC(rev),prev?dHtml(delta(last.rev,prev.rev)):"")
+    +K("🎟️ Ticket promedio",gC(ticket),prev?dHtml(delta(last.ticket,prev.ticket)):"")
+    +K("📈 Frecuencia de compra",fmtF(freq,2)+" ped./cliente",prev?dHtml(delta(last.freq,prev.freq)):"")
+    +K("🔁 Tasa de recompra",fmtP(recompra),prev?dHtml(delta(last.recompra,prev.recompra)):"")
+    +'</div>';
+
+  const rows=Y.map((r,i)=>{ const p=Y[i-1];
+    const d=(a,b)=>{ const v=p?delta(a,b):null; return v==null?'—':'<span class="'+(v>0?"up":v<0?"down":"flat")+'">'+(v>0?"+":"")+fmtP(v)+'</span>'; };
+    return {c:[r.y,fmtN(r.clientes)+" "+d(r.clientes,p&&p.clientes),fmtN(r.nuevos),fmtN(r.recur),fmtN(r.orders)+" "+d(r.orders,p&&p.orders),
+      gC(r.rev)+" "+d(r.rev,p&&p.rev),gC(r.ticket),fmtF(r.freq,2),fmtP(r.recompra)]};});
+  EXP.resumen=()=>download("resumen_anual",[["Año","Clientes","Nuevos","Recurrentes","Pedidos","Facturación","Ticket","Frecuencia","Recompra %"]]
+    .concat(Y.map(r=>[r.y,r.clientes,r.nuevos,r.recur,r.orders,Math.round(r.rev),Math.round(r.ticket),r.freq.toFixed(2),r.recompra.toFixed(1)])));
+
+  const tabla=panel("Evolución 2023 → 2026",
+    "Variación calculada contra el año inmediato anterior dentro de la selección. La condición de cliente nuevo se determina sobre todo el histórico cargado, no sobre el filtro.",
+    "Creation Date · Order · Total Value · Shipping Value · Email / Client Document · Status",
+    '<div class="head"><div></div>'+expBtn("resumen")+'</div>'
+    +tbl([{t:"Año"},{t:"Clientes",n:1},{t:"Nuevos",n:1},{t:"Recurrentes",n:1},{t:"Pedidos",n:1},{t:"Facturación",n:1},{t:"Ticket",n:1},{t:"Frecuencia",n:1},{t:"Recompra",n:1}],rows));
+
+  const charts='<div class="grid2">'
+    +panel("Facturación y pedidos por año","","",'<div class="chartbox"><canvas id="cRev"></canvas></div>')
+    +panel("Clientes: nuevos vs. recurrentes","","",'<div class="chartbox"><canvas id="cMix"></canvas></div>')
+    +'</div>';
+  return kpis+tabla+charts;
+},after(){
+  const Y=V._Y, L=Y.map(r=>r.y);
+  chart("cRev",{type:"bar",data:{labels:L,datasets:[
+    {label:"Facturación",data:Y.map(r=>r.rev),backgroundColor:C1,...BAR,yAxisID:"y"},
+    {label:"Pedidos",type:"line",data:Y.map(r=>r.orders),borderColor:C2,backgroundColor:C2,tension:.3,yAxisID:"y1"}]},
+    options:{plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:c=>c.dataset.label+": "+(c.datasetIndex===0?gC(c.parsed.y):fmtN(c.parsed.y))}}},
+    scales:{y:{ticks:{callback:v=>gC(v)}},y1:{position:"right",grid:{drawOnChartArea:false},ticks:{callback:v=>fmtN(v)}}}}});
+  chart("cMix",{type:"bar",data:{labels:L,datasets:[
+    {label:"Nuevos",data:Y.map(r=>r.nuevos),backgroundColor:C5,...BAR},
+    {label:"Recurrentes",data:Y.map(r=>r.recur),backgroundColor:C1,...BAR}]},
+    options:{plugins:{legend:{position:"bottom"}},scales:{x:{stacked:true},y:{stacked:true,ticks:{callback:v=>fmtN(v)}}}}});
+}};
+
+/* ---------- 2. EVOLUCIÓN DE CLIENTES ---------- */
+const rClientes={html(){
+  const Y=yearMetrics(); V._Y=Y;
+  const multi=V.clients.filter(c=>{const g=CLG.get(c.cid);return g&&g.years.size>=2;}).length;
+  const rows=Y.map(r=>({c:[r.y,fmtN(r.clientes),fmtN(r.nuevos),fmtN(r.recur),fmtN(r.perdidos),fmtN(r.react),
+    fmtP(r.clientes?r.nuevos/r.clientes*100:0)]}));
+  EXP.evo=()=>download("evolucion_clientes",[["Año","Activos","Nuevos","Recurrentes","Perdidos","Reactivados","% nuevos"]]
+    .concat(Y.map(r=>[r.y,r.clientes,r.nuevos,r.recur,r.perdidos,r.react,(r.clientes?r.nuevos/r.clientes*100:0).toFixed(1)])));
+
+  const dist=new Map(); V.clients.forEach(c=>{const g=CLG.get(c.cid);const k=g?g.years.size:1;dist.set(k,(dist.get(k)||0)+1);});
+  const distRows=[...dist.entries()].sort((a,b)=>a[0]-b[0]).map(([k,v])=>({c:[k+(k===1?" año":" años"),fmtN(v),fmtP(V.clients.length?v/V.clients.length*100:0)]}));
+
+  return '<div class="kpis">'
+    +'<div class="kpi"><div class="k">Clientes que compraron en varios años</div><div class="v">'+fmtN(multi)+'</div><div class="d flat">'+fmtP(V.clients.length?multi/V.clients.length*100:0)+' de la base</div></div>'
+    +'<div class="kpi"><div class="k">Clientes perdidos (último año)</div><div class="v">'+fmtN((Y[Y.length-1]||{}).perdidos||0)+'</div><div class="d flat">activos el año anterior, sin compra este año</div></div>'
+    +'<div class="kpi"><div class="k">Clientes reactivados (último año)</div><div class="v">'+fmtN((Y[Y.length-1]||{}).react||0)+'</div><div class="d flat">volvieron tras un año sin comprar</div></div>'
+    +'</div>'
+    +panel("Evolución de la base","Activos = compraron al menos una vez ese año. Nuevos = su primera compra histórica fue ese año. Perdidos = activos el año anterior y sin compra ese año. Reactivados = activos ese año, sin compra el año anterior, con compras previas.",
+      "Creation Date · Order · Email / Client Document · Status",
+      '<div class="head"><div></div>'+expBtn("evo")+'</div>'+tbl([{t:"Año"},{t:"Activos",n:1},{t:"Nuevos",n:1},{t:"Recurrentes",n:1},{t:"Perdidos",n:1},{t:"Reactivados",n:1},{t:"% nuevos",n:1}],rows))
+    +'<div class="grid2">'
+    +panel("Altas, bajas y reactivaciones","","",'<div class="chartbox"><canvas id="cEvo"></canvas></div>')
+    +panel("¿En cuántos años distintos compró cada cliente?","Sobre todo el histórico cargado.","",tbl([{t:"Años con compra"},{t:"Clientes",n:1},{t:"% base",n:1}],distRows))
+    +'</div>';
+},after(){
+  const Y=V._Y,L=Y.map(r=>r.y);
+  chart("cEvo",{type:"bar",data:{labels:L,datasets:[
+    {label:"Nuevos",data:Y.map(r=>r.nuevos),backgroundColor:C5,...BAR},
+    {label:"Reactivados",data:Y.map(r=>r.react),backgroundColor:C2,...BAR},
+    {label:"Perdidos",data:Y.map(r=>-r.perdidos),backgroundColor:C1,...BAR}]},
+    options:{plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:c=>c.dataset.label+": "+fmtN(Math.abs(c.parsed.y))}}},
+      scales:{y:{ticks:{callback:v=>fmtN(Math.abs(v))}}}}});
+}};
+
+/* ---------- 3. RETENCIÓN ---------- */
+function retData(){
+  const cl=V.clients;
+  const b1=cl.filter(c=>c.n===1).length, b2=cl.filter(c=>c.n===2).length, b3=cl.filter(c=>c.n>=3).length;
+  const ciclos=cl.filter(c=>c.ciclo!=null).map(c=>c.ciclo);
+  const to2=cl.filter(c=>c.to2nd!=null).map(c=>c.to2nd);
+  const pot=cl.filter(c=>c.ciclo!=null && c.ciclo>0 && c.rec>=c.ciclo*0.75 && c.rec<=c.ciclo*1.25);
+  return {b1,b2,b3,ciclos,to2,pot,
+    freq:cl.length?cl.reduce((a,c)=>a+c.n,0)/cl.length:0,
+    recompra:cl.length?(cl.length-b1)/cl.length*100:0};
+}
+const rRetencion={html(){
+  const R=retData(); V._R=R; const cl=V.clients;
+  const K=(k,v,d)=>'<div class="kpi"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="d flat">'+d+'</div></div>';
+  const kpis='<div class="kpis">'
+    +K("Clientes de 1 compra",fmtN(R.b1),fmtP(cl.length?R.b1/cl.length*100:0)+" de la base")
+    +K("Clientes de 2 compras",fmtN(R.b2),fmtP(cl.length?R.b2/cl.length*100:0)+" de la base")
+    +K("Clientes de 3+ compras",fmtN(R.b3),fmtP(cl.length?R.b3/cl.length*100:0)+" de la base")
+    +K("Frecuencia promedio",fmtF(R.freq,2),"pedidos por cliente")
+    +K("Tiempo entre compras",R.ciclos.length?fmtF(R.ciclos.reduce((a,b)=>a+b,0)/R.ciclos.length,0)+" días":"—","promedio · mediana "+(median(R.ciclos)!=null?fmtF(median(R.ciclos),0)+" días":"—"))
+    +K("Tasa de recompra",fmtP(R.recompra),"clientes con 2 o más pedidos")
+    +K("Tiempo hasta 2ª compra",R.to2.length?fmtF(R.to2.reduce((a,b)=>a+b,0)/R.to2.length,0)+" días":"—","mediana "+(median(R.to2)!=null?fmtF(median(R.to2),0)+" días":"—"))
+    +K("Con potencial de recompra",fmtN(R.pot.length),"están en su ventana habitual")
+    +'</div>';
+
+  const top=[...R.pot].sort((a,b)=>b.rev-a.rev).slice(0,300);
+  EXP.pot=()=>download("potencial_recompra",[["Cliente","Email","Ciudad","Pedidos","Facturación","Ticket","Ciclo (días)","Días sin comprar","Última compra"]]
+    .concat([...R.pot].sort((a,b)=>b.rev-a.rev).map(c=>[c.name,c.email,META.cityDisp.get(c.city)||c.city,c.n,Math.round(c.rev),Math.round(c.ticket),Math.round(c.ciclo),c.rec,fmtD(new Date(c.last))])));
+
+  return kpis
+    +'<div class="grid2">'
+    +panel("Distribución de clientes por cantidad de compras","","",'<div class="chartbox"><canvas id="cBuckets"></canvas></div>')
+    +panel("Días hasta la segunda compra","Distribución de los clientes que hicieron al menos dos pedidos.","",'<div class="chartbox"><canvas id="c2nd"></canvas></div>')
+    +'</div>'
+    +panel("Clientes con potencial de recompra",
+      "Clientes con al menos dos pedidos cuyo tiempo sin comprar está entre el 75% y el 125% de su propio ciclo de compra (días promedio entre sus pedidos). Es decir: están entrando en su ventana habitual de recompra. Se muestran los 300 de mayor facturación.",
+      "Creation Date · Order · Total Value · Email / Client Document",
+      '<div class="head"><div></div>'+expBtn("pot","Excel · "+fmtN(R.pot.length)+" clientes")+'</div>'
+      +tbl([{t:"Cliente"},{t:"Ciudad"},{t:"Pedidos",n:1},{t:"Facturación",n:1},{t:"Ticket",n:1},{t:"Ciclo",n:1},{t:"Días sin comprar",n:1},{t:"Última compra"}],
+        top.map(c=>({c:[esc(c.name),esc(META.cityDisp.get(c.city)||c.city),fmtN(c.n),gC(c.rev),gC(c.ticket),fmtF(c.ciclo,0)+" d",fmtN(c.rec)+" d",fmtD(new Date(c.last))]}))));
+},after(){
+  const R=V._R;
+  chart("cBuckets",{type:"bar",data:{labels:["1 compra","2 compras","3+ compras"],datasets:[{data:[R.b1,R.b2,R.b3],backgroundColor:[C3,C2,C1],...BAR}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmtN(v)}}}}});
+  const bins=[[0,15],[16,30],[31,45],[46,60],[61,90],[91,180],[181,365],[366,99999]];
+  const lbl=["0-15 d","16-30 d","31-45 d","46-60 d","61-90 d","91-180 d","181-365 d","+365 d"];
+  const cnt=bins.map(([a,b])=>R.to2.filter(v=>v>=a&&v<=b).length);
+  chart("c2nd",{type:"bar",data:{labels:lbl,datasets:[{data:cnt,backgroundColor:C1,...BAR}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{ticks:{callback:v=>fmtN(v)}}}}});
+}};
+
+/* ---------- 4. RFM ---------- */
+function rfmByYear(){
+  const out=[];
+  for(const y of V.years){
+    const end=new Date(y,11,31,23,59,59).getTime();
+    const os=V.valid.filter(o=>o.ts<=end);
+    if(!os.length){ out.push({y,counts:{},total:0}); continue; }
+    const ref=Math.min(end,Math.max(...os.map(o=>o.ts)));
+    const cs=buildClients(os,ref);
+    const counts={}; SEGMENTS.forEach(s=>counts[s.k]=0);
+    cs.forEach(c=>counts[c.seg]++);
+    out.push({y,counts,total:cs.length});
+  }
+  return out;
+}
+const rRFM={html(){
+  const cl=V.clients;
+  const agg={}; SEGMENTS.forEach(s=>agg[s.k]={n:0,rev:0,ord:0});
+  cl.forEach(c=>{ const a=agg[c.seg]; a.n++; a.rev+=c.rev; a.ord+=c.n; });
+  const rows=SEGMENTS.map(s=>{ const a=agg[s.k];
+    return {cls:"seg-clickable",attr:' data-seg="'+s.k+'"',c:[segPill(s.k),fmtN(a.n),fmtP(cl.length?a.n/cl.length*100:0),gC(a.rev),
+      gC(a.n?a.rev/Math.max(1,a.ord):0),fmtF(a.n?a.ord/a.n:0,2)]};});
+  EXP.rfm=()=>download("rfm_segmentos",[["Segmento","Clientes","% base","Facturación","Ticket","Frecuencia"]]
+    .concat(SEGMENTS.map(s=>{const a=agg[s.k];return [s.n,a.n,(cl.length?a.n/cl.length*100:0).toFixed(1),Math.round(a.rev),Math.round(a.n?a.rev/Math.max(1,a.ord):0),(a.n?a.ord/a.n:0).toFixed(2)];})));
+
+  let drill="";
+  if(S.segDrill){
+    const list=cl.filter(c=>c.seg===S.segDrill).sort((a,b)=>b.rev-a.rev);
+    EXP.drill=()=>download("rfm_"+S.segDrill,[["Cliente","Email","Ciudad","R","F","M","Pedidos","Facturación","Ticket","Días sin comprar","Última compra"]]
+      .concat(list.map(c=>[c.name,c.email,META.cityDisp.get(c.city)||c.city,c.R,c.F,c.M,c.n,Math.round(c.rev),Math.round(c.ticket),c.rec,fmtD(new Date(c.last))])));
+    drill=panel("Clientes del segmento "+SEGNAME[S.segDrill],"Se muestran los 300 de mayor facturación. La exportación incluye los "+fmtN(list.length)+".","",
+      '<div class="head"><div></div><div>'+expBtn("drill")+' <button class="btn xs" id="closeDrill">Cerrar</button></div></div>'
+      +tbl([{t:"Cliente"},{t:"Ciudad"},{t:"R",n:1},{t:"F",n:1},{t:"M",n:1},{t:"Pedidos",n:1},{t:"Facturación",n:1},{t:"Días sin comprar",n:1},{t:"Última compra"}],
+        list.slice(0,300).map(c=>({c:[esc(c.name),esc(META.cityDisp.get(c.city)||c.city),c.R,c.F,c.M,fmtN(c.n),gC(c.rev),fmtN(c.rec),fmtD(new Date(c.last))]}))));
+  }
+  const ev=rfmByYear(); V._ev=ev;
+  const evRows=SEGMENTS.map(s=>({c:[segPill(s.k)].concat(ev.map(e=>{
+    const v=e.counts[s.k]||0; return fmtN(v)+' <span class="flat" style="color:#9AA0A6">'+fmtP(e.total?v/e.total*100:0,0)+'</span>';}))}));
+  EXP.rfmEv=()=>download("rfm_evolucion",[["Segmento"].concat(ev.map(e=>e.y))]
+    .concat(SEGMENTS.map(s=>[s.n].concat(ev.map(e=>e.counts[s.k]||0)))));
+
+  return panel("Segmentación RFM","Recencia (días desde la última compra), Frecuencia (cantidad de pedidos) y Monetario (facturación acumulada). Cada dimensión se puntúa de 1 a 5 por quintiles sobre la base filtrada; la recencia se calcula al "+fmtD(new Date(V.refTs))+". Hacé clic en un segmento para ver sus clientes.",
+      "Creation Date · Order · Total Value · Shipping Value · Email / Client Document",
+      '<div class="head"><div></div>'+expBtn("rfm")+'</div>'
+      +tbl([{t:"Segmento"},{t:"Clientes",n:1},{t:"% base",n:1},{t:"Facturación",n:1},{t:"Ticket",n:1},{t:"Frecuencia",n:1}],rows)
+      +'<div class="legendnote"><b>Reglas (se evalúan en orden, cada cliente cae en un solo segmento):</b> Campeones R≥4·F≥4·M≥4 → Fieles F≥4·R≥3 → Alto valor M=5 → En riesgo F≥3·R≤2 → Perdidos R=1 → Dormidos R=2 → Potenciales fieles R≥4·F=3 → Nuevos F=1·R≥4 → Prometedores (el resto).</div>')
+    +drill
+    +'<div class="grid2">'
+    +panel("Distribución de la base","","",'<div class="chartbox"><canvas id="cSeg"></canvas></div>')
+    +panel("Facturación por segmento","","",'<div class="chartbox"><canvas id="cSegRev"></canvas></div>')
+    +'</div>'
+    +panel("Evolución RFM año a año","Para cada año se recalcula el RFM con todos los pedidos hasta el 31 de diciembre de ese año, tomando como fecha de referencia el último día con datos. Así se ve si la base gana o pierde fieles, campeones o dormidos.","Creation Date · Order · Total Value",
+      '<div class="head"><div></div>'+expBtn("rfmEv")+'</div>'
+      +tbl([{t:"Segmento"}].concat(ev.map(e=>({t:e.y,n:1}))),evRows)
+      +'<div class="chartbox tall" style="margin-top:14px"><canvas id="cSegEv"></canvas></div>');
+},after(){
+  const cl=V.clients;
+  const agg={}; SEGMENTS.forEach(s=>agg[s.k]={n:0,rev:0}); cl.forEach(c=>{agg[c.seg].n++;agg[c.seg].rev+=c.rev;});
+  chart("cSeg",{type:"bar",data:{labels:SEGMENTS.map(s=>s.n),datasets:[{data:SEGMENTS.map(s=>agg[s.k].n),backgroundColor:SEGMENTS.map(s=>s.c),...BAR}]},
+    options:{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmtN(v)}}}}});
+  chart("cSegRev",{type:"bar",data:{labels:SEGMENTS.map(s=>s.n),datasets:[{data:SEGMENTS.map(s=>agg[s.k].rev),backgroundColor:SEGMENTS.map(s=>s.c),...BAR}]},
+    options:{indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>gC(c.parsed.x)}}},scales:{x:{ticks:{callback:v=>gC(v)}}}}});
+  const ev=V._ev;
+  chart("cSegEv",{type:"bar",data:{labels:ev.map(e=>e.y),datasets:SEGMENTS.map(s=>({label:s.n,data:ev.map(e=>e.counts[s.k]||0),backgroundColor:s.c,...BAR}))},
+    options:{plugins:{legend:{position:"bottom"}},scales:{x:{stacked:true},y:{stacked:true,ticks:{callback:v=>fmtN(v)}}}}});
+  document.querySelectorAll("[data-seg]").forEach(tr=>tr.onclick=()=>{S.segDrill=tr.dataset.seg;refresh();});
+  const cd=document.getElementById("closeDrill"); if(cd)cd.onclick=()=>{S.segDrill="";refresh();};
+}};
+
+/* ---------- 5. COHORTES ---------- */
+const rCohortes={html(){
+  const years=V.years;
+  const first=new Map(); // cid -> firstYear (histórico)
+  V.clients.forEach(c=>first.set(c.cid,c.firstYear));
+  const act=new Map(); // year -> Set cid
+  const rev=new Map(); // cohort|year -> rev
+  const ords=new Map();
+  const sinEnvio=S.ship==="sin";
+  V.valid.forEach(o=>{
+    if(!act.has(o.y))act.set(o.y,new Set());
+    act.get(o.y).add(o.cid);
+    const co=first.get(o.cid); if(co==null)return;
+    const k=co+"|"+o.y;
+    rev.set(k,(rev.get(k)||0)+o.total-(sinEnvio?o.ship:0));
+    ords.set(k,(ords.get(k)||0)+1);
+  });
+  const cohorts=years.filter(y=>[...first.values()].some(f=>f===y));
+  const size=new Map(); cohorts.forEach(y=>size.set(y,[...first.values()].filter(f=>f===y).length));
+
+  const hdr=[{t:"Cohorte"},{t:"Clientes",n:1}].concat(years.map(y=>({t:y,n:1})));
+  const rows=cohorts.map(co=>{
+    const n=size.get(co)||0;
+    const cells=years.map(y=>{
+      if(y<co) return "—";
+      const s=act.get(y)||new Set();
+      let ret=0; first.forEach((f,cid)=>{ if(f===co && s.has(cid)) ret++; });
+      const pct=n?ret/n*100:0;
+      const bg=y===co?"#FFFFFF":"rgba(232,36,27,"+(Math.min(pct,100)/100*0.55).toFixed(2)+")";
+      return '<span style="display:block;background:'+bg+';border-radius:6px;padding:2px 6px">'+fmtN(ret)+' · '+fmtP(pct,0)+'</span>';
+    });
+    return {c:[co,fmtN(n)].concat(cells)};
+  });
+  const rrows=cohorts.map(co=>{
+    const n=size.get(co)||0;
+    const cl=V.clients.filter(c=>c.firstYear===co);
+    const volvieron=cl.filter(c=>c.n>=2).length;
+    const totRev=cl.reduce((a,c)=>a+c.rev,0), totOrd=cl.reduce((a,c)=>a+c.n,0);
+    return {c:[co,fmtN(n),fmtN(volvieron),fmtP(n?volvieron/n*100:0),fmtN(totOrd),gC(totRev),gC(n?totRev/n:0)]};
+  });
+  EXP.coh=()=>download("cohortes",[["Cohorte","Clientes adquiridos","Volvieron a comprar","Retención %","Pedidos totales","Facturación acumulada","Facturación por cliente"]]
+    .concat(cohorts.map(co=>{const cl=V.clients.filter(c=>c.firstYear===co);const n=size.get(co)||0;const v=cl.filter(c=>c.n>=2).length;
+      const tr=cl.reduce((a,c)=>a+c.rev,0);return [co,n,v,(n?v/n*100:0).toFixed(1),cl.reduce((a,c)=>a+c.n,0),Math.round(tr),Math.round(n?tr/n:0)];})));
+
+  return panel("Retención por cohorte de adquisición","Cada cohorte agrupa a los clientes según el año de su primera compra. La celda muestra cuántos de esos clientes compraron en cada año y qué porcentaje de la cohorte representan.",
+      "Creation Date · Order · Email / Client Document",
+      tbl(hdr,rows))
+    +panel("Calidad de cada cohorte","Cuánto valen los clientes captados cada año, sobre todo el período seleccionado.","Order · Total Value · Shipping Value",
+      '<div class="head"><div></div>'+expBtn("coh")+'</div>'
+      +tbl([{t:"Cohorte"},{t:"Clientes adquiridos",n:1},{t:"Volvieron a comprar",n:1},{t:"Retención",n:1},{t:"Pedidos",n:1},{t:"Facturación acumulada",n:1},{t:"Facturación por cliente",n:1}],rrows)
+      +'<div class="chartbox" style="margin-top:14px"><canvas id="cCoh"></canvas></div>');
+},after(){
+  const cohorts=[...new Set(V.clients.map(c=>c.firstYear))].sort();
+  const d=cohorts.map(co=>{const cl=V.clients.filter(c=>c.firstYear===co);return {n:cl.length,v:cl.filter(c=>c.n>=2).length,r:cl.reduce((a,c)=>a+c.rev,0)};});
+  chart("cCoh",{type:"bar",data:{labels:cohorts,datasets:[
+    {label:"Retención (%)",data:d.map(x=>x.n?x.v/x.n*100:0),backgroundColor:C1,...BAR,yAxisID:"y"},
+    {label:"Facturación por cliente",type:"line",data:d.map(x=>x.n?x.r/x.n:0),borderColor:C2,backgroundColor:C2,tension:.3,yAxisID:"y1"}]},
+    options:{plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:c=>c.datasetIndex===0?"Retención: "+fmtP(c.parsed.y):"Facturación/cliente: "+gC(c.parsed.y)}}},
+      scales:{y:{ticks:{callback:v=>fmtP(v,0)}},y1:{position:"right",grid:{drawOnChartArea:false},ticks:{callback:v=>gC(v)}}}}});
+}};
+
+/* ---------- 6. ALTO VALOR ---------- */
+const rValor={html(){
+  const cl=[...V.clients].sort((a,b)=>b.rev-a.rev);
+  const cut=cl.length?cl[Math.max(0,Math.floor(cl.length*0.1)-1)].rev:0;
+  const alto=cl.filter(c=>c.rev>=cut && cut>0);
+  const g=(f)=>alto.filter(f).length;
+  const activo=g(c=>c.estado==="Activo"), riesgo=g(c=>c.estado==="En riesgo"), dorm=g(c=>c.estado==="Dormido"||c.estado==="Perdido");
+  const medTicket=median(cl.map(c=>c.ticket))||0, medN=median(cl.map(c=>c.n))||0;
+  const potencial=cl.filter(c=>c.rev<cut && c.n>=medN && c.ticket>=medTicket*0.8).length;
+
+  EXP.top=()=>download("top_clientes",[["Cliente","Email","Ciudad","Pedidos","Facturación","Ticket","Ciclo (días)","Días sin comprar","Última compra","Segmento RFM","Estado"]]
+    .concat(cl.slice(0,2000).map(c=>[c.name,c.email,META.cityDisp.get(c.city)||c.city,c.n,Math.round(c.rev),Math.round(c.ticket),c.ciclo?Math.round(c.ciclo):"",c.rec,fmtD(new Date(c.last)),SEGNAME[c.seg],c.estado])));
+  EXP.alto=()=>download("alto_valor",[["Cliente","Email","Ciudad","Pedidos","Facturación","Ticket","Días sin comprar","Estado","Segmento RFM"]]
+    .concat(alto.map(c=>[c.name,c.email,META.cityDisp.get(c.city)||c.city,c.n,Math.round(c.rev),Math.round(c.ticket),c.rec,c.estado,SEGNAME[c.seg]])));
+
+  const K=(k,v,d)=>'<div class="kpi"><div class="k">'+k+'</div><div class="v">'+v+'</div><div class="d flat">'+d+'</div></div>';
+  return '<div class="kpis">'
+    +K("Clientes de alto valor",fmtN(alto.length),"top 10% por facturación (desde "+gC(cut)+")")
+    +K("Alto valor activo",fmtN(activo),"compraron hace ≤"+CFG.estado.activo+" días")
+    +K("Alto valor en riesgo",fmtN(riesgo),"entre "+(CFG.estado.activo+1)+" y "+CFG.estado.riesgo+" días")
+    +K("Alto valor dormido o perdido",fmtN(dorm),"más de "+CFG.estado.riesgo+" días sin comprar")
+    +K("Potencial alto valor",fmtN(potencial),"frecuencia y ticket sobre la mediana, aún fuera del top 10%")
+    +K("Facturación del top 10%",gC(alto.reduce((a,c)=>a+c.rev,0)),fmtP(V.rev?alto.reduce((a,c)=>a+c.rev,0)/V.rev*100:0)+" del total")
+    +'</div>'
+    +panel("Top clientes","Ordenados por facturación acumulada en el período filtrado. Se muestran los primeros 200; la exportación trae hasta 2.000.",
+      "Order · Total Value · Shipping Value · Creation Date · Email / Client Document",
+      '<div class="head"><div></div><div>'+expBtn("top","Excel · top clientes")+" "+expBtn("alto","Excel · alto valor")+'</div></div>'
+      +tbl([{t:"#",n:1},{t:"Cliente"},{t:"Ciudad"},{t:"Pedidos",n:1},{t:"Facturación",n:1},{t:"Ticket",n:1},{t:"Días sin comprar",n:1},{t:"Segmento"},{t:"Estado"}],
+        cl.slice(0,200).map((c,i)=>({c:[i+1,esc(c.name),esc(META.cityDisp.get(c.city)||c.city),fmtN(c.n),gC(c.rev),gC(c.ticket),fmtN(c.rec),segPill(c.seg),estPill(c.estado)]}))))
+    +panel("Concentración de la facturación","Qué parte de la facturación aporta cada decil de clientes, del más valioso al menos.","",'<div class="chartbox"><canvas id="cPareto"></canvas></div>');
+},after(){
+  const cl=[...V.clients].sort((a,b)=>b.rev-a.rev); const n=cl.length;
+  const dec=[],lbl=[];
+  for(let i=0;i<10;i++){ const a=Math.floor(n*i/10), b=Math.floor(n*(i+1)/10);
+    dec.push(cl.slice(a,b).reduce((s,c)=>s+c.rev,0)); lbl.push("D"+(i+1)); }
+  const tot=dec.reduce((a,b)=>a+b,0)||1; let acc=0; const cum=dec.map(v=>{acc+=v;return acc/tot*100;});
+  chart("cPareto",{type:"bar",data:{labels:lbl,datasets:[
+    {label:"Facturación del decil",data:dec,backgroundColor:C1,...BAR,yAxisID:"y"},
+    {label:"Acumulado",type:"line",data:cum,borderColor:C2,backgroundColor:C2,tension:.3,yAxisID:"y1"}]},
+    options:{plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:c=>c.datasetIndex===0?gC(c.parsed.y):"Acumulado: "+fmtP(c.parsed.y)}}},
+      scales:{y:{ticks:{callback:v=>gC(v)}},y1:{position:"right",max:100,grid:{drawOnChartArea:false},ticks:{callback:v=>fmtP(v,0)}}}}});
+}};
+
+/* ---------- 7. PRODUCTOS ---------- */
+function prodData(){
+  const P=new Map();
+  for(const l of V.lines){
+    if(l.cancel) continue;
+    if(!l.sku) continue;
+    let p=P.get(l.sku); if(!p){p={sku:l.sku,ref:l.ref,cat:l.cat,units:0,rev:0,orders:new Set(),cli:new Map(),firstTs:l.ts,years:new Map()};P.set(l.sku,p);}
+    p.units+=l.qty; p.rev+=l.lineTot; p.orders.add(l.order);
+    let s=p.cli.get(l.cid); if(!s){ s=new Set(); p.cli.set(l.cid,s); } s.add(l.order);
+    p.firstTs=Math.min(p.firstTs,l.ts);
+    p.years.set(l.y,(p.years.get(l.y)||0)+l.lineTot);
+  }
+  const arr=[...P.values()];
+  arr.forEach(p=>{ p.buyers=p.cli.size; p.repeat=[...p.cli.values()].filter(s=>s.size>=2).length; p.rep=p.buyers?p.repeat/p.buyers*100:0; p.ord=p.orders.size; });
+  return arr;
+}
+function basketPairs(top){
+  const byOrder=new Map();
+  const allow=new Set(top);
+  for(const l of V.lines){ if(l.cancel||!l.sku||!allow.has(l.sku))continue;
+    let s=byOrder.get(l.order); if(!s){s=new Set();byOrder.set(l.order,s);} s.add(l.sku); }
+  const cnt=new Map(), single=new Map(); let N=0;
+  for(const s of byOrder.values()){
+    const a=[...s]; if(!a.length)continue; N++;
+    a.forEach(x=>single.set(x,(single.get(x)||0)+1));
+    for(let i=0;i<a.length;i++)for(let j=i+1;j<a.length;j++){
+      const k=a[i]<a[j]?a[i]+"||"+a[j]:a[j]+"||"+a[i];
+      cnt.set(k,(cnt.get(k)||0)+1);
+    }
+  }
+  const out=[];
+  for(const [k,v] of cnt){ if(v<5)continue; const [a,b]=k.split("||");
+    const pa=single.get(a)/N, pb=single.get(b)/N, pab=v/N;
+    out.push({a,b,n:v,lift:pab/(pa*pb),confAB:v/single.get(a)*100,confBA:v/single.get(b)*100});
+  }
+  return {pairs:out.sort((x,y)=>y.lift-x.lift),N};
+}
+function tierOf(name){
+  const s=String(name).toLowerCase();
+  let ml=null; let m;
+  if((m=s.match(/(\d+(?:[.,]\d+)?)\s*(?:l|lt|lts|litros?)\b/))) ml=parseFloat(m[1].replace(",","."))*1000;
+  else if((m=s.match(/(\d+)\s*ml\b/))) ml=parseFloat(m[1]);
+  if(ml==null) return null;
+  if(ml<=500) return {i:1,n:"Hasta 500 ml"};
+  if(ml<=1000) return {i:2,n:"1 L"};
+  if(ml<=1500) return {i:3,n:"1,5 L"};
+  return {i:4,n:"2 L o más"};
+}
+const rProductos={html(){
+  const P=prodData(); V._P=P;
+  const [ya,yb]=(S.cmp||"").split("|").map(Number);
+  const byUnits=[...P].sort((a,b)=>b.units-a.units).slice(0,25);
+  const byRev=[...P].sort((a,b)=>b.rev-a.rev).slice(0,25);
+  const byRep=[...P].filter(p=>p.buyers>=20).sort((a,b)=>b.rep-a.rep).slice(0,25);
+  V._byUnits=byUnits; V._byRev=byRev;
+
+  const growth=P.map(p=>({sku:p.sku,a:p.years.get(ya)||0,b:p.years.get(yb)||0}))
+    .filter(x=>x.a>0||x.b>0).map(x=>({...x,d:x.b-x.a,pct:x.a?((x.b-x.a)/x.a*100):null}));
+  const nuevos=growth.filter(x=>x.a===0&&x.b>0).sort((a,b)=>b.b-a.b).slice(0,20);
+  const suben=growth.filter(x=>x.a>0&&x.d>0).sort((a,b)=>b.d-a.d).slice(0,20);
+  const bajan=growth.filter(x=>x.a>0&&x.d<0).sort((a,b)=>a.d-b.d).slice(0,20);
+
+  const {pairs,N}=basketPairs([...new Set([...P].sort((a,b)=>b.ord-a.ord).slice(0,60).map(p=>p.sku))]);
+  const cross=pairs.slice(0,25);
+
+  // upsell por presentación (parseado de SKU Name)
+  const tiers=new Map();
+  const cliTier=new Map();
+  for(const l of V.lines){ if(l.cancel||!l.sku)continue; const t=tierOf(l.sku); if(!t)continue;
+    if(!tiers.has(t.i))tiers.set(t.i,{n:t.n,skus:new Set(),rev:0}); const T=tiers.get(t.i); T.skus.add(l.sku); T.rev+=l.lineTot;
+    const cur=cliTier.get(l.cid)||0; if(t.i>cur)cliTier.set(l.cid,t.i);
+  }
+  const maxTier=Math.max(0,...[...tiers.keys()]);
+  const upsell=V.clients.filter(c=>{const t=cliTier.get(c.cid); return t && t<maxTier && c.n>=2;});
+  const medT=median(V.clients.map(c=>c.ticket))||0, medN=median(V.clients.map(c=>c.n))||0;
+  const upTicket=V.clients.filter(c=>c.n>=medN && c.ticket<medT);
+
+  EXP.pu=()=>download("productos",[["SKU","Reference Code","Categoría","Unidades","Facturación línea","Pedidos","Compradores","Recompran","% recompra"]]
+    .concat([...P].sort((a,b)=>b.rev-a.rev).map(p=>[p.sku,p.ref,p.cat,Math.round(p.units),Math.round(p.rev),p.ord,p.buyers,p.repeat,p.rep.toFixed(1)])));
+  EXP.cross=()=>download("cross_selling",[["Producto A","Producto B","Pedidos juntos","Lift","% de A que lleva B","% de B que lleva A"]]
+    .concat(pairs.slice(0,400).map(p=>[p.a,p.b,p.n,p.lift.toFixed(2),p.confAB.toFixed(1),p.confBA.toFixed(1)])));
+  EXP.upsell=()=>download("upsell_presentacion",[["Cliente","Email","Ciudad","Presentación máxima","Pedidos","Facturación","Ticket"]]
+    .concat(upsell.map(c=>[c.name,c.email,META.cityDisp.get(c.city)||c.city,(tiers.get(cliTier.get(c.cid))||{}).n||"",c.n,Math.round(c.rev),Math.round(c.ticket)])));
+
+  const gRows=(arr,lbl)=>tbl([{t:"SKU"},{t:lbl,n:1}],arr.map(x=>({c:[esc(x.sku),(x.pct==null?gC(x.b):gC(x.d)+" · "+(x.pct>0?"+":"")+fmtP(x.pct,0))]})));
+
+  return panel("Productos más vendidos y de mayor facturación",
+      "En este módulo la facturación es la del ítem (SKU Total Price), no la del pedido completo. La recompra mide qué porcentaje de los compradores del producto lo llevó en dos o más pedidos distintos.",
+      "SKU Name · Reference Code · Quantity_SKU · SKU Total Price · Order · Category Ids Sku",
+      '<div class="head"><div></div>'+expBtn("pu")+'</div>'
+      +'<div class="grid2"><div class="chartbox tall"><canvas id="cUn"></canvas></div><div class="chartbox tall"><canvas id="cRv"></canvas></div></div>')
+    +panel("Productos que más recompra generan","Sólo se listan productos con al menos 20 compradores distintos en el período filtrado.","SKU Name · Order · Email / Client Document",
+      tbl([{t:"SKU"},{t:"Compradores",n:1},{t:"Recompran",n:1},{t:"% recompra",n:1},{t:"Facturación",n:1}],
+        byRep.map(p=>({c:[esc(p.sku),fmtN(p.buyers),fmtN(p.repeat),fmtP(p.rep),gC(p.rev)]}))))
+    +'<div class="grid3">'
+    +panel("Productos nuevos en "+yb,"Sin facturación en "+ya+" y con facturación en "+yb+".","",gRows(nuevos,"Facturación "+yb))
+    +panel("Productos que crecieron","Diferencia de facturación "+yb+" contra "+ya+".","",gRows(suben,"Variación"))
+    +panel("Productos que cayeron","Diferencia de facturación "+yb+" contra "+ya+".","",gRows(bajan,"Variación"))
+    +'</div>'
+    +panel("Cross-selling: qué se compra junto",
+      "Pares de productos que aparecen en el mismo pedido, sobre los 60 SKU con más pedidos y con un mínimo de 5 pedidos en común ("+fmtN(N)+" pedidos analizados). El <b>lift</b> indica cuántas veces más probable es que aparezcan juntos frente a lo esperado por azar: por encima de 1 hay afinidad real.",
+      "Order · SKU Name",
+      '<div class="head"><div></div>'+expBtn("cross")+'</div>'
+      +tbl([{t:"Producto A"},{t:"Producto B"},{t:"Pedidos juntos",n:1},{t:"Lift",n:1},{t:"A → B",n:1},{t:"B → A",n:1}],
+        cross.map(p=>({c:[esc(p.a),esc(p.b),fmtN(p.n),fmtF(p.lift,2),fmtP(p.confAB,0),fmtP(p.confBA,0)]}))))
+    +panel("Upselling: clientes que podrían subir de presentación",
+      "La presentación se deduce del texto de <code>SKU Name</code> (mililitros o litros). Escalera detectada: "
+      +[...tiers.entries()].sort((a,b)=>a[0]-b[0]).map(([i,t])=>t.n+" ("+t.skus.size+" SKU)").join(" → ")
+      +". Son clientes con dos o más pedidos cuya presentación máxima comprada está por debajo de la más alta disponible. "
+      +"Como complemento, <b>"+fmtN(upTicket.length)+" clientes</b> compran con frecuencia igual o mayor a la mediana pero con ticket por debajo de la mediana ("+gC(medT)+"): son los candidatos naturales a subir ticket.",
+      "SKU Name · Order · Total Value · Email / Client Document",
+      '<div class="head"><div><b>'+fmtN(upsell.length)+'</b> clientes con margen para subir de presentación</div>'+expBtn("upsell")+'</div>'
+      +tbl([{t:"Cliente"},{t:"Ciudad"},{t:"Presentación máxima"},{t:"Pedidos",n:1},{t:"Facturación",n:1},{t:"Ticket",n:1}],
+        upsell.sort((a,b)=>b.rev-a.rev).slice(0,150).map(c=>({c:[esc(c.name),esc(META.cityDisp.get(c.city)||c.city),
+          esc((tiers.get(cliTier.get(c.cid))||{}).n||"—"),fmtN(c.n),gC(c.rev),gC(c.ticket)]}))));
+},after(){
+  const bu=V._byUnits.slice(0,15), br=V._byRev.slice(0,15);
+  const cut=s=>s.length>42?s.slice(0,42)+"…":s;
+  chart("cUn",{type:"bar",data:{labels:bu.map(p=>cut(p.sku)),datasets:[{label:"Unidades",data:bu.map(p=>p.units),backgroundColor:C1,...BAR}]},
+    options:{indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{callback:v=>fmtN(v)}}}}});
+  chart("cRv",{type:"bar",data:{labels:br.map(p=>cut(p.sku)),datasets:[{label:"Facturación",data:br.map(p=>p.rev),backgroundColor:C2,...BAR}]},
+    options:{indexAxis:"y",plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>gC(c.parsed.x)}}},scales:{x:{ticks:{callback:v=>gC(v)}}}}});
+}};
+
+/* ---------- 8. CIUDADES ---------- */
+const rCiudades={html(){
+  const sinEnvio=S.ship==="sin";
+  const M=new Map();
+  const clByCity=new Map();
+  V.clients.forEach(c=>{ if(!clByCity.has(c.city))clByCity.set(c.city,[]); clByCity.get(c.city).push(c); });
+  V.valid.forEach(o=>{ let r=M.get(o.city); if(!r){r={city:o.city,orders:0,rev:0,years:new Map()};M.set(o.city,r);}
+    r.orders++; const v=o.total-(sinEnvio?o.ship:0); r.rev+=v; r.years.set(o.y,(r.years.get(o.y)||0)+v); });
+  const rows=[...M.values()].map(r=>{
+    const cl=clByCity.get(r.city)||[];
+    const nuevos=cl.filter(c=>c.firstYear===Math.max(...V.years)).length;
+    const rec=cl.filter(c=>c.n>=2).length;
+    return {...r,cli:cl.length,nuevos,rec,recompra:cl.length?rec/cl.length*100:0,ticket:r.orders?r.rev/r.orders:0};
+  }).sort((a,b)=>b.rev-a.rev);
+  V._CI=rows;
+  const [ya,yb]=(S.cmp||"").split("|").map(Number);
+  const growth=rows.map(r=>({city:r.city,a:r.years.get(ya)||0,b:r.years.get(yb)||0}))
+    .map(x=>({...x,d:x.b-x.a,pct:x.a?(x.b-x.a)/x.a*100:null}));
+  const suben=[...growth].filter(x=>x.d>0).sort((a,b)=>b.d-a.d).slice(0,10);
+  const opor=[...rows].filter(r=>r.cli>=30).sort((a,b)=>a.recompra-b.recompra).slice(0,10);
+
+  EXP.ciu=()=>download("ciudades",[["Ciudad","Clientes","Pedidos","Facturación","Ticket","Clientes nuevos","Recurrentes","% recompra"]]
+    .concat(rows.map(r=>[META.cityDisp.get(r.city)||r.city,r.cli,r.orders,Math.round(r.rev),Math.round(r.ticket),r.nuevos,r.rec,r.recompra.toFixed(1)])));
+
+  return panel("Ranking de ciudades","Clientes nuevos = primera compra histórica en "+Math.max(...V.years)+". La ciudad se toma de la columna <code>City</code>, normalizada sin acentos ni mayúsculas para agrupar variantes de escritura.",
+      "City · Order · Total Value · Shipping Value · Email / Client Document",
+      '<div class="head"><div></div>'+expBtn("ciu")+'</div>'
+      +tbl([{t:"Ciudad"},{t:"Clientes",n:1},{t:"Pedidos",n:1},{t:"Facturación",n:1},{t:"Ticket",n:1},{t:"Nuevos",n:1},{t:"Recurrentes",n:1},{t:"% recompra",n:1}],
+        rows.slice(0,60).map(r=>({c:[esc(META.cityDisp.get(r.city)||r.city),fmtN(r.cli),fmtN(r.orders),gC(r.rev),gC(r.ticket),fmtN(r.nuevos),fmtN(r.rec),fmtP(r.recompra)]})))
+      +'<div class="chartbox tall" style="margin-top:14px"><canvas id="cCiu"></canvas></div>')
+    +'<div class="grid2">'
+    +panel("Ciudades con mayor crecimiento","Variación de facturación "+yb+" contra "+ya+".","",
+      tbl([{t:"Ciudad"},{t:"Variación",n:1},{t:yb,n:1}],suben.map(x=>({c:[esc(META.cityDisp.get(x.city)||x.city),gC(x.d)+(x.pct!=null?" · +"+fmtP(x.pct,0):" · nueva"),gC(x.b)]}))))
+    +panel("Ciudades con base grande y poca recompra","Oportunidad comercial: al menos 30 clientes y la menor tasa de recompra del período.","",
+      tbl([{t:"Ciudad"},{t:"Clientes",n:1},{t:"% recompra",n:1},{t:"Facturación",n:1}],
+        opor.map(r=>({c:[esc(META.cityDisp.get(r.city)||r.city),fmtN(r.cli),fmtP(r.recompra),gC(r.rev)]}))))
+    +'</div>';
+},after(){
+  const rows=V._CI.slice(0,15);
+  chart("cCiu",{type:"bar",data:{labels:rows.map(r=>META.cityDisp.get(r.city)||r.city),datasets:[
+    {label:"Facturación",data:rows.map(r=>r.rev),backgroundColor:C1,...BAR,yAxisID:"y"},
+    {label:"% recompra",type:"line",data:rows.map(r=>r.recompra),borderColor:C2,backgroundColor:C2,tension:.3,yAxisID:"y1"}]},
+    options:{plugins:{legend:{position:"bottom"},tooltip:{callbacks:{label:c=>c.datasetIndex===0?gC(c.parsed.y):fmtP(c.parsed.y)}}},
+      scales:{y:{ticks:{callback:v=>gC(v)}},y1:{position:"right",grid:{drawOnChartArea:false},ticks:{callback:v=>fmtP(v,0)}}}}});
+}};
+
+/* ---------- 9. OPORTUNIDADES CRM ---------- */
+function crmBuckets(){
+  const cl=V.clients;
+  const revs=[...cl].sort((a,b)=>b.rev-a.rev);
+  const cutHV=revs.length?revs[Math.max(0,Math.floor(revs.length*0.1)-1)].rev:0;
+  const medT=median(cl.map(c=>c.ticket))||0, medN=median(cl.map(c=>c.n))||0;
+  return [
+    {k:"recomprar",n:"🔥 Recomprar ahora",d:"Clientes con dos o más pedidos que están dentro de su ventana habitual de compra (entre el 75% y el 125% de su ciclo propio).",
+      f:c=>c.ciclo>0 && c.rec>=c.ciclo*0.75 && c.rec<=c.ciclo*1.25},
+    {k:"segunda",n:"🌱 Segunda compra",d:"Hicieron una sola compra y todavía están en ventana viva: menos de 120 días desde ese primer pedido.",
+      f:c=>c.n===1 && c.rec<=120},
+    {k:"riesgo",n:"⚠️ En riesgo",d:"Tenían buena frecuencia (3 o más pedidos, ciclo de hasta 60 días) y ya llevan entre 1,25 y 2,5 veces su ciclo sin comprar.",
+      f:c=>c.n>=3 && c.ciclo>0 && c.ciclo<=60 && c.rec>c.ciclo*1.25 && c.rec<=c.ciclo*2.5},
+    {k:"dormidos",n:"😴 Dormidos",d:"Llevan más de 1,5 veces su ciclo habitual sin comprar; si sólo tienen un pedido, más de "+CFG.estado.riesgo+" días.",
+      f:c=>(c.ciclo>0 ? c.rec>c.ciclo*1.5 : c.rec>CFG.estado.riesgo)},
+    {k:"altovalor",n:"💰 Alto valor",d:"Top 10% de la base por facturación acumulada (desde "+gC(cutHV)+").",
+      f:c=>cutHV>0 && c.rev>=cutHV},
+    {k:"potenciales",n:"🚀 Potenciales",d:"Compran seguido (frecuencia igual o mayor a la mediana de "+fmtF(medN,0)+" pedidos) pero con ticket por debajo de la mediana ("+gC(medT)+"): hay margen para subir el ticket.",
+      f:c=>c.n>=medN && c.ticket<medT}
+  ].map(b=>({...b,list:cl.filter(b.f).sort((a,x)=>x.rev-a.rev)}));
+}
+const rCRM={html(){
+  const B=crmBuckets(); V._B=B;
+  const kpis='<div class="kpis">'+B.map(b=>{
+    const rev=b.list.reduce((a,c)=>a+c.rev,0);
+    return '<div class="kpi"><div class="k">'+b.n+'</div><div class="v">'+fmtN(b.list.length)+'</div><div class="d flat">'+gC(rev)+' de facturación histórica</div></div>';
+  }).join("")+'</div>';
+
+  const bodies=B.map(b=>{
+    EXP["crm_"+b.k]=()=>download("crm_"+b.k,[["Cliente","Email","Ciudad","Pedidos","Facturación","Ticket","Ciclo (días)","Días sin comprar","Última compra","Segmento RFM","Estado"]]
+      .concat(b.list.map(c=>[c.name,c.email,META.cityDisp.get(c.city)||c.city,c.n,Math.round(c.rev),Math.round(c.ticket),c.ciclo?Math.round(c.ciclo):"",c.rec,fmtD(new Date(c.last)),SEGNAME[c.seg],c.estado])));
+    const rev=b.list.reduce((a,c)=>a+c.rev,0);
+    const tick=b.list.length?rev/b.list.reduce((a,c)=>a+c.n,0):0;
+    const cic=b.list.filter(c=>c.ciclo!=null).map(c=>c.ciclo);
+    return panel(b.n,b.d,"",
+      '<div class="head"><div style="font-size:12px;color:#6B7280;line-height:1.7">'
+      +'<b>'+fmtN(b.list.length)+'</b> clientes · facturación histórica <b>'+gC(rev)+'</b> · ticket <b>'+gC(tick)+'</b>'
+      +' · frecuencia <b>'+fmtF(b.list.length?b.list.reduce((a,c)=>a+c.n,0)/b.list.length:0,2)+'</b> ped./cliente'
+      +' · ciclo promedio <b>'+(cic.length?fmtF(cic.reduce((a,x)=>a+x,0)/cic.length,0)+" días":"—")+'</b>'
+      +'</div>'+expBtn("crm_"+b.k,"Excel · "+fmtN(b.list.length))+'</div>'
+      +tbl([{t:"Cliente"},{t:"Ciudad"},{t:"Pedidos",n:1},{t:"Facturación",n:1},{t:"Ticket",n:1},{t:"Días sin comprar",n:1},{t:"Última compra"},{t:"Segmento"}],
+        b.list.slice(0,60).map(c=>({c:[esc(c.name),esc(META.cityDisp.get(c.city)||c.city),fmtN(c.n),gC(c.rev),gC(c.ticket),fmtN(c.rec),fmtD(new Date(c.last)),segPill(c.seg)]}))));
+  }).join("");
+
+  return '<div class="warn">Estas seis listas están pensadas para accionar, no para sumar: un mismo cliente puede aparecer en más de una (por ejemplo, alto valor y en riesgo a la vez). Cada tabla muestra los 60 de mayor facturación; la exportación trae la lista completa, lista para subir a WoowUp.</div>'
+    +kpis+bodies;
+}};
+
+/* ---------- 10. TABLA DE CLIENTES ---------- */
+const rTabla={html(){
+  const cl=[...V.clients].sort((a,b)=>b.rev-a.rev);
+  const per=50, pages=Math.max(1,Math.ceil(cl.length/per));
+  S.page=Math.min(S.page,pages-1);
+  const slice=cl.slice(S.page*per,(S.page+1)*per);
+  EXP.cli=()=>download("clientes_detalle",[["Cliente","Email","Ciudad","Primera compra","Última compra","Días desde última compra","Pedidos","Facturación","Ticket promedio","Frecuencia (días entre compras)","Año última compra","Segmento RFM","Estado del cliente","Potencial CRM"]]
+    .concat(cl.map(c=>[c.name,c.email,META.cityDisp.get(c.city)||c.city,fmtD(new Date(c.first)),fmtD(new Date(c.last)),c.rec,c.n,Math.round(c.rev),Math.round(c.ticket),c.ciclo?Math.round(c.ciclo):"",new Date(c.last).getFullYear(),SEGNAME[c.seg],c.estado,potCRM(c)])));
+  return panel("Tabla de clientes","Una fila por cliente sobre el período y los filtros activos. Usá el buscador de cliente, el segmento y el estado en el panel de filtros para acotar. La exportación trae los "+fmtN(cl.length)+" clientes.",
+    "Creation Date · Order · Total Value · Shipping Value · City · Email / Client Document · Client Name",
+    '<div class="head"><div style="font-size:12px;color:#6B7280"><b>'+fmtN(cl.length)+'</b> clientes</div>'+expBtn("cli")+'</div>'
+    +tbl([{t:"Cliente"},{t:"Ciudad"},{t:"Primera compra"},{t:"Última compra"},{t:"Días sin comprar",n:1},{t:"Pedidos",n:1},{t:"Facturación",n:1},{t:"Ticket",n:1},{t:"Frecuencia",n:1},{t:"Año últ. compra",n:1},{t:"Segmento RFM"},{t:"Estado"},{t:"Potencial CRM"}],
+      slice.map(c=>({c:[esc(c.name),esc(META.cityDisp.get(c.city)||c.city),fmtD(new Date(c.first)),fmtD(new Date(c.last)),fmtN(c.rec),fmtN(c.n),gC(c.rev),gC(c.ticket),
+        c.ciclo?fmtF(c.ciclo,0)+" d":"—",new Date(c.last).getFullYear(),segPill(c.seg),estPill(c.estado),esc(potCRM(c))]})))
+    +'<div class="pg"><button class="btn xs" id="pPrev">Anterior</button><span>Página '+(S.page+1)+' de '+pages+'</span><button class="btn xs" id="pNext">Siguiente</button></div>');
+},after(){
+  const p=document.getElementById("pPrev"), n=document.getElementById("pNext");
+  if(p)p.onclick=()=>{ if(S.page>0){S.page--;refresh();} };
+  if(n)n.onclick=()=>{ S.page++; refresh(); };
+}};
+function potCRM(c){
+  const out=[];
+  if(c.ciclo>0 && c.rec>=c.ciclo*0.75 && c.rec<=c.ciclo*1.25) out.push("Recomprar");
+  if(c.n===1 && c.rec<=120) out.push("Segunda compra");
+  if(c.n>=3 && c.ciclo>0 && c.ciclo<=60 && c.rec>c.ciclo*1.25 && c.rec<=c.ciclo*2.5) out.push("En riesgo");
+  if(c.ciclo>0 ? c.rec>c.ciclo*1.5 : c.rec>CFG.estado.riesgo) out.push("Dormido");
+  return out.join(" · ")||"—";
+}
+
+/* ============================================================ QC */
+function renderQC(){
+  const st=[...QC.statuses.entries()].sort((a,b)=>b[1]-a[1]);
+  const src=QC.sources.map(s=>"<li><b>"+esc(s.name)+"</b> (gid <code>"+esc(s.gid)+"</code>): "
+    +(s.error?'<span style="color:#D8342E">'+esc(s.error)+'</span>'
+      :fmtN(s.rows)+" filas · "+fmtN(s.orders)+" pedidos · "+s.cols+" columnas"
+       +(s.missing.length?' · <span style="color:#E6A100">sin columna: '+s.missing.map(esc).join(", ")+'</span>':""))+"</li>").join("");
+  document.getElementById("qc").innerHTML=
+    "<b>Fuentes conectadas</b><ul style='margin:6px 0 12px;padding-left:18px'>"+src+"</ul>"
+    +"<b>Estados del pedido encontrados en la fuente:</b> "+st.map(([k,v])=>"<code>"+esc(k)+"</code> "+fmtN(v)+" filas").join(" · ")
+    +"<br>Se considera <b>cancelado</b> todo pedido cuyo <code>Status</code> contiene la palabra «cancel». Las métricas de venta (facturación, ticket, frecuencia) siempre excluyen cancelados."
+    +"<br><b>Pedidos:</b> se deduplican por <code>Order</code> (una fila por SKU). Duplicados entre archivos descartados: "+fmtN(QC.dupOrders)
+    +" · filas sin fecha válida: "+fmtN(QC.noDate)+" · filas sin cliente identificable: "+fmtN(QC.noClient)
+    +"<br><b>Identidad del cliente:</b> <code>Email</code> en minúsculas; si está vacío se usa <code>Client Document</code> y, en último caso, el nombre completo."
+    +"<br><b>Facturación:</b> <code>Total Value</code> a nivel pedido"+(S.ship==="sin"?" menos <code>Shipping Value</code>":"")+". En el módulo Productos se usa <code>SKU Total Price</code>, que es el importe de la línea."
+    +"<br><b>Estado del cliente:</b> Activo ≤"+CFG.estado.activo+" días · En riesgo ≤"+CFG.estado.riesgo+" · Dormido ≤"+CFG.estado.dormido+" · Perdido más allá."
+    +"<br><b>Ciclo de compra:</b> días entre el primer y el último pedido dividido por la cantidad de intervalos. Sólo existe para clientes con dos o más pedidos."
+    +"<br><b>Rango de datos cargado:</b> "+fmtD(new Date(META.minTs))+" a "+fmtD(new Date(META.maxTs))+"."
+    +"<br><b>Sin dato de categoría por nombre:</b> el export de VTEX trae <code>Category Ids Sku</code> (ruta numérica de categorías), no el nombre. El filtro de categoría usa esa ruta tal cual viene."
+    +(QC.errors.length?'<div class="err" style="margin-top:10px">'+QC.errors.map(esc).join("<br>")+'</div>':"");
+}
+
+/* ============================================================ BOOT */
+async function boot(reload){
+  document.getElementById("ov").style.display="flex";
+  document.getElementById("ovb").style.width="0%";
+  document.getElementById("errbox").innerHTML="";
+  try{
+    await loadAll();
+    if(!ORDERS.size){
+      document.getElementById("ov").style.display="none";
+      document.getElementById("errbox").innerHTML='<div class="err"><b>No se pudo leer ningún pedido.</b><br>'
+        +(QC.errors.length?QC.errors.map(esc).join("<br>"):"Revisá que las pestañas indicadas en CFG.sources sean las correctas y que las planillas estén compartidas como «cualquier persona con el enlace».")+'</div>';
+      return;
+    }
+    if(!reload){ buildFilterUI(); buildTabs(); }
+    else { S.years=[...META.years]; syncYears(); }
+    if(CFG.logoBase64){ const l=document.getElementById("logo"); l.src=CFG.logoBase64; l.style.display="block"; document.getElementById("wordmark").style.display="none"; }
+    refresh();
+    if(QC.errors.length) document.getElementById("errbox").innerHTML='<div class="warn"><b>Algunas fuentes no se pudieron leer y quedaron fuera del análisis:</b><br>'+QC.errors.map(esc).join("<br>")+'</div>';
+  }catch(e){
+    document.getElementById("errbox").innerHTML='<div class="err"><b>Error al cargar los datos.</b><br>'+esc(e.message||e)+'</div>';
+  }
+  document.getElementById("ov").style.display="none";
+}
+boot(false);
+</script>
+</body>
+</html>

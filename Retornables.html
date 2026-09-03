@@ -904,20 +904,22 @@
   </div>
   <!-- ══════ SECCIÓN 6 · COMPARATIVO Y PROYECCIÓN ══════ -->
   <div class="section" id="sec-comparativo">
-    <div class="sec-title">Comparativo 2026 vs 2025 · retornables</div>
+    <div class="sec-title" id="cmpTitle">Comparativo interanual · retornables</div>
     <div class="mini-kpis" id="yoyKpis"></div>
     <div class="row cols-1" style="grid-template-columns:1fr">
       <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Revenue Retornables Mensual · 2026 vs 2025 (Gs.)</div>
+        <div class="card-title"><span class="card-title-dot"></span> <span id="cmpChartTitle">Revenue Retornables Mensual (Gs.)</span></div>
         <div class="chart-wrap h280"><canvas id="c_yoyRet"></canvas></div>
       </div>
     </div>
-    <div class="sec-title" style="margin-top:20px">Proyección de cierre 2026 · revenue retornables</div>
-    <div class="mini-kpis" id="projKpis"></div>
-    <div class="row" style="grid-template-columns:1fr">
-      <div class="card">
-        <div class="card-title"><span class="card-title-dot"></span> Real 2026 + Proyección vs referencia 2025 (Gs.)</div>
-        <div class="chart-wrap h280"><canvas id="c_projRet"></canvas></div>
+    <div id="projBlock">
+      <div class="sec-title" style="margin-top:20px" id="projTitle">Proyección de cierre 2026 · revenue retornables</div>
+      <div class="mini-kpis" id="projKpis"></div>
+      <div class="row" style="grid-template-columns:1fr">
+        <div class="card">
+          <div class="card-title"><span class="card-title-dot"></span> <span id="projChartTitle">Real 2026 + Proyección vs referencia 2025 (Gs.)</span></div>
+          <div class="chart-wrap h280"><canvas id="c_projRet"></canvas></div>
+        </div>
       </div>
     </div>
   </div>
@@ -938,10 +940,23 @@ const SHEETS_BY_YEAR = {
   '2025': {
     id:  '1PfSeehY2EFMVU3VZfG0ICIHT3GZNnjIDlZbkbKn5Bxo',   // Fuente VTEX General 2025
     gid: '1013977220'
+  },
+  '2024': {
+    id:  '1vvl0G3BBBGJu8Tst-KdqpqspUNu8yCy77pn-AXpnjLQ',   // Fuente VTEX 2024
+    gid: '1738442477'
+  },
+  '2023': {
+    id:  '1mbn3ySHAn3LhWneFV-fkh7ciBt1NxpJ8vDO2eHj_AtM',   // Fuente VTEX 2023
+    gid: ''                                                // vacío = primera hoja del archivo
   }
 };
+const YEARS = ['2023','2024','2025','2026'];      // orden cronológico, para el selector y el comparativo
+const YEAR_ACTUAL = '2026';                       // único año en curso: es el que admite proyección
 let YEAR = '2026';                                // año activo al abrir
 function sheetCfg(){ return SHEETS_BY_YEAR[YEAR]; }
+function sheetUrl(cfg){
+  return 'https://docs.google.com/spreadsheets/d/' + cfg.id + '/edit' + (cfg.gid ? '?gid=' + cfg.gid : '');
+}
 const VALID_STATUS = ['faturado', 'pronto para o manuseio'];
 
 // ═══════════════════════════════════════════════════
@@ -1096,7 +1111,9 @@ function matchesOrder(o) {
 // ═══════════════════════════════════════════════════
 async function fetchSheetRows(year) {
   const cfg = SHEETS_BY_YEAR[year || YEAR];
-  const url = `https://docs.google.com/spreadsheets/d/${cfg.id}/gviz/tq?tqx=out:json&gid=${cfg.gid}&headers=1&cb=${Date.now()}`;
+  // gid vacío = la fuente tiene una sola hoja: gviz devuelve la primera por defecto
+  const gidParam = cfg.gid ? `&gid=${cfg.gid}` : '';
+  const url = `https://docs.google.com/spreadsheets/d/${cfg.id}/gviz/tq?tqx=out:json${gidParam}&headers=1&cb=${Date.now()}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error('HTTP ' + res.status + ' al leer el Sheet');
   const text = await res.text();
@@ -2378,8 +2395,8 @@ function buildTable(skus) {
 // ═══════════════════════════════════
 function renderPeriodPills() {
   const box = document.getElementById('periodPills');
-  let html = `<button class="ypill${YEAR==='2025'?' active':''}" onclick="setYear('2025')">2025</button>`
-           + `<button class="ypill${YEAR==='2026'?' active':''}" onclick="setYear('2026')">2026</button>`
+  let html = YEARS.map(y =>
+      `<button class="ypill${YEAR===y?' active':''}" onclick="setYear('${y}')">${y}</button>`).join('')
            + `<span class="ysep"></span>`
            + `<button class="ppill active" onclick="setPeriod('all',this)">Todo</button>`;
   ALL_MONTH_KEYS.forEach((k,i) => {
@@ -2517,7 +2534,7 @@ function showTab(name, btn) {
 // ═══════════════════════════════════
 function updateSourceChip() {
   const chip = document.getElementById('sourceChip');
-  const url = `https://docs.google.com/spreadsheets/d/${sheetCfg().id}/edit?gid=${sheetCfg().gid}`;
+  const url = sheetUrl(sheetCfg());
   const fmtFull = d => String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0') + '/' + d.getFullYear();
   const fmtHM = d => String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
   chip.href = url;
@@ -2647,19 +2664,24 @@ function exportExcel() {
   wsSeg['!cols'] = [{wch:16},{wch:12},{wch:12},{wch:22}];
   XLSX.utils.book_append_sheet(wb, wsSeg, 'Segmentos');
 
-  // Hoja 6 — Comparativo 2026 vs 2025 + proyección (año completo, independiente del filtro)
-  if (YEARLY['2025'] && YEARLY['2026'] && window._RETPROJ) {
-    const y25 = YEARLY['2025'], y26 = YEARLY['2026'], P = window._RETPROJ;
-    const cmpRows = [['Mes','Revenue Ret. 2025 (Gs.)','Revenue Ret. 2026 (Gs.)','Variación (%)','Proyección 2026 (Gs.)','Total estimado 2026 (Gs.)']];
-    MES_ABR.forEach((mn,i) => cmpRows.push([
-      mn, Math.round(y25.mRev[i]), Math.round(y26.mRev[i]),
-      (y25.mRev[i] > 0 && y26.mRev[i] > 0) ? +((y26.mRev[i]/y25.mRev[i]-1)*100).toFixed(1) : '',
-      P.proy[i], Math.round(P.real[i]) + P.proy[i]
-    ]));
-    cmpRows.push(['Cierre proyectado 2026', '', '', '', '', Math.round(P.cierre)]);
+  // Hoja 6 — Comparativo interanual (+ proyección si el año activo está en curso)
+  const _curY = YEAR, _idxY = YEARS.indexOf(_curY), _prevY = _idxY > 0 ? YEARS[_idxY - 1] : null;
+  if (_prevY && YEARLY[_prevY] && YEARLY[_curY]) {
+    const yA = YEARLY[_prevY], yB = YEARLY[_curY];
+    const P = (window._RETPROJ && window._RETPROJ_YEARS && window._RETPROJ_YEARS.curY === _curY) ? window._RETPROJ : null;
+    const head = ['Mes', `Revenue Ret. ${_prevY} (Gs.)`, `Revenue Ret. ${_curY} (Gs.)`, 'Variación (%)'];
+    if (P) head.push(`Proyección ${_curY} (Gs.)`, `Total estimado ${_curY} (Gs.)`);
+    const cmpRows = [head];
+    MES_ABR.forEach((mn,i) => {
+      const row = [mn, Math.round(yA.mRev[i]), Math.round(yB.mRev[i]),
+        (yA.mRev[i] > 0 && yB.mRev[i] > 0) ? +((yB.mRev[i]/yA.mRev[i]-1)*100).toFixed(1) : ''];
+      if (P) row.push(P.proy[i], Math.round(P.real[i]) + P.proy[i]);
+      cmpRows.push(row);
+    });
+    if (P) cmpRows.push([`Cierre proyectado ${_curY}`, '', '', '', '', Math.round(P.cierre)]);
     const wsCmp = XLSX.utils.aoa_to_sheet(cmpRows);
     wsCmp['!cols'] = cmpRows[0].map(() => ({wch:20}));
-    XLSX.utils.book_append_sheet(wb, wsCmp, 'Comparativo y proyección');
+    XLSX.utils.book_append_sheet(wb, wsCmp, 'Comparativo interanual');
   }
 
   // Hoja 7 — Info del reporte
@@ -2675,7 +2697,7 @@ function exportExcel() {
     ['SKUs retornables sin clasificar (toda la fuente)', UNK_SKUS.length ? UNK_SKUS.length + ' — ' + UNK_SKUS.slice(0,10).map(u=>u.name).join(' | ') : 'Ninguno'],
     ['Columna de ciudad en la fuente', HAS_CITY ? SRC_META.cityCol : 'No disponible'],
     ['Columna de canal en la fuente', SRC_META.chanCol ? SRC_META.chanCol : (CHANNEL_IS_UTM ? 'UtmSource (canal de adquisición)' : 'No disponible')],
-    ['Fuente (datos ' + YEAR + ')', `https://docs.google.com/spreadsheets/d/${sheetCfg().id}/edit?gid=${sheetCfg().gid}`],
+    ['Fuente (datos ' + YEAR + ')', sheetUrl(sheetCfg())],
     ['Datos al', fmtFull(LAST_ORDER_DATE)],
     ['Generado', fmtFull(new Date())],
   ];
@@ -2728,7 +2750,7 @@ async function init() {
 }
 
 /* ═══════════════════════════════════
-   COMPARATIVO 2026 vs 2025 + PROYECCIÓN · RETORNABLES
+   COMPARATIVO INTERANUAL + PROYECCIÓN · RETORNABLES
    Independiente del año activo y del filtro de período:
    siempre lee las DOS fuentes anuales completas.
    Proyección: estacionalidad mensual 2025 ajustada por el
@@ -2774,14 +2796,15 @@ function statsUpTo(agg, cutoff) {
   return { rev, n, units, clients: cl.size };
 }
 const fmtPct1 = x => (x >= 0 ? '+' : '') + x.toFixed(1).replace('.', ',') + '%';
-function deltaHTML(v26, v25) {
-  if (!v25) return '';
-  const d = (v26 / v25 - 1) * 100;
-  return `<div class="delta ${d >= 0 ? 'up' : 'dn'}">${fmtPct1(d)} vs 2025</div>`;
+function deltaHTML(vCur, vPrev, prevLabel) {
+  if (!vPrev) return '';
+  const d = (vCur / vPrev - 1) * 100;
+  return `<div class="delta ${d >= 0 ? 'up' : 'dn'}">${fmtPct1(d)} vs ${prevLabel}</div>`;
 }
 const fmtFullD = d => String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0');
 
-function computeRetProjection(y25, y26) {
+function computeRetProjection(yPrev, yCur) {
+  const y25 = yPrev, y26 = yCur;
   const dt = y26.maxD, nx = new Date(dt); nx.setDate(nx.getDate() + 1);
   const lastM = dt.getMonth();
   const partial = nx.getMonth() === dt.getMonth();
@@ -2805,18 +2828,20 @@ function computeRetProjection(y25, y26) {
   return { real, proy, ratio, cierre, total25 };
 }
 
-function renderRetYoY(y25, y26) {
-  const cutoff26 = y26.maxD;
-  const cutoff25 = new Date(2025, cutoff26.getMonth(), cutoff26.getDate(), 23, 59, 59);
-  const a = statsUpTo(y26, cutoff26), b = statsUpTo(y25, cutoff25);
+function renderRetYoY(yPrev, yCur, prevY, curY) {
+  const y25 = yPrev, y26 = yCur;
+  const cutoffCur = y26.maxD;
+  // Mismo día/mes del año anterior: el acumulado se compara contra un período equivalente.
+  const cutoffPrev = new Date(+prevY, cutoffCur.getMonth(), cutoffCur.getDate(), 23, 59, 59);
+  const a = statsUpTo(y26, cutoffCur), b = statsUpTo(y25, cutoffPrev);
   document.getElementById('yoyKpis').innerHTML = `
-    <div class="mk"><div class="lab">Revenue ret. al ${fmtFullD(cutoff26)}</div><div class="val">Gs. ${FMT(a.rev)}</div>${deltaHTML(a.rev, b.rev)}</div>
-    <div class="mk"><div class="lab">Órdenes ret.</div><div class="val">${NUM(a.n)}</div>${deltaHTML(a.n, b.n)}</div>
-    <div class="mk"><div class="lab">Unidades ret.</div><div class="val">${NUM(a.units)}</div>${deltaHTML(a.units, b.units)}</div>
-    <div class="mk"><div class="lab">Clientes ret. únicos</div><div class="val">${NUM(a.clients)}</div>${deltaHTML(a.clients, b.clients)}</div>`;
+    <div class="mk"><div class="lab">Revenue ret. al ${fmtFullD(cutoffCur)}</div><div class="val">Gs. ${FMT(a.rev)}</div>${deltaHTML(a.rev, b.rev, prevY)}</div>
+    <div class="mk"><div class="lab">Órdenes ret.</div><div class="val">${NUM(a.n)}</div>${deltaHTML(a.n, b.n, prevY)}</div>
+    <div class="mk"><div class="lab">Unidades ret.</div><div class="val">${NUM(a.units)}</div>${deltaHTML(a.units, b.units, prevY)}</div>
+    <div class="mk"><div class="lab">Clientes ret. únicos</div><div class="val">${NUM(a.clients)}</div>${deltaHTML(a.clients, b.clients, prevY)}</div>`;
   const data = { labels: MES_ABR, datasets: [
-    { label:'2025', data:y25.mRev.map(Math.round), backgroundColor:'#B0BEC5', borderRadius:5 },
-    { label:'2026', data:y26.mRev.map(v => Math.round(v) || null), backgroundColor:RED, borderRadius:5 }]};
+    { label:prevY, data:y25.mRev.map(Math.round), backgroundColor:'#B0BEC5', borderRadius:5 },
+    { label:curY,  data:y26.mRev.map(v => Math.round(v) || null), backgroundColor:RED, borderRadius:5 }]};
   const opts = { responsive:true, maintainAspectRatio:false,
     plugins:{ legend:{ position:'top', labels:{ boxWidth:12, usePointStyle:true } },
       tooltip:{ callbacks:{ label:c => ' ' + c.dataset.label + ': Gs. ' + (c.raw||0).toLocaleString('es-PY'),
@@ -2827,17 +2852,19 @@ function renderRetYoY(y25, y26) {
   else yoyRetChart = new Chart('c_yoyRet', { type:'bar', data, options:opts });
 }
 
-function renderRetProj(y25, y26) {
+function renderRetProj(yPrev, yCur, prevY, curY) {
+  const y25 = yPrev, y26 = yCur;
   const P = computeRetProjection(y25, y26);
   window._RETPROJ = P;
+  window._RETPROJ_YEARS = { prevY, curY };
   document.getElementById('projKpis').innerHTML = `
-    <div class="mk"><div class="lab">Cierre proyectado 2026</div><div class="val">Gs. ${FMT(P.cierre)}</div>${deltaHTML(P.cierre, P.total25)}</div>
-    <div class="mk"><div class="lab">Ritmo actual vs 2025</div><div class="val">${fmtPct1((P.ratio-1)*100)}</div></div>
-    <div class="mk"><div class="lab">Cierre 2025</div><div class="val">Gs. ${FMT(P.total25)}</div></div>`;
+    <div class="mk"><div class="lab">Cierre proyectado ${curY}</div><div class="val">Gs. ${FMT(P.cierre)}</div>${deltaHTML(P.cierre, P.total25, prevY)}</div>
+    <div class="mk"><div class="lab">Ritmo actual vs ${prevY}</div><div class="val">${fmtPct1((P.ratio-1)*100)}</div></div>
+    <div class="mk"><div class="lab">Cierre ${prevY}</div><div class="val">Gs. ${FMT(P.total25)}</div></div>`;
   const data = { labels: MES_ABR, datasets: [
-    { type:'bar', label:'Real 2026', data:P.real.map(Math.round), backgroundColor:RED, borderRadius:5, stack:'s' },
+    { type:'bar', label:'Real ' + curY, data:P.real.map(Math.round), backgroundColor:RED, borderRadius:5, stack:'s' },
     { type:'bar', label:'Proyección', data:P.proy, backgroundColor:'#FBC0BA', borderRadius:5, stack:'s' },
-    { type:'line', label:'2025', data:y25.mRev.map(Math.round), borderColor:'#8A939B', borderWidth:1.5,
+    { type:'line', label:prevY, data:y25.mRev.map(Math.round), borderColor:'#8A939B', borderWidth:1.5,
       borderDash:[5,4], pointRadius:0, pointHoverRadius:4, tension:.3, fill:false }]};
   const opts = { responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
     plugins:{ legend:{ position:'top', labels:{ boxWidth:12, usePointStyle:true } },
@@ -2851,20 +2878,42 @@ function renderRetProj(y25, y26) {
 }
 
 async function renderYoYProj() {
+  const curY  = YEAR;
+  const idx   = YEARS.indexOf(curY);
+  const prevY = idx > 0 ? YEARS[idx - 1] : null;
+  const projBlock = document.getElementById('projBlock');
+  // La proyección sólo tiene sentido para el año en curso: los años cerrados no se proyectan.
+  const proyectable = (curY === YEAR_ACTUAL) && !!prevY;
+  projBlock.style.display = proyectable ? '' : 'none';
+  document.getElementById('cmpTitle').textContent =
+    prevY ? `Comparativo ${curY} vs ${prevY} · retornables`
+          : `Revenue mensual ${curY} · retornables (no hay año anterior conectado)`;
+  document.getElementById('cmpChartTitle').textContent =
+    prevY ? `Revenue Retornables Mensual · ${curY} vs ${prevY} (Gs.)`
+          : `Revenue Retornables Mensual · ${curY} (Gs.)`;
+  if (proyectable) {
+    document.getElementById('projTitle').textContent = `Proyección de cierre ${curY} · revenue retornables`;
+    document.getElementById('projChartTitle').textContent = `Real ${curY} + Proyección vs referencia ${prevY} (Gs.)`;
+  }
+  if (!prevY) {
+    document.getElementById('yoyKpis').innerHTML =
+      '<div class="mk"><div class="lab">' + curY + ' es el primer año conectado: no hay año anterior con el que comparar.</div></div>';
+    return;
+  }
   try {
-    const [y25, y26] = await Promise.all([ensureYearAgg('2025'), ensureYearAgg('2026')]);
-    renderRetYoY(y25, y26);
-    renderRetProj(y25, y26);
+    const [yPrev, yCur] = await Promise.all([ensureYearAgg(prevY), ensureYearAgg(curY)]);
+    renderRetYoY(yPrev, yCur, prevY, curY);
+    if (proyectable) renderRetProj(yPrev, yCur, prevY, curY);
   } catch (err) {
     console.error(err);
-    const msg = '<div class="mk"><div class="lab" style="color:#D8342E">No se pudo cargar el otro año: ' + (err.message || err) + '</div></div>';
+    const msg = '<div class="mk"><div class="lab" style="color:#D8342E">No se pudo cargar la fuente ' + prevY + ': ' + (err.message || err) + '</div></div>';
     document.getElementById('yoyKpis').innerHTML = msg;
-    document.getElementById('projKpis').innerHTML = msg;
+    if (proyectable) document.getElementById('projKpis').innerHTML = msg;
   }
 }
 
 /* ═══════════════════════════════════
-   SELECTOR DE AÑO (2025 / 2026)
+   SELECTOR DE AÑO (2023 / 2024 / 2025 / 2026)
    Cambia la fuente activa y reconstruye todo el dashboard desde
    el Sheet del año elegido. Cada año lee SOLO su Sheet: cambiar
    de año nunca escribe ni modifica el otro archivo.

@@ -251,7 +251,7 @@ select.camp-sel option:disabled{color:#bbb;font-weight:400;font-style:italic}
   <div class="sec">Insights Automáticos</div>
   <div class="insights" id="insights"></div>
 </div>
-<div class="footer"><span>Mi Portal CC — Coca-Cola Paraguay</span> &nbsp;|&nbsp; Fuente: VTEX Report Export &nbsp;|&nbsp; Enero – Mayo 2026</div>
+<div class="footer"><span>Mi Portal CC — Coca-Cola Paraguay</span> &nbsp;|&nbsp; Fuente: VTEX Report Export &nbsp;|&nbsp; <span id="footerRange">Cargando período…</span></div>
 
 <!-- ─── Modal: crear / editar campaña manual ─── -->
 <div class="modal-bg" id="campModal" onclick="if(event.target===this)closeCampModal()">
@@ -1092,6 +1092,11 @@ function refreshDataBanner(){
   if(label && minD && maxD){
     label.textContent=`Datos refrescados · ${minD} a ${maxD}`;
   }
+  const foot=document.getElementById('footerRange');
+  if(foot && minD && maxD){
+    const dmy=d=>d.slice(8,10)+'/'+d.slice(5,7)+'/'+d.slice(0,4);
+    foot.textContent=dmy(minD)+' – '+dmy(maxD);
+  }
   const meta=RAW.import_meta||{};
   const fEl=document.getElementById('statusFacturados');
   const pEl=document.getElementById('statusPreparacion');
@@ -1300,6 +1305,22 @@ const GSHEET = {
   id:  '1oDuPtSdspEqvoo_0RDWg2eku2zrejNhrp711oqBgUp8',
   gid: '1742393063'   // pestaña nueva (verificar nombre en el Sheet)
 };
+/* Fuentes históricas: mismas 94 columnas VTEX, un archivo por año.
+   Se leen UNA sola vez por sesión (no en cada auto-refresco) y entran al
+   mismo ETL: buildPromoDelta dedupea por Order|SKU, así que no se duplican. */
+const GSHEETS_HIST = {
+  '2025': { id:'1PfSeehY2EFMVU3VZfG0ICIHT3GZNnjIDlZbkbKn5Bxo', gid:'1013977220' },  // Fuente VTEX General 2025
+  '2024': { id:'1vvl0G3BBBGJu8Tst-KdqpqspUNu8yCy77pn-AXpnjLQ', gid:'1738442477' },  // Fuente VTEX 2024
+  '2023': { id:'1mbn3ySHAn3LhWneFV-fkh7ciBt1NxpJ8vDO2eHj_AtM', gid:'' }             // Fuente VTEX 2023 (una sola hoja)
+};
+const HIST_YEARS = ['2023','2024','2025'];
+let _HIST_ROWS = null;            // caché de las filas históricas ya leídas
+/* Regla de la suite: sólo cuentan como venta los pedidos facturables. */
+const ESTADOS_VALIDOS_PROMO = ['Faturado','Pronto para o manuseio'];
+const esFacturable = r => {
+  const st = String(r['Status']||'').trim();
+  return st === '' ? true : ESTADOS_VALIDOS_PROMO.includes(st);   // sin columna Status, no se descarta nada
+};
 
 /* --- Normalización precisa de valores gviz --- */
 // Fecha gviz "Date(YYYY,M,D[,h,m,s])" (mes 0-indexado) -> "YYYY-MM-DD[ HH:MM:SS]" ISO exacto,
@@ -1320,9 +1341,11 @@ function normCreationDate(s){
   return s;
 }
 
-async function gvizFetchRows(){
-  const url = 'https://docs.google.com/spreadsheets/d/'+GSHEET.id+
-              '/gviz/tq?gid='+GSHEET.gid+'&tqx=out:json&headers=1&_='+Date.now();
+async function gvizFetchRows(cfg){
+  cfg = cfg || GSHEET;
+  /* gid vacío = el archivo tiene una sola hoja: gviz devuelve la primera */
+  const url = 'https://docs.google.com/spreadsheets/d/'+cfg.id+
+              '/gviz/tq?'+(cfg.gid?'gid='+cfg.gid+'&':'')+'tqx=out:json&headers=1&_='+Date.now();
   const res = await fetch(url, {cache:'no-store'});
   if(!res.ok) throw new Error('HTTP '+res.status);
   const txt = await res.text();
@@ -1353,10 +1376,30 @@ async function gvizFetchRows(){
   return out;
 }
 
+/* Lee 2023/2024/2025 una única vez por sesión. Si alguna fuente falla,
+   el tablero sigue funcionando con las que sí respondieron. */
+async function fetchHistRows(){
+  if(_HIST_ROWS) return _HIST_ROWS;
+  const res = await Promise.allSettled(HIST_YEARS.map(y=>gvizFetchRows(GSHEETS_HIST[y])));
+  const out = [];
+  const fallaron = [];
+  res.forEach((r,i)=>{
+    if(r.status==='fulfilled' && r.value.length) out.push(...r.value.filter(esFacturable));
+    else fallaron.push(HIST_YEARS[i]);
+  });
+  window.HIST_FALLIDOS = fallaron;
+  _HIST_ROWS = out;
+  return out;
+}
+
 async function loadPromoFromSheet(){
   try{
     showPromoUploadMsg('⏳ Cargando desde Google Sheet…','ok');
-    const rows = await gvizFetchRows();
+    const [rowsActRaw, rowsHist] = await Promise.all([gvizFetchRows(GSHEET), fetchHistRows()]);
+    /* Mismo criterio para todos los años: sólo pedidos facturables.
+       Si la pestaña del año en curso ya viene filtrada, esto no cambia nada. */
+    const rowsAct = rowsActRaw.filter(esFacturable);
+    const rows = rowsHist.concat(rowsAct);
     // Rango real de fechas de la base del Sheet (todas las filas, no solo promos)
     let smin=null, smax=null;
     rows.forEach(r=>{ const d=String(r['Creation Date']||'').slice(0,10); if(!d)return; if(!smin||d<smin)smin=d; if(!smax||d>smax)smax=d; });
@@ -1367,7 +1410,9 @@ async function loadPromoFromSheet(){
     populateCampSelect();
     renderAll();
     refreshDataBanner();
-    showPromoUploadMsg('✓ Sheet sincronizado: +'+addedCount+' líneas nuevas en '+touchedCampaigns.size+' campaña(s).','ok');
+    const fall = (window.HIST_FALLIDOS||[]);
+    showPromoUploadMsg('✓ Sheets sincronizados (2023–2026): +'+addedCount+' líneas nuevas en '+touchedCampaigns.size+' campaña(s).'+
+      (fall.length?'  ⚠ Sin datos de: '+fall.join(', '):''), fall.length?'err':'ok');
   }catch(err){
     console.error(err);
     showPromoUploadMsg('✗ No se pudo leer el Sheet: '+err.message+'  (verificá que esté compartido como "Cualquiera con el enlace · Lector")','err');

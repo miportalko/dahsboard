@@ -72,33 +72,44 @@
   @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
   @media(max-width:760px){ .h-vsep, .h-title { display:none; } .header { padding:0 16px; } }
 
-  /* FILTER BAR */
+  /* FILTER BAR — dos filas: (1) año y período · (2) fechas, filtros y acciones */
   .filter-bar {
     background:var(--white); border-bottom:1px solid var(--border);
-    padding:8px 32px; display:flex; align-items:center; gap:12px; row-gap:8px;
-    min-height:52px; height:auto; flex-wrap:wrap;
+    padding:0 32px; display:flex; flex-direction:column; align-items:stretch;
     position:sticky; top:60px; z-index:99;
     box-shadow:0 2px 8px rgba(0,0,0,.05);
   }
-  .filter-label { font-size:11px; font-weight:700; text-transform:uppercase;
+  .fb-row {
+    display:flex; align-items:center; gap:12px; row-gap:8px; flex-wrap:wrap;
+    padding:9px 0; min-height:48px;
+  }
+  .fb-row + .fb-row { border-top:1px solid var(--border); }
+  .filter-label { font-size:10.5px; font-weight:700; text-transform:uppercase;
     letter-spacing:.8px; color:var(--muted); white-space:nowrap; flex-shrink:0; }
   .filter-divider { width:1px; height:20px; background:var(--border); flex-shrink:0; }
-  .period-pills { display:flex; gap:5px; align-items:center; flex-wrap:wrap; flex:1 1 320px; min-width:0; }
+
+  /* Selector de año: control segmentado, separado de los meses */
+  .year-group {
+    display:inline-flex; align-items:center; gap:3px; padding:3px;
+    background:var(--bg); border:1px solid var(--border); border-radius:22px; flex-shrink:0;
+  }
+  .ypill {
+    padding:5px 13px; border-radius:18px; border:none; background:transparent;
+    font-family:var(--font); font-size:12px; font-weight:700; color:var(--muted);
+    cursor:pointer; transition:all .15s; white-space:nowrap; line-height:1.2;
+  }
+  .ypill:hover { color:var(--black); background:rgba(0,0,0,.06); }
+  .ypill.active { background:var(--black); color:#fff; box-shadow:0 2px 6px rgba(0,0,0,.18); }
+
+  /* Meses del año activo */
+  .period-pills { display:flex; gap:6px; align-items:center; flex-wrap:wrap; flex:1 1 300px; min-width:0; }
   .ppill {
-    padding:4px 10px; border-radius:20px; border:1px solid var(--border);
+    padding:5px 11px; border-radius:20px; border:1px solid var(--border);
     background:var(--white); font-family:var(--font); font-size:11.5px;
     font-weight:600; color:var(--muted); cursor:pointer; transition:all .15s; white-space:nowrap;
   }
   .ppill:hover { border-color:var(--red); color:var(--red); }
   .ppill.active { background:var(--red); border-color:var(--red); color:white; box-shadow:0 2px 8px rgba(232,36,27,.25); }
-  .ypill {
-    padding:4px 10px; border-radius:20px; border:1px solid var(--border);
-    background:var(--white); font-family:var(--font); font-size:11.5px; font-weight:700;
-    cursor:pointer; transition:all .15s; white-space:nowrap;
-  }
-  .ypill:hover { border-color:var(--black); }
-  .ypill.active { background:var(--black); border-color:var(--black); color:white; }
-  .ysep { width:1px; height:20px; background:var(--border); margin:0 4px; }
   .mini-kpis { display:flex; gap:26px; flex-wrap:wrap; margin:0 0 14px; }
   .mini-kpis .mk .lab { font-size:11px; color:var(--muted); font-weight:600; }
   .mini-kpis .mk .val { font-size:18px; font-weight:800; color:var(--black); letter-spacing:-.3px; }
@@ -276,10 +287,13 @@
     .row.cols-2,.row.cols-3,.row.cols-1-2,.row.cols-2-1 { grid-template-columns:1fr; }
     .cohort-row { grid-template-columns:1fr; }
     .kpi-grid { grid-template-columns:1fr 1fr; }
-    .filter-bar { gap:10px; padding:8px 16px; }
+    .filter-bar { padding:0 16px; }
+    .fb-row { gap:8px; padding:8px 0; min-height:0; }
     .filter-divider { display:none; }
     .range-summary { display:none; }
     .date-range { flex-wrap:wrap; }
+    .year-group { width:100%; justify-content:space-between; }
+    .ypill { flex:1; text-align:center; padding:6px 8px; }
   }
 
   /* DATA OVERLAY (carga / error) */
@@ -397,32 +411,42 @@
 
 <!-- FILTER BAR -->
 <div class="filter-bar">
-  <span class="filter-label">Período</span>
-  <div class="period-pills" id="periodPills">
-    <button class="ppill active" onclick="setPeriod('all',this)">Todo</button>
+  <!-- Fila 1 · año activo (fuente) y meses del año -->
+  <div class="fb-row">
+    <span class="filter-label">Año</span>
+    <div class="year-group" id="yearPills"></div>
+    <div class="filter-divider"></div>
+    <span class="filter-label">Período</span>
+    <div class="period-pills" id="periodPills">
+      <button class="ppill active" onclick="setPeriod('all',this)">Todo</button>
+    </div>
   </div>
-  <div class="filter-divider"></div>
-  <div class="date-range">
-    <input type="date" class="date-input" id="dateFrom">
-    <span class="date-sep">→</span>
-    <input type="date" class="date-input" id="dateTo">
-    <button class="btn-apply" onclick="applyDateRange()">Aplicar</button>
-  </div>
-  <div class="filter-divider"></div>
-  <select class="fsel" id="fCity" onchange="onFilterChange()" disabled title="Filtrar por ciudad"><option value="">Ciudad · todas</option></select>
-  <select class="fsel" id="fChannel" onchange="onFilterChange()" disabled title="Filtrar por canal"><option value="">Canal · todos</option></select>
-  <select class="fsel" id="fSku" onchange="onFilterChange()" disabled title="Filtrar por SKU retornable"><option value="">SKU · todos</option></select>
-  <input class="fsel finput" id="fClient" list="clientList" placeholder="Cliente (email o doc.)" autocomplete="off"
-         oninput="onClientInput(this.value)" onchange="onFilterChange()" disabled title="Buscar cliente por email o documento">
-  <datalist id="clientList"></datalist>
-  <button class="btn-clear" onclick="clearFilters()" title="Quitar filtros de ciudad, canal, SKU y cliente">✕ Limpiar</button>
-  <div class="filter-divider"></div>
-  <button class="btn-export" id="btnExportExcel" onclick="exportExcel()" disabled title="Exporta el período mostrado (según el filtro activo)">📥 Excel</button>
-  <div class="range-summary">
-    <div class="range-dot"></div>
-    Mostrando: <strong id="rangeLabel">—</strong>
-    &nbsp;·&nbsp; <strong id="rangeOrders">—</strong> órdenes ret.
-    &nbsp;·&nbsp; <strong id="rangeRevenue">—</strong> en ret.
+  <!-- Fila 2 · rango de fechas, filtros y acciones -->
+  <div class="fb-row">
+    <span class="filter-label">Fechas</span>
+    <div class="date-range">
+      <input type="date" class="date-input" id="dateFrom">
+      <span class="date-sep">→</span>
+      <input type="date" class="date-input" id="dateTo">
+      <button class="btn-apply" onclick="applyDateRange()">Aplicar</button>
+    </div>
+    <div class="filter-divider"></div>
+    <span class="filter-label">Filtros</span>
+    <select class="fsel" id="fCity" onchange="onFilterChange()" disabled title="Filtrar por ciudad"><option value="">Ciudad · todas</option></select>
+    <select class="fsel" id="fChannel" onchange="onFilterChange()" disabled title="Filtrar por canal"><option value="">Canal · todos</option></select>
+    <select class="fsel" id="fSku" onchange="onFilterChange()" disabled title="Filtrar por SKU retornable"><option value="">SKU · todos</option></select>
+    <input class="fsel finput" id="fClient" list="clientList" placeholder="Cliente (email o doc.)" autocomplete="off"
+           oninput="onClientInput(this.value)" onchange="onFilterChange()" disabled title="Buscar cliente por email o documento">
+    <datalist id="clientList"></datalist>
+    <button class="btn-clear" onclick="clearFilters()" title="Quitar filtros de ciudad, canal, SKU y cliente">✕ Limpiar</button>
+    <div class="filter-divider"></div>
+    <button class="btn-export" id="btnExportExcel" onclick="exportExcel()" disabled title="Exporta el período mostrado (según el filtro activo)">📥 Excel</button>
+    <div class="range-summary">
+      <div class="range-dot"></div>
+      Mostrando: <strong id="rangeLabel">—</strong>
+      &nbsp;·&nbsp; <strong id="rangeOrders">—</strong> órdenes ret.
+      &nbsp;·&nbsp; <strong id="rangeRevenue">—</strong> en ret.
+    </div>
   </div>
 </div>
 
@@ -2394,11 +2418,11 @@ function buildTable(skus) {
 // PERÍODO, RANGO DE FECHAS Y FILTROS
 // ═══════════════════════════════════
 function renderPeriodPills() {
+  const ybox = document.getElementById('yearPills');
+  if (ybox) ybox.innerHTML = YEARS.map(y =>
+      `<button class="ypill${YEAR===y?' active':''}" onclick="setYear('${y}')" title="Ver los datos de ${y}">${y}</button>`).join('');
   const box = document.getElementById('periodPills');
-  let html = YEARS.map(y =>
-      `<button class="ypill${YEAR===y?' active':''}" onclick="setYear('${y}')">${y}</button>`).join('')
-           + `<span class="ysep"></span>`
-           + `<button class="ppill active" onclick="setPeriod('all',this)">Todo</button>`;
+  let html = `<button class="ppill active" onclick="setPeriod('all',this)">Todo</button>`;
   ALL_MONTH_KEYS.forEach((k,i) => {
     html += `<button class="ppill" onclick="setPeriod('m${i}',this)">${ALL_MONTH_LABELS[i]}</button>`;
   });

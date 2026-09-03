@@ -2,21 +2,11 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<!-- ===== PWA / OFFLINE-FIRST · Tablero Mi Portal (no toca la lógica del tablero) ===== -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0D0D0D">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<script>window.MP_RESYNC='loadFromSheet';</script>
-<script src="offline-core.js"></script>
-<!-- ===== FIN PWA / OFFLINE-FIRST ===== -->
-
-<link rel="stylesheet" href="vendor/inter.css">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mi Portal · Inteligencia Geográfica de Ventas</title>
-<script src="vendor/chart-4.4.1.umd.min.js"></script>
-<script src="vendor/xlsx-0.18.5.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
   :root{
     --red:#E8241B; --red2:#E61A27; --ink:#111315; --black:#0D0D0D; --amber:#FFB300;
@@ -42,10 +32,9 @@
   .h-title span{color:#5BDDE8}
   .h-period{background:rgba(255,255,255,.08);color:#ccc;font-size:12px;font-weight:600;
     padding:6px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.12);white-space:nowrap}
-  /* fecha de corte de la fuente · dato chico y discreto en el header */
-  .h-datachip{font-size:11px;font-weight:600;color:rgba(255,255,255,.42);letter-spacing:.2px;white-space:nowrap}
-  @media(max-width:760px){.h-datachip{display:none}}
   @keyframes syncPulse{0%{box-shadow:0 0 0 0 rgba(120,230,160,.55)}70%{box-shadow:0 0 0 7px rgba(120,230,160,0)}100%{box-shadow:0 0 0 0 rgba(120,230,160,0)}}
+  #syncDot{animation:syncPulse 2.4s infinite}
+  #syncDot.busy{background:var(--g3)!important;animation:syncPulse 1s infinite}
   @media(max-width:760px){.h-vsep,.h-title{display:none}header{padding:0 16px}}
 
   /* ===== Filters ===== */
@@ -96,7 +85,7 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .load-title{font-size:14px;font-weight:800;letter-spacing:-.01em}
   .load-sub{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
-  @media (prefers-reduced-motion:reduce){.spinner{animation:none}}
+  @media (prefers-reduced-motion:reduce){.spinner,#syncDot{animation:none}}
   @media(max-width:980px){#updTag{display:none!important}}
 
   /* ===== KPIs ===== */
@@ -188,10 +177,11 @@
     <div class="h-title">Análisis por <span>Ciudades</span></div>
   </div>
   <div style="display:flex;align-items:center;gap:8px">
-    <span class="h-datachip" id="updTag"></span>
+    <div class="h-period" id="updTag" style="display:none">—</div>
     <div class="h-period" id="periodTag">—</div>
   </div>
   <div style="display:flex;align-items:center;gap:10px;margin-left:14px">
+    <span id="syncDot" title="Sincronización automática activa" style="width:8px;height:8px;border-radius:50%;background:#78E6A0;box-shadow:0 0 0 0 rgba(120,230,160,.6);flex-shrink:0"></span>
     <span id="uploadMsg" style="font-size:11px;color:#9aa0a6;opacity:0;transition:opacity .3s;max-width:320px"></span>
   </div>
 </header>
@@ -335,7 +325,7 @@
   <!-- COMPARATIVO Y PROYECCION -->
   <div class="grid g2">
     <div class="panel">
-      <div class="ph"><div><h2><span class="dot"></span>Comparativo 2026 vs años anteriores</h2>
+      <div class="ph"><div><h2><span class="dot"></span><span id="yoyTitle">Comparativo interanual</span></h2>
         <p class="hint">Toda la base anual con estados facturables, independiente de los filtros de arriba.</p></div>
         <div class="exp">
           <button class="exp-btn" data-exp="comparativo" data-fmt="csv">⬇ CSV</button>
@@ -344,9 +334,9 @@
       <div class="mini-kpis" id="yoyKpis"></div>
       <div class="cwrap"><canvas id="yoyChart" height="280"></canvas></div>
     </div>
-    <div class="panel">
-      <div class="ph"><div><h2><span class="dot"></span>Proyección de cierre 2026</h2>
-        <p class="hint">Estacionalidad 2025 ajustada por el ritmo real 2026 (meses completos).</p></div>
+    <div class="panel" id="projPanel">
+      <div class="ph"><div><h2><span class="dot"></span><span id="projTitle">Proyección de cierre 2026</span></h2>
+        <p class="hint" id="projHint">Estacionalidad del año anterior ajustada por el ritmo real del año en curso (meses completos).</p></div>
         <div class="exp">
           <button class="exp-btn" data-exp="proyeccion" data-fmt="csv">⬇ CSV</button>
           <button class="exp-btn" data-exp="proyeccion" data-fmt="xlsx">⬇ Excel</button>
@@ -763,9 +753,10 @@ function periodStats(orders, upTo, year){
     sales+=o.v; n++; cl.add(o.u); });
   return {sales,n,ticket:n?sales/n:0,clients:cl.size};
 }
-function computeProjection(y25,y26){
+function computeProjection(y25,y26,prevY,curY){
+  prevY=prevY||'2025'; curY=curY||'2026';
   if(!y26||!y26.maxD||!y26.orders.length) return null;
-  const m25=monthlySales(y25?y25.orders:[], '2025'), m26=monthlySales(y26.orders,'2026');
+  const m25=monthlySales(y25?y25.orders:[], prevY), m26=monthlySales(y26.orders,curY);
   const dt=parseD(y26.maxD); if(isNaN(dt)) return null;
   const nx=new Date(dt); nx.setDate(nx.getDate()+1);
   const lastM=dt.getMonth();
@@ -780,7 +771,7 @@ function computeProjection(y25,y26){
     else if(m===lastM && partial){
       real[m]=m26[m];
       const dia=dt.getDate(); let rest25=0;
-      (y25?y25.orders:[]).forEach(o=>{ if(o.d.slice(0,4)==='2025' && +o.d.slice(5,7)-1===m && +o.d.slice(8,10)>dia) rest25+=o.v; });
+      (y25?y25.orders:[]).forEach(o=>{ if(o.d.slice(0,4)===prevY && +o.d.slice(5,7)-1===m && +o.d.slice(8,10)>dia) rest25+=o.v; });
       proy[m]=Math.round(rest25*ratio);
     } else proy[m]=Math.round(m25[m]*ratio);
   }
@@ -812,16 +803,16 @@ const GSHEETS = {
     gid: '1013977220'
   },
   '2024': {
-    id:  '1vvl0G3BBBGJu8Tst-KdqpqspUNu8yCy77pn-AXpnjLQ',   // Fuente VTEX 2024 (pestaña "Report")
+    id:  '1vvl0G3BBBGJu8Tst-KdqpqspUNu8yCy77pn-AXpnjLQ',   // Fuente VTEX 2024
     gid: '1738442477'
   },
   '2023': {
-    id:  '1mbn3ySHAn3LhWneFV-fkh7ciBt1NxpJ8vDO2eHj_AtM',   // Fuente VTEX 2023 (pestaña "Hoja 1")
-    gid: '0'
+    id:  '1mbn3ySHAn3LhWneFV-fkh7ciBt1NxpJ8vDO2eHj_AtM',   // Fuente VTEX 2023
+    gid: ''                                                // vacío = primera hoja del archivo
   }
 };
-const HIST_YEARS = ['2024','2023'];   // años históricos del comparativo (además de 2025)
-const HIST_COLORS = { '2023':'#E3E8EC', '2024':'#CBD3D9', '2025':'#B0BEC5' };
+const YEARS = ['2023','2024','2025','2026'];   // orden cronológico
+const YEAR_ACTUAL = '2026';                    // único año en curso: admite proyección
 let YEAR = '2026';
 
 /* Fecha gviz "Date(YYYY,M,D[,h,m,s])" (mes 0-indexado) → ISO exacto,
@@ -848,8 +839,9 @@ async function gvizFetchRows(year){
   if(!cfg || !cfg.id || cfg.id.indexOf('PEGAR_AQUI')===0){
     throw new Error('Falta configurar el ID del Sheet '+y+' (editar GSHEETS en el código)');
   }
+  /* gid vacío = la fuente tiene una sola hoja: gviz devuelve la primera por defecto */
   const url = 'https://docs.google.com/spreadsheets/d/'+cfg.id+
-              '/gviz/tq?gid='+cfg.gid+'&tqx=out:json&headers=1&_='+Date.now();
+              '/gviz/tq?'+(cfg.gid?'gid='+cfg.gid+'&':'')+'tqx=out:json&headers=1&_='+Date.now();
   const res = await fetch(url, {cache:'no-store'});
   if(!res.ok) throw new Error('HTTP '+res.status);
   const txt = await res.text();
@@ -899,8 +891,6 @@ const fmtInt = n => Math.round(n).toLocaleString('es-PY');
 const fmtShort = n => { n=Math.round(n);
   if(n>=1e9)return (n/1e9).toFixed(2)+' MM'; if(n>=1e6)return (n/1e6).toFixed(1)+' M';
   if(n>=1e3)return (n/1e3).toFixed(0)+' mil'; return n.toLocaleString('es-PY'); };
-function fmtDMY(iso){ if(!iso) return ''; const s=String(iso).slice(0,10);
-  const p=s.split('-'); return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0] : s; }
 function fmtDate(s){ if(!s) return '—'; const d=parseD(s); return isNaN(d)?String(s):d.toLocaleDateString('es-PY',{day:'2-digit',month:'short',year:'2-digit'}); }
 const pctEs=(x,d)=> (isFinite(x)?x:0).toFixed(d==null?1:d).replace('.',',');
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -935,9 +925,15 @@ function hideLoading(){ const o=$('loadOverlay'); if(o) o.style.display='none'; 
 /* ===== Indicador de última actualización (header) ===== */
 function updateUpdTag(model){
   const el=$('updTag'); if(!el||!model) return;
-  el.textContent='Datos al '+fmtDMY(model.dateMax);
-  el.title='Última fecha con pedidos en la fuente: '+fmtDMY(model.dateMax);
+  const hhmm = lastSyncAt? lastSyncAt.toLocaleTimeString('es-PY',{hour:'2-digit',minute:'2-digit'}) : '—';
+  el.textContent='Datos al '+fmtDate(model.dateMax)+' · Actualizado '+hhmm;
+  el.title='Última fecha con pedidos en el Sheet '+YEAR+': '+model.dateMax+
+    '\nÚltima sincronización: '+(lastSyncAt? lastSyncAt.toLocaleString('es-PY') : '—')+
+    '\nSe actualiza solo cada '+AUTO_MIN+' minutos y al volver a la pestaña.';
   el.style.display='';
+  const dot=$('syncDot');
+  if(dot) dot.title='Sincronización automática cada '+AUTO_MIN+' min · última: '+
+    (lastSyncAt? lastSyncAt.toLocaleTimeString('es-PY') : '—');
 }
 
 /* ===== Guardar/restaurar filtros entre sincronizaciones ===== */
@@ -1446,6 +1442,7 @@ window.addEventListener('resize',()=>{clearTimeout(window._rt);window._rt=setTim
 /* ===== Carga desde el Sheet (única fuente de datos) ===== */
 async function loadFromSheet(){
   try{
+    showUploadMsg('⏳ Cargando desde Google Sheet…','ok');
     const saved = MODEL? captureSel() : null;
     const {headers, rows} = await gvizFetchRows();
     const model = buildModel(rows, headers);
@@ -1473,6 +1470,8 @@ async function loadFromSheet(){
     validOrders.forEach(o=>{ if(!vmin||o.d<vmin)vmin=o.d; if(!vmax||o.d>vmax)vmax=o.d; });
     YEARLY[YEAR]={orders:validOrders,minD:vmin,maxD:vmax};
     renderYoYProj();
+    showUploadMsg('✓ Sheet '+YEAR+' sincronizado: '+fmtInt(model.orders.length)+' pedidos · '+
+      fmtInt(model.nClients)+' clientes · '+model.dateMin+' a '+model.dateMax,'ok');
     return true;
   }catch(err){
     console.error(err);
@@ -1487,7 +1486,7 @@ async function loadFromSheet(){
 }
 
 /* ============================================================
-   COMPARATIVO 2026 vs 2025 + PROYECCIÓN DE CIERRE 2026
+   COMPARATIVO INTERANUAL + PROYECCIÓN DE CIERRE (año en curso)
    Base anual completa con estados facturables; independiente
    de los filtros del dashboard. Cada año lee SOLO su Sheet.
    ============================================================ */
@@ -1509,33 +1508,30 @@ async function ensureYearCache(year){
 }
 
 const fmtPct1 = x => (x>=0?'+':'')+x.toFixed(1).replace('.',',')+'%';
-function deltaHTML(v26,v25){
-  if(!v25) return '';
-  const d=(v26/v25-1)*100;
-  return `<div class="delta ${d>=0?'up':'dn'}">${fmtPct1(d)} vs 2025</div>`;
+function deltaHTML(vCur,vPrev,prevLabel){
+  if(!vPrev) return '';
+  const d=(vCur/vPrev-1)*100;
+  return `<div class="delta ${d>=0?'up':'dn'}">${fmtPct1(d)} vs ${prevLabel||'año anterior'}</div>`;
 }
+/* Año inmediatamente anterior al activo dentro de las fuentes conectadas */
+function prevYearOf(y){ const i=YEARS.indexOf(y); return i>0?YEARS[i-1]:null; }
 
-function renderYoY(y25,y26,hist){
-  hist=hist||{};
+function renderYoY(y25,y26,prevY,curY){
   if(!y26||!y26.orders.length||!y26.maxD){
-    $('yoyKpis').innerHTML='<div class="mk"><div class="lab">Aún no hay pedidos facturables 2026.</div></div>'; return;
+    $('yoyKpis').innerHTML='<div class="mk"><div class="lab">Aún no hay pedidos facturables en '+curY+'.</div></div>'; return;
   }
-  const m25=monthlySales(y25?y25.orders:[],'2025'), m26=monthlySales(y26.orders,'2026');
-  const upTo26=y26.maxD, upTo25='2025'+upTo26.slice(4);
-  const a=periodStats(y26.orders,upTo26,'2026'), b=periodStats(y25?y25.orders:[],upTo25,'2025');
+  const m25=monthlySales(y25?y25.orders:[],prevY), m26=monthlySales(y26.orders,curY);
+  const upTo26=y26.maxD, upTo25=prevY+upTo26.slice(4);
+  const a=periodStats(y26.orders,upTo26,curY), b=periodStats(y25?y25.orders:[],upTo25,prevY);
   $('yoyKpis').innerHTML=`
-    <div class="mk"><div class="lab">Ventas al ${fmtDate(upTo26)}</div><div class="val">${fmtShort(a.sales)}</div>${deltaHTML(a.sales,b.sales)}</div>
-    <div class="mk"><div class="lab">Pedidos</div><div class="val">${fmtInt(a.n)}</div>${deltaHTML(a.n,b.n)}</div>
-    <div class="mk"><div class="lab">Ticket promedio</div><div class="val">${fmtG(a.ticket)}</div>${deltaHTML(a.ticket,b.ticket)}</div>
-    <div class="mk"><div class="lab">Clientes únicos</div><div class="val">${fmtInt(a.clients)}</div>${deltaHTML(a.clients,b.clients)}</div>`;
+    <div class="mk"><div class="lab">Ventas al ${fmtDate(upTo26)}</div><div class="val">${fmtShort(a.sales)}</div>${deltaHTML(a.sales,b.sales,prevY)}</div>
+    <div class="mk"><div class="lab">Pedidos</div><div class="val">${fmtInt(a.n)}</div>${deltaHTML(a.n,b.n,prevY)}</div>
+    <div class="mk"><div class="lab">Ticket promedio</div><div class="val">${fmtG(a.ticket)}</div>${deltaHTML(a.ticket,b.ticket,prevY)}</div>
+    <div class="mk"><div class="lab">Clientes únicos</div><div class="val">${fmtInt(a.clients)}</div>${deltaHTML(a.clients,b.clients,prevY)}</div>`;
   if(!chartsOK()) return;
-  const datasets=[];
-  ['2023','2024'].forEach(y=>{ if(hist[y]) datasets.push(
-    {label:y,data:monthlySales(hist[y].orders,y).map(Math.round),backgroundColor:HIST_COLORS[y],borderRadius:4}); });
-  datasets.push(
-      {label:'2025',data:m25.map(Math.round),backgroundColor:HIST_COLORS['2025'],borderRadius:4},
-      {label:'2026',data:m26.map(v=>Math.round(v)||null),backgroundColor:'#E31837',borderRadius:4});
-  const cfg={type:'bar',data:{labels:MESES,datasets},
+  const cfg={type:'bar',data:{labels:MESES,datasets:[
+      {label:prevY,data:m25.map(Math.round),backgroundColor:'#B0BEC5',borderRadius:4},
+      {label:curY,data:m26.map(v=>Math.round(v)||null),backgroundColor:'#E31837',borderRadius:4}]},
     options:{responsive:true,maintainAspectRatio:false,
       plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12,usePointStyle:true}},
         tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmtG(c.raw||0),
@@ -1546,21 +1542,21 @@ function renderYoY(y25,y26,hist){
   if(yoyChart){yoyChart.data=cfg.data;yoyChart.update();}else yoyChart=new Chart($('yoyChart'),cfg);
 }
 
-function renderProj(y25,y26){
-  const P=computeProjection(y25,y26);
-  window._PROJ=P;
+function renderProj(y25,y26,prevY,curY){
+  const P=computeProjection(y25,y26,prevY,curY);
+  window._PROJ=P; window._PROJ_YEARS={prevY,curY};
   if(!P){
-    $('projKpis').innerHTML='<div class="mk"><div class="lab">Datos 2026 insuficientes para proyectar.</div></div>'; return;
+    $('projKpis').innerHTML='<div class="mk"><div class="lab">Datos '+curY+' insuficientes para proyectar.</div></div>'; return;
   }
   $('projKpis').innerHTML=`
-    <div class="mk"><div class="lab">Cierre proyectado 2026</div><div class="val">${fmtShort(P.cierre)}</div>${deltaHTML(P.cierre,P.total25)}</div>
-    <div class="mk"><div class="lab">Ritmo actual vs 2025</div><div class="val">${fmtPct1((P.ratio-1)*100)}</div></div>
-    <div class="mk"><div class="lab">Cierre 2025</div><div class="val">${fmtShort(P.total25)}</div></div>`;
+    <div class="mk"><div class="lab">Cierre proyectado ${curY}</div><div class="val">${fmtShort(P.cierre)}</div>${deltaHTML(P.cierre,P.total25,prevY)}</div>
+    <div class="mk"><div class="lab">Ritmo actual vs ${prevY}</div><div class="val">${fmtPct1((P.ratio-1)*100)}</div></div>
+    <div class="mk"><div class="lab">Cierre ${prevY}</div><div class="val">${fmtShort(P.total25)}</div></div>`;
   if(!chartsOK()) return;
   const cfg={data:{labels:MESES,datasets:[
-      {type:'bar',label:'Real 2026',data:P.real.map(Math.round),backgroundColor:'#E31837',borderRadius:4,stack:'s'},
+      {type:'bar',label:'Real '+curY,data:P.real.map(Math.round),backgroundColor:'#E31837',borderRadius:4,stack:'s'},
       {type:'bar',label:'Proyección',data:P.proy,backgroundColor:'#FBC0BA',borderRadius:4,stack:'s'},
-      {type:'line',label:'2025',data:P.m25.map(Math.round),borderColor:'#8A939B',borderWidth:1.5,
+      {type:'line',label:prevY,data:P.m25.map(Math.round),borderColor:'#8A939B',borderWidth:1.5,
         borderDash:[5,4],pointRadius:0,pointHoverRadius:4,tension:.3,fill:false}]},
     options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
       plugins:{legend:{position:'top',labels:{font:{size:11},boxWidth:12,usePointStyle:true}},
@@ -1573,41 +1569,47 @@ function renderProj(y25,y26){
 }
 
 async function renderYoYProj(){
+  const curY=YEAR, prevY=prevYearOf(curY);
+  /* la proyección sólo aplica al año en curso: los años cerrados no se proyectan */
+  const proyectable=(curY===YEAR_ACTUAL)&&!!prevY;
+  const panel=$('projPanel'); if(panel) panel.style.display=proyectable?'':'none';
+  const t=$('yoyTitle'); if(t) t.textContent=prevY?('Comparativo '+curY+' vs '+prevY):('Ventas mensuales '+curY);
+  if(proyectable){
+    const pt=$('projTitle'); if(pt) pt.textContent='Proyección de cierre '+curY;
+    const ph=$('projHint'); if(ph) ph.textContent='Estacionalidad '+prevY+' ajustada por el ritmo real '+curY+' (meses completos).';
+  }
+  if(!prevY){
+    $('yoyKpis').innerHTML='<div class="mk"><div class="lab">'+curY+' es el primer año conectado: no hay año anterior con el que comparar.</div></div>';
+    return;
+  }
   try{
-    const [y25,y26]=await Promise.all([ensureYearCache('2025'),ensureYearCache('2026')]);
-    renderYoY(y25,y26);
-    renderProj(y25,y26);
-    /* Años históricos (2024, 2023): se cargan después para no demorar el comparativo principal.
-       Si alguno falla, el gráfico queda con los años que sí respondieron. */
-    const res=await Promise.allSettled(HIST_YEARS.map(y=>ensureYearCache(y)));
-    const hist={};
-    res.forEach((r,i)=>{ if(r.status==='fulfilled') hist[HIST_YEARS[i]]=r.value;
-                         else console.warn('Fuente '+HIST_YEARS[i]+' no disponible:',r.reason); });
-    if(Object.keys(hist).length) renderYoY(y25,y26,hist);
+    const [y25,y26]=await Promise.all([ensureYearCache(prevY),ensureYearCache(curY)]);
+    renderYoY(y25,y26,prevY,curY);
+    if(proyectable) renderProj(y25,y26,prevY,curY);
   }catch(err){
     console.error(err);
-    const msg='<div class="mk"><div class="lab" style="color:#D8342E">No se pudo cargar el otro año: '+esc(err.message)+'</div></div>';
+    const msg='<div class="mk"><div class="lab" style="color:#D8342E">No se pudo cargar la fuente '+prevY+': '+esc(err.message)+'</div></div>';
     $('yoyKpis').innerHTML=msg;
-    $('projKpis').innerHTML=msg;
+    if(proyectable) $('projKpis').innerHTML=msg;
   }
 }
 
 function expYoY(){
-  const y25=YEARLY['2025'], y26=YEARLY['2026'];
-  if(!y25||!y26) return {name:'Comparativo 2026 vs 2025',header:['Aviso'],rows:[['Datos aún no cargados']]};
-  const m25=monthlySales(y25.orders,'2025'), m26=monthlySales(y26.orders,'2026');
-  const histY=['2023','2024'].filter(y=>YEARLY[y]);
-  const mh=histY.map(y=>monthlySales(YEARLY[y].orders,y));
-  return {name:'Comparativo 2026 vs 2025',
-    header:['Mes',...histY.map(y=>'Ventas '+y+' (Gs)'),'Ventas 2025 (Gs)','Ventas 2026 (Gs)','Variación 26/25 (%)'],
-    rows:MESES.map((m,i)=>[m,...mh.map(a=>Math.round(a[i])),Math.round(m25[i]),Math.round(m26[i]),
+  const curY=YEAR, prevY=prevYearOf(curY);
+  const y25=prevY?YEARLY[prevY]:null, y26=YEARLY[curY];
+  const nom='Comparativo '+curY+(prevY?' vs '+prevY:'');
+  if(!y25||!y26) return {name:nom,header:['Aviso'],rows:[['Datos aún no cargados']]};
+  const m25=monthlySales(y25.orders,prevY), m26=monthlySales(y26.orders,curY);
+  return {name:nom,
+    header:['Mes','Ventas '+prevY+' (Gs)','Ventas '+curY+' (Gs)','Variación (%)'],
+    rows:MESES.map((m,i)=>[m,Math.round(m25[i]),Math.round(m26[i]),
       (m25[i]>0&&m26[i]>0)? +((m26[i]/m25[i]-1)*100).toFixed(1) : ''])};
 }
 function expProj(){
-  const P=window._PROJ;
-  if(!P) return {name:'Proyección 2026',header:['Aviso'],rows:[['Datos aún no cargados']]};
-  return {name:'Proyección 2026',
-    header:['Mes','Real 2026 (Gs)','Proyección (Gs)','Total estimado (Gs)','Referencia 2025 (Gs)'],
+  const P=window._PROJ, Y=window._PROJ_YEARS||{prevY:'—',curY:YEAR};
+  if(!P) return {name:'Proyección '+Y.curY,header:['Aviso'],rows:[['Datos aún no cargados']]};
+  return {name:'Proyección '+Y.curY,
+    header:['Mes','Real '+Y.curY+' (Gs)','Proyección (Gs)','Total estimado (Gs)','Referencia '+Y.prevY+' (Gs)'],
     rows:MESES.map((m,i)=>[m,Math.round(P.real[i]),P.proy[i],Math.round(P.real[i])+P.proy[i],Math.round(P.m25[i])])};
 }
 

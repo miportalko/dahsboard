@@ -2,21 +2,13 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<!-- ===== PWA / OFFLINE-FIRST · Tablero Mi Portal (no toca la lógica del tablero) ===== -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#0D0D0D">
-<meta name="mobile-web-app-capable" content="yes">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
-<script>window.MP_RESYNC='iniciar';</script>
-<script src="offline-core.js"></script>
-<!-- ===== FIN PWA / OFFLINE-FIRST ===== -->
-
-<link rel="stylesheet" href="vendor/inter.css">
-
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mi Portal · Dashboard Ejecutivo</title>
-<script src="vendor/chart-4.4.1.umd.min.js"></script>
-<script src="vendor/xlsx-0.18.5.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 
   :root{
@@ -163,9 +155,6 @@
 
 
   /* ===== Overlay de carga ===== */
-  /* fecha de corte de la fuente · dato chico y discreto en el header */
-  .h-datachip{font-size:11px;font-weight:600;color:rgba(255,255,255,.42);letter-spacing:.2px;white-space:nowrap}
-  @media(max-width:760px){.h-datachip{display:none}}
   #loadOverlay{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;
     background:rgba(13,13,13,.45);backdrop-filter:blur(2px)}
   .load-card{background:#fff;border-radius:16px;box-shadow:0 12px 40px rgba(0,0,0,.25);
@@ -209,8 +198,8 @@
 <div id="loadOverlay">
   <div class="load-card">
     <div class="spinner"></div>
-    <div class="load-title">Cargando datos…</div>
-    <div class="load-sub" id="loadSub"></div>
+    <div class="load-title">Leyendo los Google Sheets en vivo…</div>
+    <div class="load-sub" id="loadSub">Conectando…</div>
   </div>
 </div>
 <div class="top-bar"></div>
@@ -225,7 +214,6 @@
   <div style="display:flex;align-items:center;gap:8px">
     <div class="h-mode" id="modeTag"><span class="pip"></span>Facturación con envío</div>
     <div class="h-period" id="periodTag">—</div>
-    <span class="h-datachip" id="dataMaxTag"></span>
     <button class="exp-btn" id="btnRefresh" style="background:rgba(255,255,255,.08);
       border-color:rgba(255,255,255,.15);color:#ccc">&#8635; Actualizar</button>
   </div>
@@ -290,18 +278,18 @@
   </div>
 
   <div class="section-head">
-    <h2><span class="dot"></span>2026 vs. años anteriores</h2>
+    <h2><span class="dot"></span><span id="tituloYoY">Comparativo interanual</span></h2>
     <span class="note" id="aviso25"></span>
   </div>
   <div class="grid g2">
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Facturación mes a mes</h2>
-        <p class="hint" id="hintYoY">Rojo = 2026 · grises = 2025, 2024, 2023 · rosado = mes 2026 en curso</p></div>
+        <p class="hint" id="hintYoY">Rojo = año en curso · grises = años anteriores (más claro = más viejo) · rosado = mes en curso</p></div>
         <button class="exp-btn" onclick="bajar('yoy')">&#8681; Excel</button></div>
       <div class="cwrap alto"><canvas id="cYoY"></canvas></div></div>
     <div class="panel">
       <div class="ph"><div><h2><span class="dot"></span>Detalle comparativo</h2>
-        <p class="hint">Variación 2026 vs 2025, calculada sólo donde hay dato en los dos años</p></div></div>
+        <p class="hint">La variación compara el año en curso contra el inmediatamente anterior, sólo donde hay dato en los dos</p></div></div>
       <div class="tscroll" id="tYoY"></div></div>
   </div>
   <div class="grid">
@@ -395,7 +383,9 @@ const GSHEET = {
   gid: '2098720537',                                      // hoja Base
   gidCanceladas: ''                                       // opcional: gid de Canceladas_Probables
 };
-/* Fuente del año anterior · debe tener las mismas columnas que la 2026 */
+/* Fuentes de años anteriores · misma estructura de columnas VTEX que la 2026.
+   Se leen en paralelo con la del año en curso y se suman al mismo modelo:
+   cada pedido existe una sola vez (clave = Order) y su año sale de Creation Date. */
 const GSHEET25 = {
   id:  '1PfSeehY2EFMVU3VZfG0ICIHT3GZNnjIDlZbkbKn5Bxo',   // Fuente VTEX General 2025 — NO MODIFICAR
   gid: '',        // si queda vacío, se busca la hoja por nombre y después gid 0
@@ -403,19 +393,21 @@ const GSHEET25 = {
 };
 const GSHEET24 = {
   id:  '1vvl0G3BBBGJu8Tst-KdqpqspUNu8yCy77pn-AXpnjLQ',   // Fuente VTEX 2024 — NO MODIFICAR
-  gid: '1738442477',                                      // pestaña "Report"
-  sheet: 'Report'
+  gid: '1738442477',
+  sheet: 'Base'
 };
 const GSHEET23 = {
   id:  '1mbn3ySHAn3LhWneFV-fkh7ciBt1NxpJ8vDO2eHj_AtM',   // Fuente VTEX 2023 — NO MODIFICAR
-  gid: '0',                                               // pestaña "Hoja 1"
-  sheet: 'Hoja 1'
+  gid: '',        // una sola hoja: gviz devuelve la primera
+  sheet: 'Base'
 };
-/* Fuentes de años anteriores, de la más nueva a la más vieja.
-   Si un pedido aparece en más de una fuente se toma la versión más nueva. */
-const FUENTES_PREV = [['2025',GSHEET25],['2024',GSHEET24],['2023',GSHEET23]];
-const ANIOS_PREV = FUENTES_PREV.map(f=>f[0]);   // ['2025','2024','2023']
-const GRIS_ANIO = {'2025':'#B0BEC5','2024':'#CBD3D9','2023':'#E3E8EC'};
+/* Años anteriores en orden cronológico. Si se suma otro año, va acá. */
+const FUENTES_PREV = [
+  {anio:'2023', cfg:GSHEET23},
+  {anio:'2024', cfg:GSHEET24},
+  {anio:'2025', cfg:GSHEET25}
+];
+const ANIO_ACTUAL = '2026';
 /* Columnas que se piden al Sheet. Si alguien reordena columnas en la hoja,
    el select por letra falla y el código cae automáticamente a traer todo
    y detectar por nombre de encabezado (más lento, pero no se rompe). */
@@ -515,26 +507,19 @@ const nOf=v=>{const n=typeof v==='number'?v:parseFloat(String(v).replace(/[^\d.-
 
 /* ===== modelo ===== */
 let LINEAS=[], PEDIDOS=[], MESES=[], QC={};
-let HAY25=false, ERR25='';               // alias de HAY['2025'] / ERR['2025'] (compatibilidad)
-const HAY={}, ERR={};                     // disponibilidad por año anterior
-function construir(rows, prev){
+let HAY25=false, ERR25='';
+let PREV_OK=[], PREV_ERR={};      // años anteriores que respondieron / errores por año
+function construir(rows, rows25){
   paso('Reconstruyendo pedidos y aplicando las reglas de la fuente…');
-  prev=prev||[];                          // [{anio, rows}] de la fuente más nueva a la más vieja
-  const filasCrudas=rows.length;
-  const filasPrevCrudas={}; ANIOS_PREV.forEach(a=>filasPrevCrudas[a]=0);
+  rows25=rows25||[];
+  const filasCrudas=rows.length, filas25Crudas=rows25.length;
   const lineas26=rows.filter(o=>ESTADOS_VALIDOS.includes(String(o['Status']).trim()));
-  /* si un pedido aparece en más de una fuente se toma la versión más nueva */
-  const vistos=new Set(lineas26.map(o=>o['Order']).filter(Boolean));
-  let lineasPrev=[], dupCruz=0;
-  prev.forEach(({anio,rows:rp})=>{
-    filasPrevCrudas[anio]=rp.length;
-    const todas=rp.filter(o=>ESTADOS_VALIDOS.includes(String(o['Status']).trim()));
-    dupCruz+=new Set(todas.filter(o=>vistos.has(o['Order'])).map(o=>o['Order'])).size;
-    const propias=todas.filter(o=>!vistos.has(o['Order']));
-    propias.forEach(o=>{ if(o['Order']) vistos.add(o['Order']); });
-    lineasPrev=lineasPrev.concat(propias);
-  });
-  const lineas=lineasPrev.concat(lineas26);
+  const lineas25Todas=rows25.filter(o=>ESTADOS_VALIDOS.includes(String(o['Status']).trim()));
+  /* si un pedido aparece en dos fuentes se toma la versión más nueva (la del año en curso) */
+  const ordenes26=new Set(lineas26.map(o=>o['Order']).filter(Boolean));
+  const lineas25=lineas25Todas.filter(o=>!ordenes26.has(o['Order']));
+  const dupCruz=new Set(lineas25Todas.filter(o=>ordenes26.has(o['Order'])).map(o=>o['Order'])).size;
+  const lineas=lineas25.concat(lineas26);
   const mapa=new Map();
   lineas.forEach(o=>{
     const id=o['Order']; if(!id) return;
@@ -573,11 +558,11 @@ function construir(rows, prev){
   LINEAS=lineas; PEDIDOS=pedidos;
   MESES=[...new Set(pedidos.map(p=>p.mes))].filter(Boolean).sort();
   const conVenta=pedidos.filter(p=>!p.canje);
+  const ped25=pedidos.filter(p=>p.mes.slice(0,4)==='2025');
   const pedidosPorAnio={};
-  pedidos.forEach(p=>{const a=p.mes.slice(0,4); pedidosPorAnio[a]=(pedidosPorAnio[a]||0)+1;});
-  QC={filasCrudas, filasPrevCrudas, dupCruz, pedidosPorAnio,
-      filas25Crudas:filasPrevCrudas['2025']||0,
-      pedidos25:pedidosPorAnio['2025']||0,
+  pedidos.forEach(p=>{const y=p.mes.slice(0,4); if(y) pedidosPorAnio[y]=(pedidosPorAnio[y]||0)+1});
+  QC={filasCrudas, filas25Crudas, dupCruz, pedidosPorAnio,
+      pedidos25:ped25.length,
       fechaMax26:pedidos.filter(p=>p.mes.slice(0,4)==='2026').reduce((m,p)=>p.fecha>m?p.fecha:m,''),
       filas:lineas.length, pedidos:pedidos.length, pedidosVenta:conVenta.length,
       canjes:pedidos.length-conVenta.length,
@@ -836,8 +821,7 @@ function render(){
 }
 
 /* ============================================================
-   2026 vs años anteriores · comparativo mes a mes y proyección de cierre
-   (la proyección usa 2025 como referencia; 2024 y 2023 solo comparan)
+   Comparativo interanual mes a mes y proyección de cierre
    Usan los años completos (no el rango Desde/Hasta) y respetan
    canal, ciudad y modo de facturación.
    ============================================================ */
@@ -846,75 +830,90 @@ function pedidosAnio(y){
   return PEDIDOS.filter(p=>p.mes.slice(0,4)===y&&!p.canje&&
     (!FC||p.canal===FC)&&(!FCI||p.ciudad===FCI));
 }
+function aniosEnBase(){
+  return [...new Set(PEDIDOS.map(p=>p.mes.slice(0,4)))].filter(Boolean).sort();
+}
 function renderYoY(){
   const aviso=document.getElementById('aviso25');
   if(!document.getElementById('cYoY')) return;
   const filtro=(FC?` · canal ${FC}`:'')+(FCI?` · ciudad ${FCI}`:'');
-  if(!HAY25){
-    aviso.textContent='Fuente 2025 no disponible'+(ERR25?': '+ERR25:'')+' — no se puede armar el comparativo.';
+  const anios=aniosEnBase();
+  const titulo=document.getElementById('tituloYoY');
+  if(titulo) titulo.textContent=anios.length>1?('Comparativo interanual '+anios[0]+'–'+anios[anios.length-1]):'Comparativo interanual';
+  if(anios.length<2){
+    const faltan=Object.keys(PREV_ERR||{});
+    aviso.textContent='Sólo hay un año con datos'+(faltan.length?' · sin respuesta de: '+faltan.join(', '):'')+' — no se puede armar el comparativo.';
     if(charts.cYoY){charts.cYoY.destroy();delete charts.cYoY}
-    document.getElementById('tYoY').innerHTML='<p class="hint">Falta la fuente 2025 para comparar.</p>';
+    document.getElementById('tYoY').innerHTML='<p class="hint">Faltan años anteriores para comparar.</p>';
     delete BLOQUES.yoy; return;
   }
-  aviso.textContent='Años completos'+filtro+' · modo: facturación '+ETIQ();
-  const p25=pedidosAnio('2025'), p26=pedidosAnio('2026');
-  const f25=[],f26=[],n25=[],n26=[];
-  for(let i=1;i<=12;i++){const mm=String(i).padStart(2,'0');
-    const a=p25.filter(p=>p.mes==='2025-'+mm), b=p26.filter(p=>p.mes==='2026-'+mm);
-    f25.push(suma(a,x=>FAC(x))); f26.push(suma(b,x=>FAC(x)));
-    n25.push(a.length); n26.push(b.length);}
-  /* años históricos disponibles (2024, 2023): facturación mensual y total */
-  const HIST=['2023','2024'].filter(y=>HAY[y]).map(y=>{
-    const py=pedidosAnio(y), fm=[];
-    for(let i=1;i<=12;i++) fm.push(suma(py.filter(p=>p.mes===y+'-'+String(i).padStart(2,'0')),x=>FAC(x)));
-    return {y,fm,total:suma(py,x=>FAC(x)),n:py.length};
+  const cur=anios[anios.length-1], prev=anios[anios.length-2];
+  const faltan=Object.keys(PREV_ERR||{});
+  aviso.textContent='Años completos'+filtro+' · modo: facturación '+ETIQ()+
+    (faltan.length?' · sin respuesta de: '+faltan.join(', '):'');
+  /* facturación y pedidos por mes, para cada año presente en la fuente */
+  const serie={}, cuenta={}, pedAnio={};
+  anios.forEach(y=>{
+    const p=pedidosAnio(y); pedAnio[y]=p;
+    const f=[], c=[];
+    for(let i=1;i<=12;i++){
+      const mm=String(i).padStart(2,'0');
+      const a=p.filter(x=>x.mes===y+'-'+mm);
+      f.push(suma(a,x=>FAC(x))); c.push(a.length);
+    }
+    serie[y]=f; cuenta[y]=c;
   });
   const mParcial=(QC.fechaMax26||'').slice(5,7);
-  const dsHist=HIST.map(h=>({label:h.y,data:h.fm,backgroundColor:GRIS_ANIO[h.y],borderRadius:4,maxBarThickness:20}));
-  draw('cYoY',{type:'bar',data:{labels:MESES_CORTOS,datasets:dsHist.concat([
-    {label:'2025',data:f25,backgroundColor:C.gris,borderRadius:4,maxBarThickness:20},
-    {label:'2026',data:f26,borderRadius:4,maxBarThickness:20,
-     backgroundColor:MESES_CORTOS.map((_,i)=>String(i+1).padStart(2,'0')===mParcial?C.rojoClaro:C.red)}])},
+  const GRISES=['#8A939B','#C3CBD2','#DCE1E6'];   // 1 = año anterior inmediato
+  const datasets=anios.map((y,i)=>{
+    if(y===cur) return {label:y,data:serie[y],borderRadius:4,maxBarThickness:20,
+      backgroundColor:MESES_CORTOS.map((_,j)=>String(j+1).padStart(2,'0')===mParcial?C.rojoClaro:C.red)};
+    const dist=(anios.length-1)-i;
+    return {label:y,data:serie[y],borderRadius:4,maxBarThickness:20,
+      backgroundColor:GRISES[Math.min(dist,GRISES.length)-1]||C.gris};
+  });
+  draw('cYoY',{type:'bar',data:{labels:MESES_CORTOS,datasets},
     options:{...BASE,plugins:{...BASE.plugins,tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmt(c.parsed.y)}}},
       scales:{...BASE.scales,y:{...BASE.scales.y,ticks:{font:F11,callback:fmtK}}}}});
-  /* tabla + acumulado comparable al mismo día del año */
+  /* tabla: una columna por año + variación del año en curso vs el anterior */
   const corte=(QC.fechaMax26||'').slice(5);           // 'MM-DD'
-  const f25c=suma(p25.filter(p=>p.fecha.slice(5)<=corte),p=>FAC(p));
-  const f26c=suma(p26,p=>FAC(p));
-  const t25=suma(p25,p=>FAC(p));
+  const acum={}; anios.forEach(y=>{ acum[y]=suma(pedAnio[y].filter(p=>p.fecha.slice(5)<=corte),p=>FAC(p)); });
+  const total={}; anios.forEach(y=>{ total[y]=suma(pedAnio[y],p=>FAC(p)); });
   const filas=[];
   for(let i=0;i<12;i++){
-    const hayHist=HIST.some(h=>h.fm[i]);
-    if(!f25[i]&&!f26[i]&&!n25[i]&&!n26[i]&&!hayHist) continue;
+    const hayDato=anios.some(y=>serie[y][i]||cuenta[y][i]);
+    if(!hayDato) continue;
     const parc=String(i+1).padStart(2,'0')===mParcial;
-    const v=(f25[i]>0&&(f26[i]>0||n26[i]>0))?f26[i]/f25[i]-1:null;
-    filas.push([MESES_CORTOS[i]+(parc?' *':''),f25[i],f26[i],v,n25[i],n26[i],HIST.map(h=>h.fm[i])]);
+    const v=(serie[prev][i]>0&&(serie[cur][i]>0||cuenta[cur][i]>0))?serie[cur][i]/serie[prev][i]-1:null;
+    filas.push([MESES_CORTOS[i]+(parc?' *':''), anios.map(y=>serie[y][i]), v, cuenta[prev][i], cuenta[cur][i]]);
   }
-  const vAc=f25c>0?f26c/f25c-1:null;
+  const vAc=acum[prev]>0?acum[cur]/acum[prev]-1:null;
   const celVar=v=>v===null?'<td>—</td>':
     `<td style="font-weight:700;color:${Math.abs(v)<.005?'var(--muted)':v>0?'var(--ok)':'var(--bad)'}">${pct(v*100)}</td>`;
-  const thHist=HIST.map(h=>`<th>${h.y}</th>`).join('');
-  const tdHist=arr=>arr.map(v=>`<td>${v?fmt(v):'—'}</td>`).join('');
   document.getElementById('tYoY').innerHTML=
-    '<table><thead><tr><th>Mes</th>'+thHist+'<th>2025</th><th>2026</th><th>Var. 26/25</th><th>Ped. 25</th><th>Ped. 26</th></tr></thead><tbody>'+
-    filas.map(r=>`<tr><td>${r[0]}</td>`+tdHist(r[6])+`<td>${fmt(r[1])}</td><td>${r[2]?fmt(r[2]):'—'}</td>`+
-      celVar(r[3])+`<td>${num(r[4])}</td><td>${r[5]?num(r[5]):'—'}</td></tr>`).join('')+
+    '<table><thead><tr><th>Mes</th>'+anios.map(y=>'<th>'+y+'</th>').join('')+
+      '<th>Var. '+cur.slice(2)+'/'+prev.slice(2)+'</th><th>Ped. '+prev.slice(2)+'</th><th>Ped. '+cur.slice(2)+'</th></tr></thead><tbody>'+
+    filas.map(r=>`<tr><td>${r[0]}</td>`+
+      r[1].map(v=>`<td>${v?fmt(v):'—'}</td>`).join('')+
+      celVar(r[2])+`<td>${num(r[3])}</td><td>${r[4]?num(r[4]):'—'}</td></tr>`).join('')+
     '</tbody><tfoot>'+
     `<tr><td class="tt">Acum. comparable al ${corte.slice(3)}/${corte.slice(0,2)}</td>`+
-    HIST.map(()=>'<td></td>').join('')+
-    `<td>${fmt(f25c)}</td><td>${fmt(f26c)}</td>${celVar(vAc)}<td colspan="2"></td></tr>`+
-    `<tr><td class="tt">Total año completo</td>`+HIST.map(h=>`<td>${fmt(h.total)}</td>`).join('')+
-    `<td>${fmt(t25)}</td><td>—</td><td>—</td>`+
-    `<td>${num(p25.length)}</td><td>${num(p26.length)}</td></tr>`+
+      anios.map(y=>`<td>${fmt(acum[y])}</td>`).join('')+celVar(vAc)+'<td colspan="2"></td></tr>'+
+    '<tr><td class="tt">Total del año</td>'+
+      anios.map(y=>`<td>${fmt(total[y])}</td>`).join('')+'<td>—</td>'+
+      `<td>${num(pedAnio[prev].length)}</td><td>${num(pedAnio[cur].length)}</td></tr>`+
     '</tfoot></table>'+
-    '<p class="hint" style="margin-top:8px">* mes en curso: la fuente 2026 corta el '+
-    (QC.fechaMax26?QC.fechaMax26.slice(8,10)+'/'+QC.fechaMax26.slice(5,7):'—')+'.</p>';
-  BLOQUES.yoy={arch:'2026_vs_anteriores',hoja:'2026 vs anteriores',anchos:[12,...HIST.map(()=>18),18,18,12,10,10],
-    aoa:[['Mes',...HIST.map(h=>'Facturación '+h.y),'Facturación 2025','Facturación 2026','Variación 26/25','Pedidos 2025','Pedidos 2026']]
-      .concat(filas.map(r=>[r[0],...r[6],r[1],r[2],r[3]===null?'':r[3],r[4],r[5]]))
-      .concat([['Acumulado comparable (mismo día del año)',...HIST.map(()=>''),f25c,f26c,vAc===null?'':vAc,'',''],
-               ['Total año completo',...HIST.map(h=>h.total),t25,'','',p25.length,''],
-               [],['* mes en curso','la fuente 2026 corta el '+(QC.fechaMax26||'—')]])};
+    '<p class="hint" style="margin-top:8px">* mes en curso: la fuente '+cur+' corta el '+
+    (QC.fechaMax26?QC.fechaMax26.slice(8,10)+'/'+QC.fechaMax26.slice(5,7):'—')+'. '+
+    'El acumulado comparable recorta todos los años al mismo día.</p>';
+  BLOQUES.yoy={arch:'Comparativo_interanual',hoja:'Comparativo interanual',
+    anchos:[14].concat(anios.map(()=>18)).concat([12,10,10]),
+    aoa:[['Mes'].concat(anios.map(y=>'Facturación '+y))
+          .concat(['Variación '+cur+'/'+prev,'Pedidos '+prev,'Pedidos '+cur])]
+      .concat(filas.map(r=>[r[0]].concat(r[1]).concat([r[2]===null?'':r[2],r[3],r[4]])))
+      .concat([['Acumulado comparable (mismo día del año)'].concat(anios.map(y=>acum[y])).concat([vAc===null?'':vAc,'','']),
+               ['Total del año'].concat(anios.map(y=>total[y])).concat(['',pedAnio[prev].length,pedAnio[cur].length]),
+               [],['* mes en curso','la fuente '+cur+' corta el '+(QC.fechaMax26||'—')]])};
 }
 function renderProy(){
   const box=document.getElementById('proyKpis'); if(!box) return;
@@ -1177,7 +1176,7 @@ function cabecera(titulo){
     ['Filtro ciudad',FCI||'Todas'],
     ['Modo de facturación',ETIQL()],
     ['Generado',new Date().toLocaleString('es-PY')],
-    ['Fuente','Fuente General VTEX 2026 (gid '+GSHEET.gid+')'+ANIOS_PREV.filter(a=>HAY[a]).map(a=>' + Fuente VTEX '+a).join('')],
+    ['Fuente','Fuente General VTEX 2026 (gid '+GSHEET.gid+')'+(PREV_OK.length?' + fuentes '+PREV_OK.join(', '):'')],
     []];
 }
 
@@ -1213,16 +1212,18 @@ function qcRender(){
     ['ok','Envío total <small>sumado por fila</small>',fmt(v.envio)],
     ['ok','Descuento nominal',fmt(v.descuento)],
     ['ok','Rango de datos',v.desde+' \u2192 '+v.fechaMax],
-    ...ANIOS_PREV.map(a=>[HAY[a]?'ok':'bad',
-      'Fuente '+a+' '+(HAY[a]?'conectada <small>'+num((v.filasPrevCrudas||{})[a]||0)+' filas leídas</small>'
-                            :'no disponible'+(ERR[a]?' · '+ERR[a]:'')),
-      HAY[a]?num((v.pedidosPorAnio||{})[a]||0)+' pedidos':'\u2014']),
+    ['ok','Filas leídas de las fuentes de años anteriores',num(v.filas25Crudas||0)],
+    [PREV_OK.length?'ok':'bad','Fuentes anteriores conectadas',
+      PREV_OK.length?PREV_OK.join(', '):'\u2014'],
+    [Object.keys(PREV_ERR||{}).length?'warn':'ok','Fuentes anteriores sin respuesta',
+      Object.keys(PREV_ERR||{}).length?Object.keys(PREV_ERR).map(y=>y+' ('+PREV_ERR[y]+')').join(' · '):'ninguna'],
+    ['ok','Pedidos por año',Object.keys(v.pedidosPorAnio||{}).sort().map(y=>y+': '+num(v.pedidosPorAnio[y])).join(' · ')||'\u2014'],
     [(v.dupCruz||0)>0?'warn':'ok','Pedidos repetidos entre fuentes <small>se toma la versión más nueva</small>',num(v.dupCruz||0)]
   ].map(([t,k,val])=>`<div class="qc-item ${t}"><span class="ic">${t==='ok'?'\u2713':'!'}</span>`+
     `<span>${k}</span><b>${val}</b></div>`).join('');
   document.getElementById('foot').innerHTML=
     'Lectura en vivo de <b>Fuente General VTEX 2026</b> (gid '+GSHEET.gid+', '+num(v.filasCrudas)+' filas)'+
-    ANIOS_PREV.map(a=>HAY[a]?' + <b>Fuente VTEX '+a+'</b> ('+num((v.filasPrevCrudas||{})[a]||0)+' filas)':' · <b>fuente '+a+' no disponible</b>').join('')+
+    (PREV_OK.length?' + fuentes <b>'+PREV_OK.join(', ')+'</b> ('+num(v.filas25Crudas||0)+' filas)':' · <b>sin fuentes de años anteriores</b>')+
     ' · pedidos <b>Faturado</b> y <b>Pronto para o manuseio</b> · '+
     'modo activo: <b>facturación '+ETIQ()+'</b> = '+
     (MODOFAC==='con'
@@ -1245,20 +1246,19 @@ function controles(){
   fc.onchange=()=>{FC=fc.value;render()};
   fci.onchange=()=>{FCI=fci.value;render()};
   const n=MESES.length;
-  const es26=m=>m.slice(0,4)==='2026';
-  const i26=MESES.findIndex(es26), hay26=i26>=0;
+  const i26=MESES.findIndex(m=>m.slice(0,4)===ANIO_ACTUAL), hay26=i26>=0;
   const P=[['Último mes',n-1,n-1],['3 meses',Math.max(0,n-3),n-1],
     ['6 meses',Math.max(0,n-6),n-1]];
-  if(hay26) P.push(['Año 2026',i26,n-1]);
-  /* un preset por cada año anterior con datos cargados (2025, 2024, 2023) */
-  ANIOS_PREV.forEach(y=>{
-    const a=MESES.findIndex(m=>m.slice(0,4)===y); if(a<0) return;
-    let b=-1; MESES.forEach((m,i)=>{if(m.slice(0,4)===y)b=i});
-    P.push(['Año '+y,a,b]);
+  /* un chip por cada año presente en la fuente, del más viejo al más nuevo */
+  const aniosEnBase=[...new Set(MESES.map(m=>m.slice(0,4)))].filter(Boolean).sort();
+  aniosEnBase.forEach(y=>{
+    let a=-1,b=-1;
+    MESES.forEach((m,i)=>{ if(m.slice(0,4)===y){ if(a<0)a=i; b=i; } });
+    if(a>=0) P.push(['Año '+y, a, y===ANIO_ACTUAL?n-1:b]);
   });
   P.push(['Todo',0,n-1]);
-  /* vista por defecto: el año 2026 completo (o todo si no hay 2026) */
-  const DEF=hay26?{a:i26,b:n-1,i:P.findIndex(x=>x[0]==='Año 2026')}
+  /* vista por defecto: el año en curso completo (o todo si no hay datos de ese año) */
+  const DEF=hay26?{a:i26,b:n-1,i:P.findIndex(x=>x[0]==='Año '+ANIO_ACTUAL)}
                  :{a:0,b:n-1,i:P.length-1};
   A=DEF.a; B=DEF.b; dz.value=A; hz.value=B;
   const cont=document.getElementById('presets'); cont.innerHTML='';
@@ -1280,33 +1280,38 @@ const marcar=i=>[...document.querySelectorAll('#presets button')]
   .forEach((b,j)=>b.classList.toggle('active',j===i));
 
 /* ===== arranque ===== */
-function fmtDMY(iso){ if(!iso) return ''; const s=String(iso).slice(0,10);
-  const p=s.split('-'); return p.length===3 ? p[2]+'/'+p[1]+'/'+p[0] : s; }
 const paso=t=>{const e=document.getElementById('loadSub');if(e)e.textContent=t};
 async function iniciar(){
   try{
-    const locsDe=cfg=>cfg.gid?[{gid:cfg.gid}]:[{sheet:cfg.sheet||'Base'},{gid:'0'}];
-    const [r26,...rPrev]=await Promise.allSettled([
-      traerFuente(GSHEET,'Fuente 2026',[{gid:GSHEET.gid}]),
-      ...FUENTES_PREV.map(([anio,cfg])=>traerFuente(cfg,'Fuente '+anio,locsDe(cfg)))
+    paso('Leyendo las fuentes 2023, 2024, 2025 y 2026 en paralelo…');
+    /* Si la fuente no declara gid se prueba por nombre de pestaña y después la primera hoja */
+    const locsDe=cfg=>cfg.gid?[{gid:cfg.gid},{}]:[{sheet:cfg.sheet||'Base'},{gid:'0'},{}];  // {} = primera hoja del archivo
+    const [r26, ...rPrev]=await Promise.allSettled([
+      traerFuente(GSHEET,'Fuente '+ANIO_ACTUAL,[{gid:GSHEET.gid}]),
+      ...FUENTES_PREV.map(f=>traerFuente(f.cfg,'Fuente '+f.anio,locsDe(f.cfg)))
     ]);
     if(r26.status==='rejected') throw r26.reason;
     const rows=r26.value;
-    if(!rows.length) throw new Error('La hoja 2026 respondió sin filas. Verificá el gid.');
-    /* años anteriores: cada uno es opcional; si falla, el tablero sigue con los que respondieron */
-    const prev=[];
-    FUENTES_PREV.forEach(([anio],i)=>{
-      const r=rPrev[i]; HAY[anio]=false; ERR[anio]='';
-      if(r.status==='fulfilled'&&r.value.length){ prev.push({anio,rows:r.value}); HAY[anio]=true; }
-      else ERR[anio]=r.status==='rejected'?String(r.reason&&(r.reason.message||r.reason)):'la hoja respondió sin filas';
-    });
-    HAY25=HAY['2025']; ERR25=ERR['2025'];
-    construir(rows,prev);
+    if(!rows.length) throw new Error('La hoja '+ANIO_ACTUAL+' respondió sin filas. Verificá el gid.');
+    /* Se concatenan de más viejo a más nuevo; si un pedido aparece en dos fuentes
+       queda la versión de la fuente más nueva (nunca se duplica un Order). */
+    let rows25=[]; PREV_OK=[]; PREV_ERR={};
+    const vistos=new Set();
+    for(let i=FUENTES_PREV.length-1;i>=0;i--){
+      const anio=FUENTES_PREV[i].anio, r=rPrev[i];
+      if(r.status==='fulfilled'&&r.value.length){
+        PREV_OK.unshift(anio);
+        const nuevas=r.value.filter(o=>{const id=o['Order']; if(!id) return false; if(vistos.has(id)) return false; vistos.add(id); return true;});
+        rows25=nuevas.concat(rows25);
+      } else {
+        PREV_ERR[anio]=r.status==='rejected'?String(r.reason&&(r.reason.message||r.reason)):'la hoja respondió sin filas';
+      }
+    }
+    HAY25=PREV_OK.indexOf('2025')>=0;
+    ERR25=PREV_ERR['2025']||'';
+    construir(rows,rows25);
     if(!MESES.length) throw new Error('No se pudo leer ninguna fecha válida en "Creation Date".');
     controles(); qcRender(); render();
-    const _dm=document.getElementById('dataMaxTag');
-    if(_dm && QC.fechaMax){ _dm.textContent='Datos al '+fmtDMY(QC.fechaMax);
-      _dm.title='Última fecha con pedidos en la fuente: '+fmtDMY(QC.fechaMax); }
     document.getElementById('loadOverlay').style.display='none';
   }catch(e){
     document.getElementById('loadOverlay').style.display='none';
@@ -1315,8 +1320,9 @@ async function iniciar(){
     f.innerHTML='<b>No se pudieron cargar los datos de la fuente 2026.</b><br>'+String(e.message||e)+
       '<br><br>Revisá que los Sheets estén compartidos como “Cualquier persona con el enlace · Lector” '+
       'y que el <code>gid</code> configurado ('+GSHEET.gid+') sea el de la hoja <b>Base</b>. '+
-      'Las fuentes 2025 / 2024 / 2023 son opcionales: si alguna falla, el tablero sigue con las demás '+
-      '(ver detalle en el panel de control de calidad).';
+      'Las fuentes de años anteriores se leen por gid o, si está vacío, por nombre de pestaña '+
+      '(<b>'+(GSHEET25.sheet||'Base')+'</b>); si alguna pestaña se llama distinto, cargá su gid en '+
+      '<code>GSHEET25 / GSHEET24 / GSHEET23</code>.';
   }
 }
 
@@ -1358,7 +1364,7 @@ function exportarTodo(){
       ['Filtro ciudad',FCI||'Todas'],
       ['Modo de facturación',ETIQL()],
       ['Generado',new Date().toLocaleString('es-PY')],
-      ['Fuente','Fuente General VTEX 2026 (gid '+GSHEET.gid+')'+ANIOS_PREV.filter(a=>HAY[a]).map(a=>' + Fuente VTEX '+a).join('')],
+      ['Fuente','Fuente General VTEX 2026 (gid '+GSHEET.gid+')'+(PREV_OK.length?' + fuentes '+PREV_OK.join(', '):'')],
       [],
       ['Indicador','Valor','Período previo','Variación'],
       [HFAC(),f,hay?fp:'',hay?va(f,fp):''],
@@ -1399,7 +1405,7 @@ function exportarTodo(){
     hoja(wb,'Semanal',[['Semana ISO','Pedidos',HFAC(),'Ticket promedio']].concat(
       [...sm.keys()].sort().map(k=>{const v=sm.get(k);return [k,v.p,v.f,v.p?v.f/v.p:0]})),[14,10,16,16]);
 
-    /* --- 2026 vs 2025 y proyección (si están armados) --- */
+    /* --- comparativo interanual y proyección (si están armados) --- */
     if(BLOQUES.yoy) hoja(wb,BLOQUES.yoy.hoja,BLOQUES.yoy.aoa,BLOQUES.yoy.anchos);
     if(BLOQUES.proyeccion) hoja(wb,BLOQUES.proyeccion.hoja,BLOQUES.proyeccion.aoa,BLOQUES.proyeccion.anchos);
 
